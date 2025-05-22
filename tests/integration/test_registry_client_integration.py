@@ -103,6 +103,128 @@ class TestRegistryClientIntegration(unittest.TestCase):
             self.assertIsNone(non_existent, "Non-existent server should return None")
         except (requests.RequestException, ValueError) as e:
             self.skipTest(f"Could not find server by name in demo registry: {e}")
+    
+    def test_specific_real_servers(self):
+        """Test integration with specific real servers from the demo registry."""
+        # Test specific server IDs from the MCP demo registry
+        figma_server_id = "43515997-b00f-4472-bca4-6c47389e7685"  # Figma Context MCP (NPX runtime)
+        box_server_id = "da0676e0-e495-46a7-a330-29e2e4bfc653"  # Box MCP server (UV runtime)
+        
+        # Set to collect different runtime types we encounter
+        runtime_types = set()
+        
+        # Test the Figma MCP server (NPX runtime)
+        try:
+            figma_server = self.client.get_server_info(figma_server_id)
+            
+            # Validate basic server information
+            self.assertEqual(figma_server["id"], figma_server_id)
+            self.assertIn("name", figma_server)
+            self.assertIn("description", figma_server)
+            
+            # Validate repository information
+            self.assertIn("repository", figma_server)
+            self.assertIn("url", figma_server["repository"])
+            self.assertIn("source", figma_server["repository"])
+            
+            # Validate version details
+            self.assertIn("version_detail", figma_server)
+            self.assertIn("version", figma_server["version_detail"])
+            
+            # Validate it has package information
+            self.assertIn("packages", figma_server)
+            self.assertGreater(len(figma_server["packages"]), 0)
+            
+            # Validate NPX package details
+            package = figma_server["packages"][0]
+            self.assertIn("name", package)
+            self.assertIn("version", package)
+            
+            if "runtime_hint" in package:
+                runtime_types.add(package["runtime_hint"])
+                
+            # Validate arguments
+            if "runtime_arguments" in package:
+                self.assertGreater(len(package["runtime_arguments"]), 0)
+                for arg in package["runtime_arguments"]:
+                    self.assertIn("is_required", arg)
+                    self.assertIn("value", arg)
+            
+            if "package_arguments" in package:
+                self.assertGreater(len(package["package_arguments"]), 0)
+                for arg in package["package_arguments"]:
+                    self.assertIn("is_required", arg)
+                    self.assertIn("value", arg)
+                    
+            # Test finding by name
+            figma_name = figma_server["name"]
+            found_by_name = self.client.get_server_by_name(figma_name)
+            self.assertIsNotNone(found_by_name)
+            self.assertEqual(found_by_name["id"], figma_server_id)
+        except (requests.RequestException, ValueError) as e:
+            self.skipTest(f"Could not test Figma MCP server: {e}")
+            
+        # Test the Box MCP server (UV runtime)
+        try:
+            box_server = self.client.get_server_info(box_server_id)
+            
+            # Validate basic server information
+            self.assertEqual(box_server["id"], box_server_id)
+            self.assertIn("name", box_server)
+            self.assertIn("description", box_server)
+            
+            # Validate repository information
+            self.assertIn("repository", box_server)
+            self.assertIn("url", box_server["repository"])
+            
+            # Validate it has package information if available
+            if "packages" in box_server and box_server["packages"]:
+                package = box_server["packages"][0]
+                self.assertIn("name", package)
+                self.assertIn("version", package)
+                
+                if "runtime_hint" in package:
+                    runtime_types.add(package["runtime_hint"])
+        except (requests.RequestException, ValueError) as e:
+            self.skipTest(f"Could not test Box MCP server: {e}")
+            
+        # Try to find a server with Docker runtime
+        try:
+            # Search for servers with different runtime types
+            servers, _ = self.client.list_servers(limit=50)
+            
+            for server in servers:
+                server_id = server["id"]
+                if server_id != figma_server_id and server_id != box_server_id:
+                    try:
+                        server_info = self.client.get_server_info(server_id)
+                        
+                        if "packages" in server_info and server_info["packages"]:
+                            for package in server_info["packages"]:
+                                if "runtime_hint" in package and package["runtime_hint"] not in runtime_types:
+                                    runtime_types.add(package["runtime_hint"])
+                                    
+                                    # Validate we can get basic info for this server type
+                                    self.assertIn("name", server_info)
+                                    self.assertIn("description", server_info)
+                                    self.assertIn("id", server_info)
+                                    
+                                    # If we found at least 3 different runtime types, we've validated enough diversity
+                                    if len(runtime_types) >= 3:
+                                        break
+                    except (requests.RequestException, ValueError):
+                        # Skip servers that can't be accessed
+                        continue
+                        
+                    # If we found at least 3 different runtime types, we've validated enough diversity
+                    if len(runtime_types) >= 3:
+                        break
+                        
+            # We should have found at least 2 different runtime types
+            self.assertGreaterEqual(len(runtime_types), 2,
+                                  f"Expected to find at least 2 different runtime types, found: {runtime_types}")
+        except (requests.RequestException, ValueError) as e:
+            self.skipTest(f"Could not test servers with different runtime types: {e}")
 
 
 if __name__ == "__main__":
