@@ -6,6 +6,7 @@ from colorama import init, Fore, Style
 from .config import get_default_client, set_default_client
 from .factory import ClientFactory, PackageManagerFactory
 from .core.operations import install_package, uninstall_package
+from .registry.integration import RegistryIntegration
 
 # Initialize colorama
 init(autoreset=True)
@@ -239,10 +240,23 @@ def registry(ctx):
 def list_registry(ctx):
     """List available packages in the registry."""
     click.echo(f"{INFO}Available MCP servers in registry:{RESET}")
-    # Placeholder for actual implementation
-    click.echo("  - ghcr.io/github/github-mcp-server")
-    click.echo("  - ghcr.io/azure/azure-mcp-server")
-    click.echo("  - ghcr.io/redis/redis-mcp-server")
+    
+    try:
+        registry_integration = RegistryIntegration()
+        packages = registry_integration.list_available_packages()
+        
+        if not packages:
+            click.echo(f"{WARNING}No packages found in registry.{RESET}")
+            return
+            
+        for pkg in packages:
+            name = pkg.get("name", "Unknown")
+            description = pkg.get("description", "No description available")
+            click.echo(f"  - {HIGHLIGHT}{name}{RESET}: {description}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error listing registry packages: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 @registry.command(name="search", help="Search the registry for packages")
@@ -251,9 +265,57 @@ def list_registry(ctx):
 def search_registry(ctx, query):
     """Search the registry for packages."""
     click.echo(f"{INFO}Searching registry for: {HIGHLIGHT}{query}{RESET}")
-    # Placeholder for actual implementation
-    click.echo(f"{INFO}Found matching MCP servers:{RESET}")
-    click.echo(f"  - {query}-mcp-server")
+    
+    try:
+        registry_integration = RegistryIntegration()
+        results = registry_integration.search_packages(query)
+        
+        if not results:
+            click.echo(f"{WARNING}No matching packages found in registry.{RESET}")
+            return
+            
+        click.echo(f"{INFO}Found {len(results)} matching packages:{RESET}")
+        for pkg in results:
+            name = pkg.get("name", "Unknown")
+            description = pkg.get("description", "No description available")
+            click.echo(f"  - {HIGHLIGHT}{name}{RESET}: {description}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error searching registry: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+@registry.command(name="info", help="Get details about a specific package")
+@click.argument('package')
+@click.pass_context
+def package_info(ctx, package):
+    """Get detailed information about a specific package."""
+    click.echo(f"{INFO}Package details for: {HIGHLIGHT}{package}{RESET}")
+    
+    try:
+        registry_integration = RegistryIntegration()
+        pkg_info = registry_integration.get_package_info(package)
+        
+        # Display basic package information
+        click.echo(f"  Name: {HIGHLIGHT}{pkg_info.get('name')}{RESET}")
+        click.echo(f"  Description: {pkg_info.get('description', 'No description available')}")
+        
+        # Display available versions
+        versions = pkg_info.get("versions", [])
+        if versions:
+            click.echo(f"  Available versions:")
+            for version in versions:
+                version_str = version.get("version", "Unknown")
+                click.echo(f"    - {version_str}")
+        else:
+            click.echo(f"  {WARNING}No versions available{RESET}")
+            
+    except ValueError as e:
+        click.echo(f"{WARNING}{e}{RESET}")
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"{ERROR}Error getting package info: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 # Config command
