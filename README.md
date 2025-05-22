@@ -109,12 +109,12 @@ The AWD CLI intelligently manages the relationship between workflows and MCP ser
    - If missing servers are detected, AWD automatically installs them before executing the workflow
    - This ensures workflows always have their required tools available
 
-2. **mcp.yml Synchronization**:
-   - AWD can update the `mcp.yml` file to include MCP servers required by workflows
+2. **awd.yml Synchronization**:
+   - AWD can update the `awd.yml` file to include MCP servers required by workflows
    - This keeps your central dependency file in sync with actual workflow requirements
 
 3. **Project-wide Management**:
-   - The `mcp.yml` file serves as the central record of all MCP server dependencies across workflows
+   - The `awd.yml` file serves as the central record of all MCP server dependencies across workflows
    - Use it for version pinning, documentation, and to ensure consistent environments across team members
 
 This integration ensures that both individual workflows can declare their specific tool requirements while maintaining a central, manageable dependency manifest for the entire project.
@@ -130,7 +130,7 @@ awd mcp registry list
 
 #### Creating a Configuration File
 
-Create a `mcp.yml` file in your project root:
+Create an `awd.yml` file in your project root:
 
 ```yaml
 version: "1.0"
@@ -164,16 +164,16 @@ awd workflow create --name deploy-service             # Create a new workflow te
 awd workflow run deploy-service --service-name=auth-api --target-env=staging  # Run with parameters
 
 # Workflow-MCP Integration
-awd workflow mcp-sync                                # Update mcp.yml with workflow dependencies
+awd workflow mcp-sync                                # Update awd.yml with workflow dependencies
 
 # MCP Server Management
 awd mcp list                                          # List all installed MCP servers
-awd mcp install                                       # Install servers from mcp.yml
+awd mcp install                                       # Install servers from awd.yml
 awd mcp install redis-mcp-server                      # Install server by name
 
 # MCP Configuration Commands
-awd mcp verify                                        # Verify servers in mcp.yml are installed
-awd mcp init                                          # Create mcp.yml from installed client servers
+awd mcp verify                                        # Verify servers in awd.yml are installed
+awd mcp init                                          # Create awd.yml from installed client servers
 ```
 
 ## Development
