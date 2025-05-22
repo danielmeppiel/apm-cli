@@ -1,0 +1,1 @@
+"""Registry package for MCP registry integration."""
