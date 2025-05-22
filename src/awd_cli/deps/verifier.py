@@ -2,7 +2,7 @@
 
 import os
 import yaml
-from ..factory import PackageManagerFactory
+from ..factory import PackageManagerFactory, ClientFactory
 
 
 def load_awd_config(config_file="awd.yml"):
@@ -58,12 +58,12 @@ def verify_dependencies(config_file="awd.yml"):
         return False, [], []
 
 
-def install_missing_dependencies(config_file="awd.yml", client_type="default"):
-    """Install missing dependencies from awd.yml.
+def install_missing_dependencies(config_file="awd.yml", client_type="vscode"):
+    """Install missing dependencies from awd.yml for specified client.
     
     Args:
         config_file (str, optional): Path to the configuration file. Defaults to "awd.yml".
-        client_type (str, optional): Type of client to configure. Defaults to "default".
+        client_type (str, optional): Type of client to configure. Defaults to "vscode".
         
     Returns:
         tuple: (bool, list) - Success status and list of installed packages
@@ -74,14 +74,27 @@ def install_missing_dependencies(config_file="awd.yml", client_type="default"):
         return True, []
     
     installed = []
+    
+    # Get client adapter and package manager
+    client = ClientFactory.create_client(client_type)
     package_manager = PackageManagerFactory.create_package_manager()
     
-    for package in missing:
+    for server in missing:
         try:
-            result = package_manager.install(package)
-            if result:
-                installed.append(package)
+            # Install the package using the package manager
+            install_result = package_manager.install(server)
+            
+            if install_result:
+                # Configure the client to use the server
+                # For VSCode this updates the settings.json with the server entry
+                client_result = client.configure_mcp_server(server, server_name=server)
+                
+                if client_result:
+                    installed.append(server)
+                else:
+                    print(f"Warning: Package {server} installed but client configuration failed")
+            
         except Exception as e:
-            print(f"Error installing {package}: {e}")
+            print(f"Error installing {server}: {e}")
     
     return len(installed) == len(missing), installed
