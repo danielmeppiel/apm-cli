@@ -1,5 +1,6 @@
 """Integration module for connecting registry client with package manager."""
 
+import requests
 from typing import Dict, List, Any, Optional
 from .client import SimpleRegistryClient
 
@@ -23,7 +24,7 @@ class RegistryIntegration:
         Returns:
             List[Dict[str, Any]]: List of package metadata dictionaries.
         """
-        servers = self.client.list_servers()
+        servers, _ = self.client.list_servers()
         # Transform server data to package format for backward compatibility
         return [self._server_to_package(server) for server in servers]
 
@@ -48,12 +49,20 @@ class RegistryIntegration:
 
         Returns:
             Dict[str, Any]: Package metadata dictionary.
+            
+        Raises:
+            ValueError: If the package is not found.
         """
-        # Note: In a real implementation, we might need to search for the server
-        # by name first to get its ID, since the API uses IDs
-        server_id = self._get_server_id_by_name(name)
-        server_info = self.client.get_server_info(server_id)
-        return self._server_to_package_detail(server_info)
+        # First try to find by ID
+        try:
+            server_info = self.client.get_server_info(name)
+            return self._server_to_package_detail(server_info)
+        except (ValueError, requests.RequestException):
+            # If not found by ID, try to find by name
+            server_info = self.client.get_server_by_name(name)
+            if not server_info:
+                raise ValueError(f"Package '{name}' not found in registry")
+            return self._server_to_package_detail(server_info)
 
     def get_latest_version(self, name: str) -> str:
         """Get the latest version of a package.
@@ -68,28 +77,26 @@ class RegistryIntegration:
             ValueError: If the package has no versions.
         """
         package_info = self.get_package_info(name)
+        
+        # Check for version_detail in server format
+        if "version_detail" in package_info:
+            version_detail = package_info.get("version_detail", {})
+            if version_detail and "version" in version_detail:
+                return version_detail["version"]
+        
+        # Check packages list for version information
+        packages = package_info.get("packages", [])
+        if packages:
+            for pkg in packages:
+                if "version" in pkg:
+                    return pkg["version"]
+        
+        # Fall back to versions list (backward compatibility)
         versions = package_info.get("versions", [])
-        
-        if not versions:
-            raise ValueError(f"Package '{name}' has no versions")
+        if versions:
+            return versions[-1].get("version", "latest")
             
-        # Return the latest version (assuming versions are sorted)
-        return versions[-1].get("version", "latest")
-    
-    def _get_server_id_by_name(self, name: str) -> str:
-        """Get server ID by name.
-        
-        In a real implementation, this would search the registry for a server by name.
-        For simplicity, we're assuming the name is the ID for now.
-        
-        Args:
-            name (str): Server name.
-            
-        Returns:
-            str: Server ID.
-        """
-        # Simplified implementation - in real code, we would search for the server first
-        return name
+        raise ValueError(f"Package '{name}' has no versions")
     
     def _server_to_package(self, server: Dict[str, Any]) -> Dict[str, Any]:
         """Convert server data format to package format for compatibility.
@@ -100,11 +107,21 @@ class RegistryIntegration:
         Returns:
             Dict[str, Any]: Package formatted data.
         """
-        return {
+        package = {
+            "id": server.get("id", ""),
             "name": server.get("name", "Unknown"),
             "description": server.get("description", "No description available"),
-            # Add other fields as needed for compatibility
         }
+        
+        # Add repository information if available
+        if "repository" in server:
+            package["repository"] = server["repository"]
+            
+        # Add version information if available
+        if "version_detail" in server:
+            package["version_detail"] = server["version_detail"]
+            
+        return package
     
     def _server_to_package_detail(self, server: Dict[str, Any]) -> Dict[str, Any]:
         """Convert detailed server data to package detail format.
@@ -115,19 +132,23 @@ class RegistryIntegration:
         Returns:
             Dict[str, Any]: Package detail formatted data.
         """
-        # Extract version information from server data
-        version_info = server.get("version_detail", {})
-        versions = []
+        # Start with the basic package data
+        package_detail = self._server_to_package(server)
         
-        if version_info:
-            versions.append({
+        # Add packages information
+        if "packages" in server:
+            package_detail["packages"] = server["packages"]
+            
+        if "package_canonical" in server:
+            package_detail["package_canonical"] = server["package_canonical"]
+            
+        # For backward compatibility, create a versions list
+        if "version_detail" in server and server["version_detail"]:
+            version_info = server["version_detail"]
+            package_detail["versions"] = [{
                 "version": version_info.get("version", "latest"),
-                # Add other version fields as needed
-            })
+                "release_date": version_info.get("release_date", ""),
+                "is_latest": version_info.get("is_latest", True)
+            }]
         
-        return {
-            "name": server.get("name", "Unknown"),
-            "description": server.get("description", "No description available"),
-            "versions": versions,
-            # Add other fields as needed for compatibility
-        }
+        return package_detail
