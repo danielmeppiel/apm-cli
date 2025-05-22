@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 from .base import MCPClientAdapter
+from ...registry import MCPRegistryClient
 
 
 class VSCodeClientAdapter(MCPClientAdapter):
@@ -18,6 +19,15 @@ class VSCodeClientAdapter(MCPClientAdapter):
     a repository-level .vscode/mcp.json file, following the format specified
     in the VSCode documentation.
     """
+    
+    def __init__(self, registry_url="https://demo.registry.azure-mcp.net"):
+        """Initialize the VSCode client adapter.
+        
+        Args:
+            registry_url (str, optional): URL of the MCP registry.
+                Defaults to the demo registry.
+        """
+        self.registry_client = MCPRegistryClient(registry_url)
     
     def get_config_path(self):
         """Get the path to the VSCode MCP configuration file in the repository.
@@ -110,20 +120,28 @@ class VSCodeClientAdapter(MCPClientAdapter):
             server_name = server_url
             
         try:
+            # Get server details from registry
+            server_details = self.registry_client.get_server_details(server_url)
+            
+            # Format server configuration
+            if server_details:
+                server_config = self.registry_client.format_server_config(server_details)
+            else:
+                # Fallback configuration if server details cannot be retrieved
+                server_config = {
+                    "type": "stdio",
+                    "command": "uvx",
+                    "args": [f"mcp-server-{server_url}"]
+                }
+            
             config = self.get_current_config()
             
             # Make sure we have the servers object
             if "servers" not in config:
                 config["servers"] = {}
                 
-            # Create the server configuration
-            # Using the format from VSCode docs:
-            # https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_configuration-format
-            config["servers"][server_name] = {
-                "type": "stdio",
-                "command": "uvx",
-                "args": [f"mcp-server-{server_url}"]
-            }
+            # Add the server configuration
+            config["servers"][server_name] = server_config
                 
             # Update the configuration
             return self.update_config(config)

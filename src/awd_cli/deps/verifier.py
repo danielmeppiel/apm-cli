@@ -86,7 +86,7 @@ def install_missing_dependencies(config_file="awd.yml", client_type="vscode"):
             
             if install_result:
                 # Configure the client to use the server
-                # For VSCode this updates the settings.json with the server entry
+                # For VSCode this updates the .vscode/mcp.json file in the project root
                 client_result = client.configure_mcp_server(server, server_name=server)
                 
                 if client_result:
