@@ -252,7 +252,9 @@ def list_registry(ctx):
         for pkg in packages:
             name = pkg.get("name", "Unknown")
             description = pkg.get("description", "No description available")
-            click.echo(f"  - {HIGHLIGHT}{name}{RESET}: {description}")
+            server_id = pkg.get("id", "")
+            click.echo(f"  - {HIGHLIGHT}{name}{RESET} (ID: {server_id})")
+            click.echo(f"    {description}")
             
     except Exception as e:
         click.echo(f"{ERROR}Error listing registry packages: {e}{RESET}", err=True)
@@ -278,7 +280,9 @@ def search_registry(ctx, query):
         for pkg in results:
             name = pkg.get("name", "Unknown")
             description = pkg.get("description", "No description available")
-            click.echo(f"  - {HIGHLIGHT}{name}{RESET}: {description}")
+            server_id = pkg.get("id", "")
+            click.echo(f"  - {HIGHLIGHT}{name}{RESET} (ID: {server_id})")
+            click.echo(f"    {description}")
             
     except Exception as e:
         click.echo(f"{ERROR}Error searching registry: {e}{RESET}", err=True)
@@ -300,15 +304,68 @@ def package_info(ctx, package):
         click.echo(f"  Name: {HIGHLIGHT}{pkg_info.get('name')}{RESET}")
         click.echo(f"  Description: {pkg_info.get('description', 'No description available')}")
         
-        # Display available versions
-        versions = pkg_info.get("versions", [])
-        if versions:
-            click.echo(f"  Available versions:")
-            for version in versions:
-                version_str = version.get("version", "Unknown")
-                click.echo(f"    - {version_str}")
+        # Display repository information if available
+        if "repository" in pkg_info:
+            repo = pkg_info["repository"]
+            click.echo(f"  Repository: {repo.get('url', 'Unknown')}")
+            if "source" in repo:
+                click.echo(f"  Source: {repo.get('source')}")
+        
+        # Display version information
+        if "version_detail" in pkg_info:
+            version_detail = pkg_info["version_detail"]
+            click.echo(f"  Version: {version_detail.get('version', 'Unknown')}")
+            if "release_date" in version_detail:
+                click.echo(f"  Release Date: {version_detail.get('release_date')}")
+            if "is_latest" in version_detail:
+                is_latest = "Yes" if version_detail.get("is_latest") else "No"
+                click.echo(f"  Latest: {is_latest}")
+        
+        # Display available packages
+        if "packages" in pkg_info:
+            packages = pkg_info["packages"]
+            if packages:
+                click.echo(f"  Available packages:")
+                for package in packages:
+                    registry = package.get("registry_name", "Unknown")
+                    name = package.get("name", "Unknown")
+                    version = package.get("version", "Unknown")
+                    runtime = package.get("runtime_hint", "")
+                    
+                    pkg_display = f"    - {name} (v{version}, {registry}"
+                    if runtime:
+                        pkg_display += f", runtime: {runtime}"
+                    pkg_display += ")"
+                    
+                    click.echo(pkg_display)
+                    
+                    # Display runtime arguments if available
+                    if "runtime_arguments" in package and package["runtime_arguments"]:
+                        click.echo(f"      Runtime arguments:")
+                        for arg in package["runtime_arguments"]:
+                            required = "[Required]" if arg.get("is_required", False) else "[Optional]"
+                            arg_name = arg.get("value", "")
+                            arg_desc = f"({arg.get('type', '')})"
+                            click.echo(f"        {required} {arg_name} {arg_desc}")
+                    
+                    # Display package arguments if available
+                    if "package_arguments" in package and package["package_arguments"]:
+                        click.echo(f"      Package arguments:")
+                        for arg in package["package_arguments"]:
+                            required = "[Required]" if arg.get("is_required", False) else "[Optional]"
+                            arg_name = arg.get("value", "")
+                            arg_desc = f"({arg.get('description', '')})"
+                            click.echo(f"        {required} {arg_name} {arg_desc}")
         else:
-            click.echo(f"  {WARNING}No versions available{RESET}")
+            # Fall back to displaying versions (backward compatibility)
+            versions = pkg_info.get("versions", [])
+            if versions:
+                click.echo(f"  Available versions:")
+                for version in versions:
+                    version_str = version.get("version", "Unknown")
+                    click.echo(f"    - {version_str}")
+            else:
+                click.echo(f"  {WARNING}No versions available{RESET}")
             
     except ValueError as e:
         click.echo(f"{WARNING}{e}{RESET}")
