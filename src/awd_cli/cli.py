@@ -51,11 +51,23 @@ def workflow(ctx):
 @click.pass_context
 def list_workflows(ctx):
     """List all available workflows."""
+    from .workflow.discovery import discover_workflows
+    
     click.echo(f"{INFO}Available workflows:{RESET}")
-    # Placeholder for actual implementation
-    click.echo("  - hello-world")
-    click.echo("  - deploy-service")
-    click.echo("  - incident-response")
+    
+    try:
+        workflows = discover_workflows()
+        
+        if not workflows:
+            click.echo(f"{WARNING}No workflows found.{RESET}")
+            return
+            
+        for wf in workflows:
+            click.echo(f"  - {HIGHLIGHT}{wf.name}{RESET}: {wf.description}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error listing workflows: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 @workflow.command(name="create", help="Create a new workflow template")
@@ -63,28 +75,51 @@ def list_workflows(ctx):
 @click.pass_context
 def create_workflow(ctx, name):
     """Create a new workflow template."""
+    from .workflow.discovery import create_workflow_template
+    
     click.echo(f"{SUCCESS}Creating new workflow template: {HIGHLIGHT}{name}.awd.md{RESET}")
-    # Placeholder for actual implementation
-    click.echo(f"{INFO}Workflow template created successfully!{RESET}")
+    
+    try:
+        file_path = create_workflow_template(name)
+        click.echo(f"{INFO}Workflow template created at: {file_path}{RESET}")
+        click.echo(f"{SUCCESS}Workflow template created successfully!{RESET}")
+    except Exception as e:
+        click.echo(f"{ERROR}Error creating workflow template: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 @workflow.command(name="run", help="Run a workflow with parameters")
 @click.argument('workflow_name')
-@click.option('--service-name', help="Service name parameter")
-@click.option('--target-env', help="Target environment parameter")
+@click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
 @click.pass_context
-def run_workflow(ctx, workflow_name, service_name, target_env):
+def run_workflow(ctx, workflow_name, param):
     """Run a workflow."""
+    from .workflow.runner import run_workflow as execute_workflow
+    
     click.echo(f"{INFO}Running workflow: {HIGHLIGHT}{workflow_name}{RESET}")
     
-    # Display parameters
-    if service_name:
-        click.echo(f"  - Service Name: {service_name}")
-    if target_env:
-        click.echo(f"  - Target Environment: {target_env}")
+    # Parse parameters
+    params = {}
+    for p in param:
+        if '=' in p:
+            name, value = p.split('=', 1)
+            params[name] = value
+            click.echo(f"  - {name}: {value}")
     
-    # Placeholder for actual implementation
-    click.echo(f"{SUCCESS}Workflow executed successfully!{RESET}")
+    try:
+        success, result = execute_workflow(workflow_name, params)
+        
+        if not success:
+            click.echo(f"{ERROR}{result}{RESET}", err=True)
+            sys.exit(1)
+            
+        click.echo(f"\n{INFO}Workflow output:{RESET}")
+        click.echo(result)
+        click.echo(f"\n{SUCCESS}Workflow executed successfully!{RESET}")
+        
+    except Exception as e:
+        click.echo(f"{ERROR}Error executing workflow: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 @workflow.command(name="mcp-sync", help="Update mcp.yml with workflow dependencies")
