@@ -38,7 +38,7 @@ Create your first Agentic Workflow and start writing your Workflow Definition fi
 
 ```zsh
 # Create a new workflow template
-awd workflow create --name gh-repo-from-template               # Creates deploy-service.awd.md template
+awd workflow create --name gh-repo-from-template               # Creates gh-repo-from-template.awd.md template
 ```
 
 ### Workflow Definitions
@@ -51,6 +51,9 @@ description: Creates a new GitHub repository by picking the right Repository Tem
 author: Alice DevOps  
 mcp:
   - ghcr.io/github/github-mcp-server
+input:
+  - language
+  - framework
 ---
 
 # Create a GitHub Repo from a Repo Template
@@ -89,7 +92,7 @@ You can then ask AWD to "run" your workflow:
 
 ```zsh
 # Run a workflow with parameters
-awd workflow run deploy-service --service-name=payments-api --target-env=staging
+awd workflow run gh-repo-from-template --language=java --framework=spring
 
 # Run with interactive parameter input (prompted if missing)
 awd workflow run incident-response
