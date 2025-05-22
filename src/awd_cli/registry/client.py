@@ -1,4 +1,4 @@
-"""Simple MCP Registry client for package discovery."""
+"""Simple MCP Registry client for server discovery."""
 
 import os
 import requests
@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Any
 
 
 class SimpleRegistryClient:
-    """Simple client for querying MCP registries for package discovery."""
+    """Simple client for querying MCP registries for server discovery."""
 
     def __init__(self, registry_url: Optional[str] = None):
         """Initialize the registry client.
@@ -21,58 +21,58 @@ class SimpleRegistryClient:
         )
         self.session = requests.Session()
 
-    def list_packages(self) -> List[Dict[str, Any]]:
-        """List all available packages in the registry.
+    def list_servers(self) -> List[Dict[str, Any]]:
+        """List all available servers in the registry.
 
         Returns:
-            List[Dict[str, Any]]: List of package metadata dictionaries.
+            List[Dict[str, Any]]: List of server metadata dictionaries.
         
         Raises:
             requests.RequestException: If the request fails.
         """
-        response = self.session.get(f"{self.registry_url}/v1/packages")
+        response = self.session.get(f"{self.registry_url}/v0/servers")
         response.raise_for_status()
-        return response.json().get("packages", [])
+        return response.json().get("servers", [])
 
-    def search_packages(self, query: str) -> List[Dict[str, Any]]:
-        """Search for packages in the registry.
+    def search_servers(self, query: str) -> List[Dict[str, Any]]:
+        """Search for servers in the registry.
 
         Args:
             query (str): Search query string.
 
         Returns:
-            List[Dict[str, Any]]: List of matching package metadata dictionaries.
+            List[Dict[str, Any]]: List of matching server metadata dictionaries.
         
         Raises:
             requests.RequestException: If the request fails.
         """
-        all_packages = self.list_packages()
+        all_servers = self.list_servers()
         
         # Simple client-side filtering by name or description
         return [
-            pkg for pkg in all_packages 
-            if query.lower() in pkg.get("name", "").lower() 
-            or query.lower() in pkg.get("description", "").lower()
+            server for server in all_servers 
+            if query.lower() in server.get("name", "").lower() 
+            or query.lower() in server.get("description", "").lower()
         ]
 
-    def get_package_info(self, name: str) -> Dict[str, Any]:
-        """Get detailed information about a specific package.
+    def get_server_info(self, server_id: str) -> Dict[str, Any]:
+        """Get detailed information about a specific server.
 
         Args:
-            name (str): Name of the package.
+            server_id (str): ID of the server.
 
         Returns:
-            Dict[str, Any]: Package metadata dictionary.
+            Dict[str, Any]: Server metadata dictionary.
         
         Raises:
             requests.RequestException: If the request fails.
-            ValueError: If the package is not found.
+            ValueError: If the server is not found.
         """
-        response = self.session.get(f"{self.registry_url}/v1/packages/{name}")
+        response = self.session.get(f"{self.registry_url}/v0/servers/{server_id}")
         response.raise_for_status()
-        package_info = response.json()
+        server_info = response.json()
         
-        if not package_info:
-            raise ValueError(f"Package '{name}' not found in registry")
+        if not server_info:
+            raise ValueError(f"Server '{server_id}' not found in registry")
             
-        return package_info
+        return server_info
