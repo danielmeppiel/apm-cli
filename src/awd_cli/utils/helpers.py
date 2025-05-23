@@ -3,6 +3,8 @@
 import os
 import platform
 import subprocess
+import shutil
+import sys
 
 
 def is_tool_available(tool_name):
@@ -14,19 +16,30 @@ def is_tool_available(tool_name):
     Returns:
         bool: True if the tool is available, False otherwise.
     """
+    # First try using shutil.which which is more reliable across platforms
+    if shutil.which(tool_name):
+        return True
+        
+    # Fall back to subprocess approach if shutil.which returns None
     try:
-        with open(os.devnull, "w") as devnull:
-            # Use shell=True on Windows to properly find executables
-            shell = os.name == 'nt'
-            subprocess.Popen(
-                tool_name if shell else [tool_name],
-                stdout=devnull,
-                stderr=devnull,
-                shell=shell
-            ).communicate()
-    except OSError:
+        # Different approaches for different platforms
+        if sys.platform == 'win32':
+            # On Windows, use 'where' command
+            result = subprocess.run(['where', tool_name], 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.PIPE,
+                                   shell=True,
+                                   check=False)
+            return result.returncode == 0
+        else:
+            # On Unix-like systems, use 'which' command
+            result = subprocess.run(['which', tool_name], 
+                                   stdout=subprocess.PIPE, 
+                                   stderr=subprocess.PIPE,
+                                   check=False)
+            return result.returncode == 0
+    except Exception:
         return False
-    return True
 
 
 def get_available_package_managers():
