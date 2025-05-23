@@ -79,6 +79,13 @@ class TestDependenciesVerifier(unittest.TestCase):
     
     def tearDown(self):
         """Tear down test fixtures."""
+        # Force garbage collection to release file handles
+        import gc
+        gc.collect()
+        # Small delay to allow Windows to release locks
+        import time
+        time.sleep(0.1)
+        
         self.temp_dir.cleanup()
     
     def test_load_awd_config(self):

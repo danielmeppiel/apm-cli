@@ -24,11 +24,11 @@ def is_tool_available(tool_name):
     try:
         # Different approaches for different platforms
         if sys.platform == 'win32':
-            # On Windows, use 'where' command
+            # On Windows, use 'where' command but WITHOUT shell=True
             result = subprocess.run(['where', tool_name], 
                                    stdout=subprocess.PIPE, 
                                    stderr=subprocess.PIPE,
-                                   shell=True,
+                                   shell=False,  # Changed from True to False
                                    check=False)
             return result.returncode == 0
         else:

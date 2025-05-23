@@ -56,6 +56,13 @@ class TestVSCodeClientAdapter(unittest.TestCase):
     
     def tearDown(self):
         """Tear down test fixtures."""
+        # Force garbage collection to release file handles
+        import gc
+        gc.collect()
+        # Small delay to allow Windows to release locks
+        import time
+        time.sleep(0.1)
+        
         self.mock_registry_patcher.stop()
         self.mock_integration_patcher.stop()
         self.temp_dir.cleanup()
