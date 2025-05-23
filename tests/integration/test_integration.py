@@ -4,9 +4,33 @@ import os
 import json
 import tempfile
 import unittest
+import time
+import shutil
+import gc
+import sys
 from unittest.mock import patch
 from awd_cli.factory import ClientFactory, PackageManagerFactory
 from awd_cli.core.operations import install_package
+
+
+def safe_rmdir(path):
+    """Safely remove a directory with retry logic for Windows.
+    
+    Args:
+        path (str): Path to directory to remove
+    """
+    try:
+        shutil.rmtree(path)
+    except PermissionError:
+        # On Windows, give time for any lingering processes to release the lock
+        time.sleep(0.5)
+        gc.collect()  # Force garbage collection to release file handles
+        try:
+            shutil.rmtree(path)
+        except PermissionError as e:
+            print(f"Failed to remove directory {path}: {e}")
+            # Continue without failing the test
+            pass
 
 
 class TestIntegration(unittest.TestCase):
@@ -15,7 +39,8 @@ class TestIntegration(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.temp_path = os.path.join(self.temp_dir.name, "settings.json")
+        self.temp_dir_path = self.temp_dir.name
+        self.temp_path = os.path.join(self.temp_dir_path, "settings.json")
         
         # Create a temporary settings file
         with open(self.temp_path, "w") as f:
@@ -23,7 +48,20 @@ class TestIntegration(unittest.TestCase):
     
     def tearDown(self):
         """Tear down test fixtures."""
-        self.temp_dir.cleanup()
+        # Force garbage collection to release file handles
+        gc.collect()
+        
+        # Give time for Windows to release locks
+        if sys.platform == 'win32':
+            time.sleep(0.1)
+            
+        # First, try the standard cleanup
+        try:
+            self.temp_dir.cleanup()
+        except PermissionError:
+            # If standard cleanup fails on Windows, use our safe_rmdir function
+            if hasattr(self, 'temp_dir_path') and os.path.exists(self.temp_dir_path):
+                safe_rmdir(self.temp_dir_path)
     
     @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_install_package_integration(self, mock_get_path):
