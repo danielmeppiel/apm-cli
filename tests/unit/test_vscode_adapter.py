@@ -235,9 +235,13 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         adapter = VSCodeClientAdapter()
         path = adapter.get_config_path()
         
-        # Verify the path is constructed correctly for repository
-        expected_path = str(Path(self.temp_dir.name) / ".vscode" / "mcp.json")
-        self.assertEqual(path, expected_path)
+        # Create Path objects for comparison to handle platform differences
+        actual_path = Path(path)
+        expected_path = Path(self.temp_dir.name) / ".vscode" / "mcp.json"
+        
+        # Compare parts of the path to avoid string formatting issues
+        self.assertEqual(actual_path.parent, expected_path.parent)
+        self.assertEqual(actual_path.name, expected_path.name)
 
 
 if __name__ == "__main__":
