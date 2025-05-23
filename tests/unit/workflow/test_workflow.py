@@ -76,7 +76,7 @@ input:
         self.assertEqual(len(errors), 1)
         self.assertIn("description", errors[0])
         
-        # Invalid workflow - missing input parameters
+        # Input parameters are now optional, so this should not report an error
         workflow = WorkflowDefinition(
             "test",
             "test.awd.md",
@@ -86,8 +86,7 @@ input:
             "content"
         )
         errors = workflow.validate()
-        self.assertEqual(len(errors), 1)
-        self.assertIn("input", errors[0])
+        self.assertEqual(len(errors), 0)  # Expecting 0 errors as input is optional
 
 
 class TestWorkflowRunner(unittest.TestCase):
