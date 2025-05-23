@@ -23,35 +23,40 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         with open(self.temp_path, "w") as f:
             json.dump({"servers": {}}, f)
             
-        # Create a mock registry client
-        self.mock_registry_patcher = patch('awd_cli.adapters.client.vscode.MCPRegistryClient')
+        # Create mock clients
+        self.mock_registry_patcher = patch('awd_cli.adapters.client.vscode.SimpleRegistryClient')
         self.mock_registry_class = self.mock_registry_patcher.start()
         self.mock_registry = MagicMock()
         self.mock_registry_class.return_value = self.mock_registry
         
+        self.mock_integration_patcher = patch('awd_cli.adapters.client.vscode.RegistryIntegration')
+        self.mock_integration_class = self.mock_integration_patcher.start()
+        self.mock_integration = MagicMock()
+        self.mock_integration_class.return_value = self.mock_integration
+        
         # Mock server details
-        self.server_details = {
+        self.server_info = {
+            "id": "12345",
             "name": "fetch",
-            "installation": {
-                "type": "npm",
-                "package": "@mcp/fetch"
-            }
+            "description": "Fetch MCP server",
+            "packages": [
+                {
+                    "name": "@mcp/fetch",
+                    "version": "1.0.0",
+                    "registry_name": "npm",
+                    "runtime_hint": "npx"
+                }
+            ]
         }
         
-        # Mock server config
-        self.server_config = {
-            "type": "stdio",
-            "command": "npx",
-            "args": ["@mcp/fetch"]
-        }
-        
-        # Configure the mock
-        self.mock_registry.get_server_details.return_value = self.server_details
-        self.mock_registry.format_server_config.return_value = self.server_config
+        # Configure the mocks
+        self.mock_registry.get_server_info.return_value = self.server_info
+        self.mock_registry.get_server_by_name.return_value = self.server_info
     
     def tearDown(self):
         """Tear down test fixtures."""
         self.mock_registry_patcher.stop()
+        self.mock_integration_patcher.stop()
         self.temp_dir.cleanup()
     
     @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
@@ -131,11 +136,12 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertIn("fetch", updated_config["servers"])
         
         # Verify the registry client was called
-        self.mock_registry.get_server_details.assert_called_once_with("fetch")
-        self.mock_registry.format_server_config.assert_called_once_with(self.server_details)
+        self.mock_registry.get_server_info.assert_called_once_with("fetch")
         
         # Verify the server configuration
-        self.assertEqual(updated_config["servers"]["fetch"], self.server_config)
+        self.assertEqual(updated_config["servers"]["fetch"]["type"], "stdio")
+        self.assertEqual(updated_config["servers"]["fetch"]["command"], "npx")
+        self.assertEqual(updated_config["servers"]["fetch"]["args"], ["@mcp/fetch"])
     
     @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_configure_mcp_server_update_existing(self, mock_get_path):
@@ -169,11 +175,12 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertIn("fetch", updated_config["servers"])
         
         # Verify the registry client was called
-        self.mock_registry.get_server_details.assert_called_once_with("fetch")
-        self.mock_registry.format_server_config.assert_called_once_with(self.server_details)
+        self.mock_registry.get_server_info.assert_called_once_with("fetch")
         
         # Verify the server configuration
-        self.assertEqual(updated_config["servers"]["fetch"], self.server_config)
+        self.assertEqual(updated_config["servers"]["fetch"]["type"], "stdio")
+        self.assertEqual(updated_config["servers"]["fetch"]["command"], "npx")
+        self.assertEqual(updated_config["servers"]["fetch"]["args"], ["@mcp/fetch"])
     
     @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_configure_mcp_server_empty_url(self, mock_get_path):
@@ -191,8 +198,9 @@ class TestVSCodeClientAdapter(unittest.TestCase):
     @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_configure_mcp_server_registry_fallback(self, mock_get_path):
         """Test fallback behavior when registry doesn't have server details."""
-        # Configure the mock to return None for server details
-        self.mock_registry.get_server_details.return_value = None
+        # Configure the mock to raise an exception when getting server info
+        self.mock_registry.get_server_info.side_effect = ValueError("Not found")
+        self.mock_registry.get_server_by_name.return_value = None
         
         mock_get_path.return_value = self.temp_path
         adapter = VSCodeClientAdapter()
@@ -210,7 +218,8 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertIn("unknown-server", updated_config["servers"])
         
         # Verify the registry client was called
-        self.mock_registry.get_server_details.assert_called_once_with("unknown-server")
+        self.mock_registry.get_server_info.assert_called_once_with("unknown-server")
+        self.mock_registry.get_server_by_name.assert_called_once_with("unknown-server")
         
         # Verify the fallback server configuration
         self.assertEqual(updated_config["servers"]["unknown-server"]["type"], "stdio")
