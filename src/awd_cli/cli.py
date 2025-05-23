@@ -6,6 +6,7 @@ from colorama import init, Fore, Style
 from .config import get_default_client, set_default_client
 from .factory import ClientFactory, PackageManagerFactory
 from .core.operations import install_package, uninstall_package
+from .registry.integration import RegistryIntegration
 
 # Initialize colorama
 init(autoreset=True)
@@ -51,11 +52,23 @@ def workflow(ctx):
 @click.pass_context
 def list_workflows(ctx):
     """List all available workflows."""
+    from .workflow.discovery import discover_workflows
+    
     click.echo(f"{INFO}Available workflows:{RESET}")
-    # Placeholder for actual implementation
-    click.echo("  - hello-world")
-    click.echo("  - deploy-service")
-    click.echo("  - incident-response")
+    
+    try:
+        workflows = discover_workflows()
+        
+        if not workflows:
+            click.echo(f"{WARNING}No workflows found.{RESET}")
+            return
+            
+        for wf in workflows:
+            click.echo(f"  - {HIGHLIGHT}{wf.name}{RESET}: {wf.description}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error listing workflows: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 @workflow.command(name="create", help="Create a new workflow template")
@@ -63,28 +76,51 @@ def list_workflows(ctx):
 @click.pass_context
 def create_workflow(ctx, name):
     """Create a new workflow template."""
+    from .workflow.discovery import create_workflow_template
+    
     click.echo(f"{SUCCESS}Creating new workflow template: {HIGHLIGHT}{name}.awd.md{RESET}")
-    # Placeholder for actual implementation
-    click.echo(f"{INFO}Workflow template created successfully!{RESET}")
+    
+    try:
+        file_path = create_workflow_template(name)
+        click.echo(f"{INFO}Workflow template created at: {file_path}{RESET}")
+        click.echo(f"{SUCCESS}Workflow template created successfully!{RESET}")
+    except Exception as e:
+        click.echo(f"{ERROR}Error creating workflow template: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 @workflow.command(name="run", help="Run a workflow with parameters")
 @click.argument('workflow_name')
-@click.option('--service-name', help="Service name parameter")
-@click.option('--target-env', help="Target environment parameter")
+@click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
 @click.pass_context
-def run_workflow(ctx, workflow_name, service_name, target_env):
+def run_workflow(ctx, workflow_name, param):
     """Run a workflow."""
+    from .workflow.runner import run_workflow as execute_workflow
+    
     click.echo(f"{INFO}Running workflow: {HIGHLIGHT}{workflow_name}{RESET}")
     
-    # Display parameters
-    if service_name:
-        click.echo(f"  - Service Name: {service_name}")
-    if target_env:
-        click.echo(f"  - Target Environment: {target_env}")
+    # Parse parameters
+    params = {}
+    for p in param:
+        if '=' in p:
+            name, value = p.split('=', 1)
+            params[name] = value
+            click.echo(f"  - {name}: {value}")
     
-    # Placeholder for actual implementation
-    click.echo(f"{SUCCESS}Workflow executed successfully!{RESET}")
+    try:
+        success, result = execute_workflow(workflow_name, params)
+        
+        if not success:
+            click.echo(f"{ERROR}{result}{RESET}", err=True)
+            sys.exit(1)
+            
+        click.echo(f"\n{INFO}Workflow output:{RESET}")
+        click.echo(result)
+        click.echo(f"\n{SUCCESS}Workflow executed successfully!{RESET}")
+        
+    except Exception as e:
+        click.echo(f"{ERROR}Error executing workflow: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 @workflow.command(name="mcp-sync", help="Update awd.yml with workflow dependencies")
@@ -340,10 +376,25 @@ def registry(ctx):
 def list_registry(ctx):
     """List available packages in the registry."""
     click.echo(f"{INFO}Available MCP servers in registry:{RESET}")
-    # Placeholder for actual implementation
-    click.echo("  - ghcr.io/github/github-mcp-server")
-    click.echo("  - ghcr.io/azure/azure-mcp-server")
-    click.echo("  - ghcr.io/redis/redis-mcp-server")
+    
+    try:
+        registry_integration = RegistryIntegration()
+        packages = registry_integration.list_available_packages()
+        
+        if not packages:
+            click.echo(f"{WARNING}No packages found in registry.{RESET}")
+            return
+            
+        for pkg in packages:
+            name = pkg.get("name", "Unknown")
+            description = pkg.get("description", "No description available")
+            server_id = pkg.get("id", "")
+            click.echo(f"  - {HIGHLIGHT}{name}{RESET} (ID: {server_id})")
+            click.echo(f"    {description}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error listing registry packages: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 @registry.command(name="search", help="Search the registry for packages")
@@ -352,9 +403,112 @@ def list_registry(ctx):
 def search_registry(ctx, query):
     """Search the registry for packages."""
     click.echo(f"{INFO}Searching registry for: {HIGHLIGHT}{query}{RESET}")
-    # Placeholder for actual implementation
-    click.echo(f"{INFO}Found matching MCP servers:{RESET}")
-    click.echo(f"  - {query}-mcp-server")
+    
+    try:
+        registry_integration = RegistryIntegration()
+        results = registry_integration.search_packages(query)
+        
+        if not results:
+            click.echo(f"{WARNING}No matching packages found in registry.{RESET}")
+            return
+            
+        click.echo(f"{INFO}Found {len(results)} matching packages:{RESET}")
+        for pkg in results:
+            name = pkg.get("name", "Unknown")
+            description = pkg.get("description", "No description available")
+            server_id = pkg.get("id", "")
+            click.echo(f"  - {HIGHLIGHT}{name}{RESET} (ID: {server_id})")
+            click.echo(f"    {description}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error searching registry: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+@registry.command(name="info", help="Get details about a specific package")
+@click.argument('package')
+@click.pass_context
+def package_info(ctx, package):
+    """Get detailed information about a specific package."""
+    click.echo(f"{INFO}Package details for: {HIGHLIGHT}{package}{RESET}")
+    
+    try:
+        registry_integration = RegistryIntegration()
+        pkg_info = registry_integration.get_package_info(package)
+        
+        # Display basic package information
+        click.echo(f"  Name: {HIGHLIGHT}{pkg_info.get('name')}{RESET}")
+        click.echo(f"  Description: {pkg_info.get('description', 'No description available')}")
+        
+        # Display repository information if available
+        if "repository" in pkg_info:
+            repo = pkg_info["repository"]
+            click.echo(f"  Repository: {repo.get('url', 'Unknown')}")
+            if "source" in repo:
+                click.echo(f"  Source: {repo.get('source')}")
+        
+        # Display version information
+        if "version_detail" in pkg_info:
+            version_detail = pkg_info["version_detail"]
+            click.echo(f"  Version: {version_detail.get('version', 'Unknown')}")
+            if "release_date" in version_detail:
+                click.echo(f"  Release Date: {version_detail.get('release_date')}")
+            if "is_latest" in version_detail:
+                is_latest = "Yes" if version_detail.get("is_latest") else "No"
+                click.echo(f"  Latest: {is_latest}")
+        
+        # Display available packages
+        if "packages" in pkg_info:
+            packages = pkg_info["packages"]
+            if packages:
+                click.echo(f"  Available packages:")
+                for package in packages:
+                    registry = package.get("registry_name", "Unknown")
+                    name = package.get("name", "Unknown")
+                    version = package.get("version", "Unknown")
+                    runtime = package.get("runtime_hint", "")
+                    
+                    pkg_display = f"    - {name} (v{version}, {registry}"
+                    if runtime:
+                        pkg_display += f", runtime: {runtime}"
+                    pkg_display += ")"
+                    
+                    click.echo(pkg_display)
+                    
+                    # Display runtime arguments if available
+                    if "runtime_arguments" in package and package["runtime_arguments"]:
+                        click.echo(f"      Runtime arguments:")
+                        for arg in package["runtime_arguments"]:
+                            required = "[Required]" if arg.get("is_required", False) else "[Optional]"
+                            arg_name = arg.get("value", "")
+                            arg_desc = f"({arg.get('type', '')})"
+                            click.echo(f"        {required} {arg_name} {arg_desc}")
+                    
+                    # Display package arguments if available
+                    if "package_arguments" in package and package["package_arguments"]:
+                        click.echo(f"      Package arguments:")
+                        for arg in package["package_arguments"]:
+                            required = "[Required]" if arg.get("is_required", False) else "[Optional]"
+                            arg_name = arg.get("value", "")
+                            arg_desc = f"({arg.get('description', '')})"
+                            click.echo(f"        {required} {arg_name} {arg_desc}")
+        else:
+            # Fall back to displaying versions (backward compatibility)
+            versions = pkg_info.get("versions", [])
+            if versions:
+                click.echo(f"  Available versions:")
+                for version in versions:
+                    version_str = version.get("version", "Unknown")
+                    click.echo(f"    - {version_str}")
+            else:
+                click.echo(f"  {WARNING}No versions available{RESET}")
+            
+    except ValueError as e:
+        click.echo(f"{WARNING}{e}{RESET}")
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"{ERROR}Error getting package info: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 # Config command
