@@ -15,8 +15,15 @@ def is_tool_available(tool_name):
         bool: True if the tool is available, False otherwise.
     """
     try:
-        devnull = open(os.devnull, "w")
-        subprocess.Popen([tool_name], stdout=devnull, stderr=devnull).communicate()
+        with open(os.devnull, "w") as devnull:
+            # Use shell=True on Windows to properly find executables
+            shell = os.name == 'nt'
+            subprocess.Popen(
+                tool_name if shell else [tool_name],
+                stdout=devnull,
+                stderr=devnull,
+                shell=shell
+            ).communicate()
     except OSError:
         return False
     return True
