@@ -46,8 +46,11 @@ class VSCodeClientAdapter(MCPClientAdapter):
         mcp_config_path = vscode_dir / "mcp.json"
         
         # Create the .vscode directory if it doesn't exist
-        if not vscode_dir.exists():
-            vscode_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            if not vscode_dir.exists():
+                vscode_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            print(f"Warning: Could not create .vscode directory: {e}")
             
         return str(mcp_config_path)
     
