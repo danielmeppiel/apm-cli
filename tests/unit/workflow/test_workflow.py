@@ -3,9 +3,33 @@
 import os
 import tempfile
 import unittest
+import time
+import shutil
+import gc
+import sys
 from awd_cli.workflow.parser import WorkflowDefinition, parse_workflow_file
 from awd_cli.workflow.runner import substitute_parameters, collect_parameters
 from awd_cli.workflow.discovery import discover_workflows, create_workflow_template
+
+
+def safe_rmdir(path):
+    """Safely remove a directory with retry logic for Windows.
+    
+    Args:
+        path (str): Path to directory to remove
+    """
+    try:
+        shutil.rmtree(path)
+    except PermissionError:
+        # On Windows, give time for any lingering processes to release the lock
+        time.sleep(0.5)
+        gc.collect()  # Force garbage collection to release file handles
+        try:
+            shutil.rmtree(path)
+        except PermissionError as e:
+            print(f"Failed to remove directory {path}: {e}")
+            # Continue without failing the test
+            pass
 
 
 class TestWorkflowParser(unittest.TestCase):
@@ -14,7 +38,8 @@ class TestWorkflowParser(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.temp_path = os.path.join(self.temp_dir.name, "test-workflow.awd.md")
+        self.temp_dir_path = self.temp_dir.name
+        self.temp_path = os.path.join(self.temp_dir_path, "test-workflow.awd.md")
         
         # Create a test workflow file
         with open(self.temp_path, "w") as f:
@@ -36,7 +61,20 @@ input:
     
     def tearDown(self):
         """Tear down test fixtures."""
-        self.temp_dir.cleanup()
+        # Force garbage collection to release file handles
+        gc.collect()
+        
+        # Give time for Windows to release locks
+        if sys.platform == 'win32':
+            time.sleep(0.1)
+            
+        # First, try the standard cleanup
+        try:
+            self.temp_dir.cleanup()
+        except PermissionError:
+            # If standard cleanup fails on Windows, use our safe_rmdir function
+            if hasattr(self, 'temp_dir_path') and os.path.exists(self.temp_dir_path):
+                safe_rmdir(self.temp_dir_path)
     
     def test_parse_workflow_file(self):
         """Test parsing a workflow file."""
@@ -76,7 +114,7 @@ input:
         self.assertEqual(len(errors), 1)
         self.assertIn("description", errors[0])
         
-        # Invalid workflow - missing input parameters
+        # Input parameters are now optional, so this should not report an error
         workflow = WorkflowDefinition(
             "test",
             "test.awd.md",
@@ -86,8 +124,7 @@ input:
             "content"
         )
         errors = workflow.validate()
-        self.assertEqual(len(errors), 1)
-        self.assertIn("input", errors[0])
+        self.assertEqual(len(errors), 0)  # Expecting 0 errors as input is optional
 
 
 class TestWorkflowRunner(unittest.TestCase):
@@ -121,9 +158,10 @@ class TestWorkflowDiscovery(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.TemporaryDirectory()
+        self.temp_dir_path = self.temp_dir.name
         
         # Create a few test workflow files
-        self.workflow1_path = os.path.join(self.temp_dir.name, "workflow1.awd.md")
+        self.workflow1_path = os.path.join(self.temp_dir_path, "workflow1.awd.md")
         with open(self.workflow1_path, "w") as f:
             f.write("""---
 description: Workflow 1
@@ -133,7 +171,7 @@ input:
 # Workflow 1
 """)
         
-        self.workflow2_path = os.path.join(self.temp_dir.name, "workflow2.awd.md")
+        self.workflow2_path = os.path.join(self.temp_dir_path, "workflow2.awd.md")
         with open(self.workflow2_path, "w") as f:
             f.write("""---
 description: Workflow 2
@@ -145,11 +183,24 @@ input:
     
     def tearDown(self):
         """Tear down test fixtures."""
-        self.temp_dir.cleanup()
+        # Force garbage collection to release file handles
+        gc.collect()
+        
+        # Give time for Windows to release locks
+        if sys.platform == 'win32':
+            time.sleep(0.1)
+            
+        # First, try the standard cleanup
+        try:
+            self.temp_dir.cleanup()
+        except PermissionError:
+            # If standard cleanup fails on Windows, use our safe_rmdir function
+            if hasattr(self, 'temp_dir_path') and os.path.exists(self.temp_dir_path):
+                safe_rmdir(self.temp_dir_path)
     
     def test_discover_workflows(self):
         """Test discovering workflows."""
-        workflows = discover_workflows(self.temp_dir.name)
+        workflows = discover_workflows(self.temp_dir_path)
         
         self.assertEqual(len(workflows), 2)
         self.assertIn("workflow1", [w.name for w in workflows])
@@ -157,7 +208,7 @@ input:
     
     def test_create_workflow_template(self):
         """Test creating a workflow template."""
-        template_path = create_workflow_template("test-template", self.temp_dir.name)
+        template_path = create_workflow_template("test-template", self.temp_dir_path)
         
         self.assertTrue(os.path.exists(template_path))
         with open(template_path, "r") as f:
