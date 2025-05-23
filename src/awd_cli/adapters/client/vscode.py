@@ -9,7 +9,8 @@ import json
 import os
 from pathlib import Path
 from .base import MCPClientAdapter
-from ...registry import MCPRegistryClient
+from ...registry.client import SimpleRegistryClient
+from ...registry.integration import RegistryIntegration
 
 
 class VSCodeClientAdapter(MCPClientAdapter):
@@ -20,14 +21,16 @@ class VSCodeClientAdapter(MCPClientAdapter):
     in the VSCode documentation.
     """
     
-    def __init__(self, registry_url="https://demo.registry.azure-mcp.net"):
+    def __init__(self, registry_url=None):
         """Initialize the VSCode client adapter.
         
         Args:
             registry_url (str, optional): URL of the MCP registry.
-                Defaults to the demo registry.
+                If not provided, uses the MCP_REGISTRY_URL environment variable
+                or falls back to the default demo registry.
         """
-        self.registry_client = MCPRegistryClient(registry_url)
+        self.registry_client = SimpleRegistryClient(registry_url)
+        self.registry_integration = RegistryIntegration(registry_url)
     
     def get_config_path(self):
         """Get the path to the VSCode MCP configuration file in the repository.
@@ -120,12 +123,16 @@ class VSCodeClientAdapter(MCPClientAdapter):
             server_name = server_url
             
         try:
-            # Get server details from registry
-            server_details = self.registry_client.get_server_details(server_url)
+            # Try to get server info by ID first
+            try:
+                server_info = self.registry_client.get_server_info(server_url)
+            except (ValueError, Exception):
+                # If that fails, try by name
+                server_info = self.registry_client.get_server_by_name(server_url)
             
             # Format server configuration
-            if server_details:
-                server_config = self.registry_client.format_server_config(server_details)
+            if server_info:
+                server_config = self._format_server_config(server_info)
             else:
                 # Fallback configuration if server details cannot be retrieved
                 server_config = {
@@ -149,3 +156,65 @@ class VSCodeClientAdapter(MCPClientAdapter):
         except Exception as e:
             print(f"Error configuring MCP server: {e}")
             return False
+    
+    def _format_server_config(self, server_info):
+        """Format server details into VSCode mcp.json compatible format.
+        
+        Args:
+            server_info (dict): Server information from registry.
+            
+        Returns:
+            dict: Formatted server configuration for mcp.json.
+        """
+        # Check for packages information
+        if "packages" in server_info and server_info["packages"]:
+            package = server_info["packages"][0]
+            runtime_hint = package.get("runtime_hint", "")
+            
+            # Handle npm packages
+            if runtime_hint == "npx" or "npm" in package.get("registry_name", "").lower():
+                return {
+                    "type": "stdio",
+                    "command": "npx",
+                    "args": [package.get("name")]
+                }
+            
+            # Handle docker packages
+            elif runtime_hint == "docker":
+                return {
+                    "type": "stdio",
+                    "command": "docker",
+                    "args": ["run", "-i", "--rm", package.get("name")]
+                }
+            
+            # Handle Python packages
+            elif runtime_hint in ["uvx", "pip", "python"]:
+                if runtime_hint == "uvx":
+                    command = "uvx"
+                    module_name = package.get("name", "").replace("mcp-server-", "")
+                    args = [f"mcp-server-{module_name}"]
+                else:
+                    command = "python3"
+                    module_name = package.get("name", "").replace("mcp-server-", "").replace("-", "_")
+                    args = ["-m", f"mcp_server_{module_name}"]
+                
+                return {
+                    "type": "stdio",
+                    "command": command,
+                    "args": args
+                }
+        
+        # Check for SSE endpoints
+        if "sse_endpoint" in server_info:
+            return {
+                "type": "sse",
+                "url": server_info["sse_endpoint"],
+                "headers": server_info.get("sse_headers", {})
+            }
+        
+        # Default fallback
+        return {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [f"mcp-server-{server_info.get('name', '')}"]
+        }

@@ -1,5 +1,6 @@
 """MCP Registry module for AWD-CLI."""
 
-from .registry_client import MCPRegistryClient
+from .client import SimpleRegistryClient
+from .integration import RegistryIntegration
 
-__all__ = ["MCPRegistryClient"]
+__all__ = ["SimpleRegistryClient", "RegistryIntegration"]
