@@ -1,6 +1,7 @@
 """Dependency verification for AWD-CLI."""
 
 import os
+from pathlib import Path
 import yaml
 from ..factory import PackageManagerFactory, ClientFactory
 
@@ -15,11 +16,12 @@ def load_awd_config(config_file="awd.yml"):
         dict: The configuration, or None if loading failed.
     """
     try:
-        if not os.path.exists(config_file):
+        config_path = Path(config_file)
+        if not config_path.exists():
             print(f"Configuration file {config_file} not found.")
             return None
             
-        with open(config_file, 'r', encoding='utf-8') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
         
         return config

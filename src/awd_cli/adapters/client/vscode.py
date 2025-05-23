@@ -39,17 +39,17 @@ class VSCodeClientAdapter(MCPClientAdapter):
             str: Path to the .vscode/mcp.json file.
         """
         # Use the current working directory as the repository root
-        repo_root = os.getcwd()
+        repo_root = Path(os.getcwd())
         
         # Path to .vscode/mcp.json in the repository
-        vscode_dir = os.path.join(repo_root, ".vscode")
-        mcp_config_path = os.path.join(vscode_dir, "mcp.json")
+        vscode_dir = repo_root / ".vscode"
+        mcp_config_path = vscode_dir / "mcp.json"
         
         # Create the .vscode directory if it doesn't exist
-        if not os.path.exists(vscode_dir):
-            os.makedirs(vscode_dir, exist_ok=True)
+        if not vscode_dir.exists():
+            vscode_dir.mkdir(parents=True, exist_ok=True)
             
-        return mcp_config_path
+        return str(mcp_config_path)
     
     def update_config(self, config_updates):
         """Update the VSCode MCP configuration with new values.
