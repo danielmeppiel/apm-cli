@@ -4,8 +4,33 @@ import os
 import json
 import pytest
 import tempfile
+import time
+import shutil
+import gc
+import sys
+from pathlib import Path
 from awd_cli.registry.client import SimpleRegistryClient
 from awd_cli.adapters.client.vscode import VSCodeClientAdapter
+
+
+def safe_rmdir(path):
+    """Safely remove a directory with retry logic for Windows.
+    
+    Args:
+        path (str): Path to directory to remove
+    """
+    try:
+        shutil.rmtree(path)
+    except PermissionError:
+        # On Windows, give time for any lingering processes to release the lock
+        time.sleep(0.5)
+        gc.collect()  # Force garbage collection to release file handles
+        try:
+            shutil.rmtree(path)
+        except PermissionError as e:
+            print(f"Failed to remove directory {path}: {e}")
+            # Continue without failing the test
+            pass
 
 
 class TestMCPRegistry:
@@ -17,14 +42,28 @@ class TestMCPRegistry:
         
         # Create a temporary directory for tests
         self.test_dir = tempfile.TemporaryDirectory()
-        os.chdir(self.test_dir.name)
+        self.test_dir_path = self.test_dir.name
+        os.chdir(self.test_dir_path)
         
         # Create .vscode directory
-        os.makedirs(os.path.join(self.test_dir.name, ".vscode"), exist_ok=True)
+        os.makedirs(os.path.join(self.test_dir_path, ".vscode"), exist_ok=True)
     
     def teardown_method(self):
         """Clean up after tests."""
-        self.test_dir.cleanup()
+        # Force garbage collection to release file handles
+        gc.collect()
+        
+        # Give time for Windows to release locks
+        if sys.platform == 'win32':
+            time.sleep(0.1)
+            
+        # First, try the standard cleanup
+        try:
+            self.test_dir.cleanup()
+        except PermissionError:
+            # If standard cleanup fails on Windows, use our safe_rmdir function
+            if hasattr(self, 'test_dir_path') and os.path.exists(self.test_dir_path):
+                safe_rmdir(self.test_dir_path)
     
     def test_list_servers(self):
         """Test listing servers from the registry."""
