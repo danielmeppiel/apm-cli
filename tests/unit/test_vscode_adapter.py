@@ -4,6 +4,7 @@ import os
 import json
 import tempfile
 import unittest
+from pathlib import Path
 import pytest
 from unittest.mock import patch, MagicMock
 from awd_cli.adapters.client.vscode import VSCodeClientAdapter
@@ -235,7 +236,8 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         path = adapter.get_config_path()
         
         # Verify the path is constructed correctly for repository
-        self.assertEqual(path, os.path.join(self.temp_dir.name, ".vscode", "mcp.json"))
+        expected_path = str(Path(self.temp_dir.name) / ".vscode" / "mcp.json")
+        self.assertEqual(path, expected_path)
 
 
 if __name__ == "__main__":
