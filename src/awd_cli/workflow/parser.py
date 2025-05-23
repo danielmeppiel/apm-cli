@@ -33,8 +33,7 @@ class WorkflowDefinition:
         errors = []
         if not self.description:
             errors.append("Missing 'description' in frontmatter")
-        if not self.input_parameters:
-            errors.append("Missing 'input' parameters in frontmatter")
+        # Input parameters are optional, so we don't check for them
         return errors
 
 
