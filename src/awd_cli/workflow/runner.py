@@ -34,6 +34,10 @@ def collect_parameters(workflow_def, provided_params=None):
     """
     provided_params = provided_params or {}
     
+    # If there are no input parameters defined, return the provided ones
+    if not workflow_def.input_parameters:
+        return provided_params
+    
     # Convert list parameters to dict if they're just names
     if isinstance(workflow_def.input_parameters, list):
         # List of parameter names
