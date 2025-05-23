@@ -129,20 +129,19 @@ class VSCodeClientAdapter(MCPClientAdapter):
             # Try to get server info by ID first
             try:
                 server_info = self.registry_client.get_server_info(server_url)
-            except (ValueError, Exception):
+            except (ValueError, Exception) as e:
                 # If that fails, try by name
                 server_info = self.registry_client.get_server_by_name(server_url)
+                if not server_info:
+                    # Re-raise the original exception if no server info is found
+                    raise ValueError(f"Failed to retrieve server details for '{server_url}'") from e
             
             # Format server configuration
             if server_info:
                 server_config = self._format_server_config(server_info)
             else:
-                # Fallback configuration if server details cannot be retrieved
-                server_config = {
-                    "type": "stdio",
-                    "command": "uvx",
-                    "args": [f"mcp-server-{server_url}"]
-                }
+                # Fail if server details cannot be retrieved
+                raise ValueError(f"Failed to retrieve server details for '{server_url}'")
             
             config = self.get_current_config()
             
@@ -156,6 +155,9 @@ class VSCodeClientAdapter(MCPClientAdapter):
             # Update the configuration
             return self.update_config(config)
             
+        except ValueError as ve:
+            # Re-raise ValueError to indicate missing server details
+            raise ve
         except Exception as e:
             print(f"Error configuring MCP server: {e}")
             return False

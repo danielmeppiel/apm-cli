@@ -204,8 +204,8 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertFalse(result)
     
     @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
-    def test_configure_mcp_server_registry_fallback(self, mock_get_path):
-        """Test fallback behavior when registry doesn't have server details."""
+    def test_configure_mcp_server_registry_error(self, mock_get_path):
+        """Test error behavior when registry doesn't have server details."""
         # Configure the mock to raise an exception when getting server info
         self.mock_registry.get_server_info.side_effect = ValueError("Not found")
         self.mock_registry.get_server_by_name.return_value = None
@@ -213,26 +213,18 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         mock_get_path.return_value = self.temp_path
         adapter = VSCodeClientAdapter()
         
-        result = adapter.configure_mcp_server(
-            server_url="unknown-server", 
-            server_name="unknown-server"
-        )
+        # Test that ValueError is raised when server details can't be retrieved
+        with self.assertRaises(ValueError) as context:
+            adapter.configure_mcp_server(
+                server_url="unknown-server", 
+                server_name="unknown-server"
+            )
         
-        with open(self.temp_path, "r") as f:
-            updated_config = json.load(f)
-        
-        self.assertTrue(result)
-        self.assertIn("servers", updated_config)
-        self.assertIn("unknown-server", updated_config["servers"])
+        self.assertIn("Failed to retrieve server details", str(context.exception))
         
         # Verify the registry client was called
         self.mock_registry.get_server_info.assert_called_once_with("unknown-server")
         self.mock_registry.get_server_by_name.assert_called_once_with("unknown-server")
-        
-        # Verify the fallback server configuration
-        self.assertEqual(updated_config["servers"]["unknown-server"]["type"], "stdio")
-        self.assertEqual(updated_config["servers"]["unknown-server"]["command"], "uvx")
-        self.assertEqual(updated_config["servers"]["unknown-server"]["args"], ["mcp-server-unknown-server"])
     
     @patch("os.getcwd")
     def test_get_config_path_repository(self, mock_getcwd):
