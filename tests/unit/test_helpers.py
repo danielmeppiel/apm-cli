@@ -8,6 +8,15 @@ from awd_cli.utils.helpers import is_tool_available, detect_platform, get_availa
 class TestHelpers(unittest.TestCase):
     """Test cases for helper utility functions."""
     
+    def tearDown(self):
+        """Tear down test fixtures."""
+        # Force garbage collection to release file handles
+        import gc
+        gc.collect()
+        # Small delay to allow Windows to release locks
+        import time
+        time.sleep(0.1)
+    
     def test_is_tool_available(self):
         """Test is_tool_available function with known commands."""
         # Python should always be available in the test environment
