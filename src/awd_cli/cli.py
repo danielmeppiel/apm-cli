@@ -123,13 +123,34 @@ def run_workflow(ctx, workflow_name, param):
         sys.exit(1)
 
 
-@workflow.command(name="mcp-sync", help="Update mcp.yml with workflow dependencies")
+@workflow.command(name="mcp-sync", help="Update awd.yml with workflow dependencies")
+@click.option('--output', default="awd.yml", help="Output file name")
 @click.pass_context
-def mcp_sync(ctx):
-    """Sync MCP dependencies from workflows to mcp.yml."""
-    click.echo(f"{INFO}Syncing workflow MCP dependencies to mcp.yml...{RESET}")
-    # Placeholder for actual implementation
-    click.echo(f"{SUCCESS}MCP dependencies synced successfully!{RESET}")
+def mcp_sync(ctx, output):
+    """Sync MCP dependencies from workflows to awd.yml."""
+    click.echo(f"{INFO}Syncing workflow MCP dependencies to {output}...{RESET}")
+    
+    try:
+        from .deps.aggregator import sync_workflow_dependencies
+        
+        success, servers = sync_workflow_dependencies(output)
+        
+        if success:
+            if servers:
+                click.echo(f"{INFO}Found {len(servers)} MCP dependencies across workflows:{RESET}")
+                for server in servers:
+                    click.echo(f"  - {server}")
+                click.echo(f"{SUCCESS}MCP dependencies synced successfully to {output}!{RESET}")
+            else:
+                click.echo(f"{WARNING}No MCP dependencies found in workflows.{RESET}")
+                click.echo(f"{SUCCESS}Empty {output} file created!{RESET}")
+        else:
+            click.echo(f"{ERROR}Failed to sync MCP dependencies.{RESET}", err=True)
+            sys.exit(1)
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error syncing MCP dependencies: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 # MCP command group
@@ -168,8 +189,9 @@ def list_mcp(ctx):
 @mcp.command(name="install", help="Install MCP servers")
 @click.argument('package', required=False)
 @click.option('--version', help="Package version to install")
+@click.option('--file', default="awd.yml", help="Configuration file to install from")
 @click.pass_context
-def install_mcp(ctx, package, version):
+def install_mcp(ctx, package, version, file):
     """Install MCP servers."""
     client_type = ctx.obj['client']
     
@@ -187,10 +209,40 @@ def install_mcp(ctx, package, version):
                 click.echo(f"{ERROR}Failed to install MCP server.{RESET}", err=True)
                 sys.exit(1)
         else:
-            # Install from mcp.yml
-            click.echo(f"{INFO}Installing MCP servers from mcp.yml...{RESET}")
-            # Placeholder for actual implementation
-            click.echo(f"{SUCCESS}MCP servers installed successfully!{RESET}")
+            # Install from awd.yml
+            click.echo(f"{INFO}Installing MCP servers from {file}...{RESET}")
+            
+            from .deps.verifier import verify_dependencies, install_missing_dependencies
+            
+            # First verify what's missing
+            all_installed, installed, missing = verify_dependencies(file)
+            
+            if not installed and not missing:
+                click.echo(f"{WARNING}No MCP servers defined in {file} or file not found.{RESET}")
+                sys.exit(0)
+                
+            if all_installed:
+                click.echo(f"{SUCCESS}All MCP servers already installed!{RESET}")
+                sys.exit(0)
+                
+            # Confirm installation with user
+            if missing:
+                click.echo(f"{INFO}The following MCP servers will be installed:{RESET}")
+                for server in missing:
+                    click.echo(f"  - {server}")
+                    
+                if not click.confirm(f"{INFO}Do you want to continue?{RESET}"):
+                    click.echo(f"{INFO}Installation cancelled.{RESET}")
+                    sys.exit(0)
+                
+                # Install missing dependencies
+                success, installed = install_missing_dependencies(file, client_type)
+                
+                if success:
+                    click.echo(f"{SUCCESS}All required MCP servers installed successfully!{RESET}")
+                else:
+                    click.echo(f"{WARNING}Some MCP servers could not be installed.{RESET}")
+                    sys.exit(1)
             
     except Exception as e:
         click.echo(f"{ERROR}Error installing MCP server: {e}{RESET}", err=True)
@@ -243,23 +295,72 @@ def search_mcp(ctx, query):
         sys.exit(1)
 
 
-@mcp.command(name="verify", help="Verify servers in mcp.yml are installed")
+@mcp.command(name="verify", help="Verify servers in awd.yml are installed")
+@click.option('--file', default="awd.yml", help="Configuration file to verify")
 @click.pass_context
-def verify_mcp(ctx):
-    """Verify MCP servers in mcp.yml are installed."""
-    click.echo(f"{INFO}Verifying MCP servers in mcp.yml...{RESET}")
-    # Placeholder for actual implementation
-    click.echo(f"{SUCCESS}All required MCP servers are installed!{RESET}")
+def verify_mcp(ctx, file):
+    """Verify MCP servers in awd.yml are installed."""
+    click.echo(f"{INFO}Verifying MCP servers in {file}...{RESET}")
+    
+    try:
+        from .deps.verifier import verify_dependencies
+        
+        all_installed, installed, missing = verify_dependencies(file)
+        
+        if not installed and not missing:
+            click.echo(f"{WARNING}No MCP servers defined in {file} or file not found.{RESET}")
+            sys.exit(0)
+            
+        if installed:
+            click.echo(f"{INFO}Installed MCP servers ({len(installed)}):{RESET}")
+            for server in installed:
+                click.echo(f"  - {server}")
+                
+        if missing:
+            click.echo(f"{WARNING}Missing MCP servers ({len(missing)}):{RESET}")
+            for server in missing:
+                click.echo(f"  - {server}")
+            click.echo(f"{INFO}Run 'awd mcp install' to install missing servers.{RESET}")
+            sys.exit(1)
+        else:
+            click.echo(f"{SUCCESS}All required MCP servers are installed!{RESET}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error verifying MCP servers: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
-@mcp.command(name="init", help="Create mcp.yml from installed servers")
-@click.option('--output', default="mcp.yml", help="Output file name")
+@mcp.command(name="init", help="Create awd.yml from installed servers")
+@click.option('--output', default="awd.yml", help="Output file name")
 @click.pass_context
 def init_mcp(ctx, output):
-    """Create mcp.yml from installed servers."""
+    """Create awd.yml from installed servers."""
     click.echo(f"{INFO}Creating {output} from installed MCP servers...{RESET}")
-    # Placeholder for actual implementation
-    click.echo(f"{SUCCESS}{output} created successfully!{RESET}")
+    
+    try:
+        package_manager = PackageManagerFactory.create_package_manager()
+        installed = package_manager.list_installed()
+        
+        if not installed:
+            click.echo(f"{WARNING}No MCP servers installed.{RESET}")
+            return
+        
+        # Create the configuration
+        config = {
+            'version': '1.0',
+            'servers': installed
+        }
+        
+        # Write to file
+        with open(output, 'w', encoding='utf-8') as f:
+            import yaml
+            yaml.dump(config, f, default_flow_style=False)
+            
+        click.echo(f"{SUCCESS}{output} created successfully!{RESET}")
+        
+    except Exception as e:
+        click.echo(f"{ERROR}Error creating {output}: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 # MCP Registry command group
