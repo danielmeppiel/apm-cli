@@ -147,10 +147,9 @@ class TestRuntimeArguments(unittest.TestCase):
         # Validate the args array includes all required runtime arguments
         self.assertEqual(server_config["type"], "stdio")
         self.assertEqual(server_config["command"], "docker")
-        self.assertEqual(len(server_config["args"]), 5)  # run, -i, --rm, image, port
-        self.assertEqual(server_config["args"][0], "run")
-        self.assertEqual(server_config["args"][3], "test-image")
-        self.assertEqual(server_config["args"][4], "8080")
+        self.assertEqual(len(server_config["args"]), 2)  # All arguments should come directly from runtime_arguments
+        self.assertEqual(server_config["args"][0], "test-image") 
+        self.assertEqual(server_config["args"][1], "8080")
     
     def test_python_runtime_args_handling(self):
         """Test that python runtime arguments are correctly added to the args list."""
