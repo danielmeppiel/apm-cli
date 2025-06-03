@@ -6,6 +6,7 @@ AWD allows you to define step-by-step procedures for AI agents to execute. These
 
 - **Portable Agentic Workflows** - Author Agentic Workflows in plain Markdown and run them with any AI agent like GitHub Copilot, Cursor, Claude or ChatGPT
 - **MCP Package Management** - Define your workflow's required MCP Servers and let AWD install them from an MCP Registry
+- **Seamless Execution** - Run workflows with automatic clipboard integration - output is instantly ready to paste into your AI client
 - **Version control friendly** - Store and share workflows like code in your existing repositories
 
 ## Getting Started in 5 Minutes
@@ -17,7 +18,7 @@ pip install awd-cli
 # 2. Create your first workflow
 awd workflow create --name hello-world
 
-# 3. Run the workflow
+# 3. Run the workflow (output auto-copied to clipboard ✓)
 awd workflow run hello-world
 ```
 
@@ -98,7 +99,7 @@ awd workflow run gh-repo-from-template --language=java --framework=spring
 awd workflow run incident-response
 ```
 
-This will ensure all required MCP Servers are installed in the target client and then generate the final prompt output by replacing the input parameter placeholders. You will need to copy and paste this in your client - hoping for a direct integration soon!
+AWD will ensure all required MCP Servers are installed in the target client, generate the final prompt output by replacing the input parameter placeholders, and **automatically copy the result to your clipboard** ✓. Simply paste it directly into your MCP client.
 
 ### Workflow and MCP Integration
 
@@ -161,7 +162,7 @@ awd workflow list                                     # List all available workf
 awd workflow create --name deploy-service             # Create a new workflow template
 
 # Workflow Execution
-awd workflow run deploy-service --service-name=auth-api --target-env=staging  # Run with parameters
+awd workflow run deploy-service --service-name=auth-api --target-env=staging  # Run with parameters (auto-copies to clipboard)
 
 # Workflow-MCP Integration
 awd workflow mcp-sync                                # Update awd.yml with workflow dependencies
