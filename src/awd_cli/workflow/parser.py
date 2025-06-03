@@ -49,11 +49,43 @@ def parse_workflow_file(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             post = frontmatter.load(f)
-            
-        name = os.path.basename(file_path).replace('.awd.md', '')
+        
+        # Extract name based on file structure
+        name = _extract_workflow_name(file_path)
         metadata = post.metadata
         content = post.content
         
         return WorkflowDefinition(name, file_path, metadata, content)
     except Exception as e:
         raise ValueError(f"Failed to parse workflow file: {e}")
+
+
+def _extract_workflow_name(file_path):
+    """Extract workflow name from file path based on naming conventions.
+    
+    Args:
+        file_path (str): Path to the workflow file.
+    
+    Returns:
+        str: Extracted workflow name.
+    """
+    # Normalize path separators
+    normalized_path = os.path.normpath(file_path)
+    path_parts = normalized_path.split(os.sep)
+    
+    # Check if it's a VSCode .github/prompts convention
+    if '.github' in path_parts and 'prompts' in path_parts:
+        # For .github/prompts/name.prompt.md, extract name from filename
+        github_idx = path_parts.index('.github')
+        if (github_idx + 1 < len(path_parts) and 
+            path_parts[github_idx + 1] == 'prompts'):
+            basename = os.path.basename(file_path)
+            if basename.endswith('.prompt.md'):
+                return basename.replace('.prompt.md', '')
+    
+    # For .prompt.md files, extract name from filename
+    if file_path.endswith('.prompt.md'):
+        return os.path.basename(file_path).replace('.prompt.md', '')
+    
+    # Fallback: use filename without extension
+    return os.path.splitext(os.path.basename(file_path))[0]

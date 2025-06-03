@@ -78,12 +78,15 @@ def create_workflow(ctx, name):
     """Create a new workflow template."""
     from .workflow.discovery import create_workflow_template
     
-    click.echo(f"{SUCCESS}Creating new workflow template: {HIGHLIGHT}{name}.awd.md{RESET}")
+    file_format = "VSCode .github/prompts format"
+    click.echo(f"{SUCCESS}Creating new workflow template: {HIGHLIGHT}{name}{RESET} ({file_format})")
     
     try:
-        file_path = create_workflow_template(name)
+        file_path = create_workflow_template(name, use_vscode_convention=True)
         click.echo(f"{INFO}Workflow template created at: {file_path}{RESET}")
         click.echo(f"{SUCCESS}Workflow template created successfully!{RESET}")
+        click.echo(f"{INFO}💡 Tip: This follows VSCode's .github/prompts convention for better integration.{RESET}")
+        
     except Exception as e:
         click.echo(f"{ERROR}Error creating workflow template: {e}{RESET}", err=True)
         sys.exit(1)

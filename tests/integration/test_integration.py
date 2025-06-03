@@ -8,7 +8,7 @@ import time
 import shutil
 import gc
 import sys
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from awd_cli.factory import ClientFactory, PackageManagerFactory
 from awd_cli.core.operations import install_package
 
@@ -64,9 +64,22 @@ class TestIntegration(unittest.TestCase):
                 safe_rmdir(self.temp_dir_path)
     
     @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
-    def test_install_package_integration(self, mock_get_path):
+    @patch("awd_cli.registry.client.SimpleRegistryClient.find_server_by_reference")
+    def test_install_package_integration(self, mock_find_server, mock_get_path):
         """Test installing a package and updating client configuration."""
         mock_get_path.return_value = self.temp_path
+        
+        # Mock the registry client to return a test server configuration
+        mock_find_server.return_value = {
+            "id": "test-id",
+            "name": "test-package",
+            "packages": [
+                {
+                    "name": "test-package",
+                    "runtime_hint": "npx"
+                }
+            ]
+        }
         
         # Install a package
         result = install_package("vscode", "test-package", "1.0.0")
@@ -76,7 +89,10 @@ class TestIntegration(unittest.TestCase):
         with open(self.temp_path, "r") as f:
             config = json.load(f)
         
-        self.assertTrue(config.get("mcp.package.test-package.enabled", False))
+        # Should have servers entry and should NOT have the deprecated mcp.package entry
+        self.assertIn("servers", config)
+        self.assertIn("test-package", config["servers"])
+        self.assertFalse("mcp.package.test-package.enabled" in config)
 
 
 if __name__ == "__main__":

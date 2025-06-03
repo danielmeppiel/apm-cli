@@ -20,7 +20,11 @@ class TestDependenciesAggregator(unittest.TestCase):
     def test_scan_workflows_for_dependencies(self, mock_frontmatter_load, mock_file, mock_glob):
         """Test scanning workflows for dependencies."""
         # Mock glob to return workflow files
-        mock_glob.return_value = ['workflow1.awd.md', 'workflow2.awd.md']
+        # First call returns GitHub prompts, second call returns generic prompts
+        mock_glob.side_effect = [
+            ['.github/prompts/workflow1.prompt.md'], 
+            ['.github/prompts/workflow2.prompt.md']
+        ]
         
         # Mock frontmatter.load to return content with mcp metadata
         mock_content1 = unittest.mock.MagicMock()
@@ -37,7 +41,7 @@ class TestDependenciesAggregator(unittest.TestCase):
         # Verify the results
         self.assertIsInstance(result, set)
         self.assertEqual(result, {'server1', 'server2', 'server3'})
-        self.assertEqual(mock_glob.call_count, 1)
+        self.assertEqual(mock_glob.call_count, 2)  # We now make two glob calls for different patterns
         self.assertEqual(mock_file.call_count, 2)
         self.assertEqual(mock_frontmatter_load.call_count, 2)
     

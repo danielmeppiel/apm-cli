@@ -73,9 +73,14 @@ class VSCodeClientAdapter(MCPClientAdapter):
             except (FileNotFoundError, json.JSONDecodeError):
                 config = {}
             
-            # Update config with new values
+            # Update config with new values or remove entries set to None
             for key, value in config_updates.items():
-                config[key] = value
+                if value is None:
+                    # Remove the entry if it exists
+                    if key in config:
+                        del config[key]
+                else:
+                    config[key] = value
                 
             # Write the updated config
             with open(config_path, "w", encoding="utf-8") as f:
@@ -90,7 +95,7 @@ class VSCodeClientAdapter(MCPClientAdapter):
         """Get the current VSCode MCP configuration.
         
         Returns:
-            dict: Current VSCode MCP configuration.
+            dict: Current VSCode MCP configuration from the local .vscode/mcp.json file.
         """
         config_path = self.get_config_path()
         
@@ -133,14 +138,24 @@ class VSCodeClientAdapter(MCPClientAdapter):
             if not server_info:
                 raise ValueError(f"Failed to retrieve server details for '{server_url}'. Server not found in registry.")
             
-            # Format server configuration
-            server_config = self._format_server_config(server_info)
+            # Format server configuration and get input variables if any
+            server_config, input_vars = self._format_server_config(server_info)
             
             config = self.get_current_config()
             
             # Make sure we have the servers object
             if "servers" not in config:
                 config["servers"] = {}
+                
+            # Add input variables if any
+            if input_vars:
+                if "inputs" not in config:
+                    config["inputs"] = []
+                # Merge with existing inputs, avoiding duplicates by id
+                existing_input_ids = [input_var.get("id") for input_var in config.get("inputs", [])]
+                for input_var in input_vars:
+                    if input_var.get("id") not in existing_input_ids:
+                        config["inputs"].append(input_var)
                 
             # Add the server configuration
             config["servers"][server_name] = server_config
@@ -162,8 +177,14 @@ class VSCodeClientAdapter(MCPClientAdapter):
             server_info (dict): Server information from registry.
             
         Returns:
-            dict: Formatted server configuration for mcp.json.
+            tuple: (server_config, input_vars) where:
+                - server_config is the formatted server configuration for mcp.json
+                - input_vars is a list of input variable definitions
         """
+        # Initialize the base config structure
+        server_config = {}
+        input_vars = []
+        
         # Check for packages information
         if "packages" in server_info and server_info["packages"]:
             package = server_info["packages"][0]
@@ -171,18 +192,38 @@ class VSCodeClientAdapter(MCPClientAdapter):
             
             # Handle npm packages
             if runtime_hint == "npx" or "npm" in package.get("registry_name", "").lower():
-                return {
+                # Start with the base args array containing package name
+                args = [package.get("name")]
+                
+                # Add additional runtime arguments if present
+                if "runtime_arguments" in package and package["runtime_arguments"]:
+                    # Skip the first argument as it's typically the package name which we've already added
+                    for arg in package["runtime_arguments"][1:]:
+                        if arg.get("is_required", False) and arg.get("value_hint"):
+                            args.append(arg.get("value_hint"))
+                
+                server_config = {
                     "type": "stdio",
                     "command": "npx",
-                    "args": [package.get("name")]
+                    "args": args
                 }
             
             # Handle docker packages
             elif runtime_hint == "docker":
-                return {
+                # Start with the base docker run command
+                args = ["run", "-i", "--rm", package.get("name")]
+                
+                # Add additional runtime arguments if present
+                if "runtime_arguments" in package and package["runtime_arguments"]:
+                    # Skip the first argument as it's typically the container name which we've already added
+                    for arg in package["runtime_arguments"][1:]:
+                        if arg.get("is_required", False) and arg.get("value_hint"):
+                            args.append(arg.get("value_hint"))
+                
+                server_config = {
                     "type": "stdio",
                     "command": "docker",
-                    "args": ["run", "-i", "--rm", package.get("name")]
+                    "args": args
                 }
             
             # Handle Python packages
@@ -196,23 +237,54 @@ class VSCodeClientAdapter(MCPClientAdapter):
                     module_name = package.get("name", "").replace("mcp-server-", "").replace("-", "_")
                     args = ["-m", f"mcp_server_{module_name}"]
                 
-                return {
+                # Add additional runtime arguments if present
+                if "runtime_arguments" in package and package["runtime_arguments"]:
+                    # Skip the first argument as it's typically the module name which we've already added
+                    for arg in package["runtime_arguments"][1:]:
+                        if arg.get("is_required", False) and arg.get("value_hint"):
+                            args.append(arg.get("value_hint"))
+                
+                server_config = {
                     "type": "stdio",
                     "command": command,
                     "args": args
                 }
+            
+            # Add environment variables if present
+            if "environment_variables" in package and package["environment_variables"]:
+                server_config["env"] = {}
+                for env_var in package["environment_variables"]:
+                    if "name" in env_var:
+                        # Convert variable name to lowercase and replace underscores with hyphens for VS Code convention
+                        input_var_name = env_var["name"].lower().replace("_", "-")
+                        
+                        # Create the input variable reference
+                        server_config["env"][env_var["name"]] = f"${{input:{input_var_name}}}"
+                        
+                        # Create the input variable definition
+                        input_var_def = {
+                            "type": "promptString",
+                            "id": input_var_name,
+                            "description": env_var.get("description", f"{env_var['name']} for MCP server"),
+                            "password": True  # Default to True for security
+                        }
+                        input_vars.append(input_var_def)
+            
+        # If no server config was created from packages, check for other server types
+        if not server_config:
+            # Check for SSE endpoints
+            if "sse_endpoint" in server_info:
+                server_config = {
+                    "type": "sse",
+                    "url": server_info["sse_endpoint"],
+                    "headers": server_info.get("sse_headers", {})
+                }
+            # Default fallback
+            else:
+                server_config = {
+                    "type": "stdio",
+                    "command": "uvx",
+                    "args": [f"mcp-server-{server_info.get('name', '')}"]
+                }
         
-        # Check for SSE endpoints
-        if "sse_endpoint" in server_info:
-            return {
-                "type": "sse",
-                "url": server_info["sse_endpoint"],
-                "headers": server_info.get("sse_headers", {})
-            }
-        
-        # Default fallback
-        return {
-            "type": "stdio",
-            "command": "uvx",
-            "args": [f"mcp-server-{server_info.get('name', '')}"]
-        }
+        return server_config, input_vars

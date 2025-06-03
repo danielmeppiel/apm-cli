@@ -6,7 +6,7 @@ from .parser import parse_workflow_file
 
 
 def discover_workflows(base_dir=None):
-    """Find all .awd.md files in the current directory and subdirectories.
+    """Find all .prompt.md files following VSCode's .github/prompts convention.
     
     Args:
         base_dir (str, optional): Base directory to search in. Defaults to current directory.
@@ -17,10 +17,26 @@ def discover_workflows(base_dir=None):
     if base_dir is None:
         base_dir = os.getcwd()
     
-    workflow_files = glob.glob(os.path.join(base_dir, "**/*.awd.md"), recursive=True)
-    workflows = []
+    # Support VSCode's .github/prompts convention with .prompt.md files
+    prompt_patterns = [
+        "**/.github/prompts/*.prompt.md",     # VSCode convention: .github/prompts/
+        "**/*.prompt.md"                      # Generic .prompt.md files
+    ]
     
+    workflow_files = []
+    for pattern in prompt_patterns:
+        workflow_files.extend(glob.glob(os.path.join(base_dir, pattern), recursive=True))
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_files = []
     for file_path in workflow_files:
+        if file_path not in seen:
+            seen.add(file_path)
+            unique_files.append(file_path)
+    
+    workflows = []
+    for file_path in unique_files:
         try:
             workflow = parse_workflow_file(file_path)
             workflows.append(workflow)
@@ -30,12 +46,13 @@ def discover_workflows(base_dir=None):
     return workflows
 
 
-def create_workflow_template(name, output_dir=None):
-    """Create a basic workflow template file.
+def create_workflow_template(name, output_dir=None, use_vscode_convention=True):
+    """Create a basic workflow template file following VSCode's .github/prompts convention.
     
     Args:
         name (str): Name of the workflow.
         output_dir (str, optional): Directory to create the file in. Defaults to current directory.
+        use_vscode_convention (bool): Whether to use VSCode's .github/prompts structure. Defaults to True.
     
     Returns:
         str: Path to the created file.
@@ -66,7 +83,14 @@ input:
    - Details for step two
 """
     
-    file_path = os.path.join(output_dir, f"{name}.awd.md")
+    if use_vscode_convention:
+        # Create .github/prompts directory structure
+        prompts_dir = os.path.join(output_dir, ".github", "prompts")
+        os.makedirs(prompts_dir, exist_ok=True)
+        file_path = os.path.join(prompts_dir, f"{name}.prompt.md")
+    else:
+        # Create .prompt.md file in output directory
+        file_path = os.path.join(output_dir, f"{name}.prompt.md")
     
     with open(file_path, "w", encoding='utf-8') as f:
         f.write(template)

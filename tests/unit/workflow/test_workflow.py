@@ -39,7 +39,10 @@ class TestWorkflowParser(unittest.TestCase):
         """Set up test fixtures."""
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_dir_path = self.temp_dir.name
-        self.temp_path = os.path.join(self.temp_dir_path, "test-workflow.awd.md")
+        # Create .github/prompts directory structure
+        self.prompts_dir = os.path.join(self.temp_dir_path, ".github", "prompts")
+        os.makedirs(self.prompts_dir, exist_ok=True)
+        self.temp_path = os.path.join(self.prompts_dir, "test-workflow.prompt.md")
         
         # Create a test workflow file
         with open(self.temp_path, "w") as f:
@@ -92,7 +95,7 @@ input:
         # Valid workflow
         workflow = WorkflowDefinition(
             "test",
-            "test.awd.md",
+            ".github/prompts/test.prompt.md",
             {
                 "description": "Test",
                 "input": ["param1"]
@@ -104,7 +107,7 @@ input:
         # Invalid workflow - missing description
         workflow = WorkflowDefinition(
             "test",
-            "test.awd.md",
+            ".github/prompts/test.prompt.md",
             {
                 "input": ["param1"]
             },
@@ -117,7 +120,7 @@ input:
         # Input parameters are now optional, so this should not report an error
         workflow = WorkflowDefinition(
             "test",
-            "test.awd.md",
+            ".github/prompts/test.prompt.md",
             {
                 "description": "Test"
             },
@@ -160,8 +163,12 @@ class TestWorkflowDiscovery(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_dir_path = self.temp_dir.name
         
+        # Create .github/prompts directory structure
+        self.prompts_dir = os.path.join(self.temp_dir_path, ".github", "prompts")
+        os.makedirs(self.prompts_dir, exist_ok=True)
+        
         # Create a few test workflow files
-        self.workflow1_path = os.path.join(self.temp_dir_path, "workflow1.awd.md")
+        self.workflow1_path = os.path.join(self.prompts_dir, "workflow1.prompt.md")
         with open(self.workflow1_path, "w") as f:
             f.write("""---
 description: Workflow 1
@@ -171,7 +178,7 @@ input:
 # Workflow 1
 """)
         
-        self.workflow2_path = os.path.join(self.temp_dir_path, "workflow2.awd.md")
+        self.workflow2_path = os.path.join(self.prompts_dir, "workflow2.prompt.md")
         with open(self.workflow2_path, "w") as f:
             f.write("""---
 description: Workflow 2

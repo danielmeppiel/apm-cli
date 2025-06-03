@@ -65,7 +65,7 @@ class TestWorkflow(unittest.TestCase):
         """Test the WorkflowDefinition class."""
         workflow = WorkflowDefinition(
             "test",
-            "test.awd.md",
+            ".github/prompts/test.prompt.md",
             {
                 "description": "Test workflow",
                 "author": "Test Author",
@@ -95,7 +95,8 @@ class TestWorkflow(unittest.TestCase):
         template_path = create_workflow_template("test-workflow", self.temp_dir_path)
         
         self.assertTrue(os.path.exists(template_path))
-        self.assertEqual(os.path.basename(template_path), "test-workflow.awd.md")
+        # VSCode convention: .github/prompts/name.prompt.md
+        self.assertEqual(os.path.basename(template_path), "test-workflow.prompt.md")
 
 
 if __name__ == "__main__":

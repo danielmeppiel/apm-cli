@@ -39,11 +39,9 @@ def install_package(client_type, package_name, version=None):
         
         # Install the package
         result = package_manager.install(package_name, version)
-        
-        # Configure the client to use the package
-        # This is just a placeholder - actual implementation will depend on the package
-        client.update_config({f"mcp.package.{package_name}.enabled": True})
-        
+                
+        # Return the result of installation
+        # The configuration of the server is already handled in the package_manager.install method
         return result
     except Exception as e:
         print(f"Error installing package: {e}")
@@ -67,10 +65,12 @@ def uninstall_package(client_type, package_name):
         # Uninstall the package
         result = package_manager.uninstall(package_name)
         
-        # Update the client configuration to disable the package
+        # Remove any legacy config entries if they exist
         current_config = client.get_current_config()
+        config_updates = {}
         if f"mcp.package.{package_name}.enabled" in current_config:
-            client.update_config({f"mcp.package.{package_name}.enabled": False})
+            config_updates = {f"mcp.package.{package_name}.enabled": None}  # Set to None to remove the entry
+            client.update_config(config_updates)
         
         return result
     except Exception as e:
