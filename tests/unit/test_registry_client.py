@@ -184,6 +184,143 @@ class TestSimpleRegistryClient(unittest.TestCase):
         client = SimpleRegistryClient("https://explicit-url.example.com")
         self.assertEqual(client.registry_url, "https://explicit-url.example.com")
 
+    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
+    def test_find_server_by_reference_uuid(self, mock_get_server_info):
+        """Test finding a server by UUID reference."""
+        # Mock server data
+        server_data = {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "name": "test-server",
+            "description": "Test server"
+        }
+        mock_get_server_info.return_value = server_data
+        
+        # Call the method with UUID
+        result = self.client.find_server_by_reference("123e4567-e89b-12d3-a456-426614174000")
+        
+        # Assertions
+        self.assertEqual(result, server_data)
+        mock_get_server_info.assert_called_once_with("123e4567-e89b-12d3-a456-426614174000")
+
+    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
+    def test_find_server_by_reference_uuid_not_found(self, mock_get_server_info):
+        """Test finding a server by UUID that doesn't exist."""
+        # Mock get_server_info to raise ValueError
+        mock_get_server_info.side_effect = ValueError("Server not found")
+        
+        # Call the method with UUID
+        result = self.client.find_server_by_reference("123e4567-e89b-12d3-a456-426614174000")
+        
+        # Should return None when server not found
+        self.assertIsNone(result)
+        mock_get_server_info.assert_called_once_with("123e4567-e89b-12d3-a456-426614174000")
+
+    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    def test_find_server_by_reference_name_match(self, mock_list_servers, mock_get_server_info):
+        """Test finding a server by exact name match."""
+        # Mock list_servers
+        mock_list_servers.return_value = (
+            [
+                {
+                    "id": "123e4567-e89b-12d3-a456-426614174000",
+                    "name": "io.github.owner/repo-name"
+                },
+                {
+                    "id": "223e4567-e89b-12d3-a456-426614174000",
+                    "name": "other-server"
+                }
+            ],
+            None
+        )
+        
+        # Mock get_server_info
+        server_data = {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "name": "io.github.owner/repo-name",
+            "description": "Test server"
+        }
+        mock_get_server_info.return_value = server_data
+        
+        # Call the method with exact name
+        result = self.client.find_server_by_reference("io.github.owner/repo-name")
+        
+        # Assertions
+        self.assertEqual(result, server_data)
+        mock_list_servers.assert_called_once()
+        mock_get_server_info.assert_called_once_with("123e4567-e89b-12d3-a456-426614174000")
+
+    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    def test_find_server_by_reference_name_not_found(self, mock_list_servers):
+        """Test finding a server by name that doesn't exist in registry."""
+        # Mock list_servers with no matching names
+        mock_list_servers.return_value = (
+            [
+                {
+                    "id": "123e4567-e89b-12d3-a456-426614174000",
+                    "name": "io.github.owner/different-repo"
+                },
+                {
+                    "id": "223e4567-e89b-12d3-a456-426614174000",
+                    "name": "other-server"
+                }
+            ],
+            None
+        )
+        
+        # Call the method with non-existent name
+        result = self.client.find_server_by_reference("ghcr.io/github/github-mcp-server")
+        
+        # Should return None when server not found
+        self.assertIsNone(result)
+        mock_list_servers.assert_called_once()
+
+    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    def test_find_server_by_reference_name_match_get_server_info_fails(self, mock_list_servers, mock_get_server_info):
+        """Test finding a server by name when get_server_info fails."""
+        # Mock list_servers
+        mock_list_servers.return_value = (
+            [
+                {
+                    "id": "123e4567-e89b-12d3-a456-426614174000",
+                    "name": "test-server"
+                }
+            ],
+            None
+        )
+        
+        # Mock get_server_info to fail
+        mock_get_server_info.side_effect = Exception("Network error")
+        
+        # Call the method
+        result = self.client.find_server_by_reference("test-server")
+        
+        # Should return None when get_server_info fails
+        self.assertIsNone(result)
+        mock_list_servers.assert_called_once()
+        mock_get_server_info.assert_called_once_with("123e4567-e89b-12d3-a456-426614174000")
+
+    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    def test_find_server_by_reference_invalid_format(self, mock_list_servers):
+        """Test finding a server with various invalid/edge case formats."""
+        # Mock list_servers with no matches
+        mock_list_servers.return_value = ([], None)
+        
+        # Test various formats that should not match
+        test_cases = [
+            "",  # Empty string
+            "short",  # Too short to be UUID
+            "123e4567-e89b-12d3-a456-426614174000-extra",  # Too long to be UUID
+            "not-a-uuid-but-36-chars-long-string",  # 36 chars but wrong format
+            "registry.io/very/long/path/name",  # Container-like reference
+        ]
+        
+        for test_case in test_cases:
+            with self.subTest(reference=test_case):
+                result = self.client.find_server_by_reference(test_case)
+                self.assertIsNone(result)
+
 
 if __name__ == "__main__":
     unittest.main()

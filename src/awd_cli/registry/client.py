@@ -115,3 +115,42 @@ class SimpleRegistryClient:
                 return self.get_server_info(server["id"])
                 
         return None
+    
+
+    
+    def find_server_by_reference(self, reference: str) -> Optional[Dict[str, Any]]:
+        """Find a server by exact name match or server ID.
+
+        This is a simple, efficient lookup that only makes network requests when necessary:
+        1. Server ID (UUID format) - direct API call
+        2. Exact name match from server list - single additional API call
+
+        Args:
+            reference (str): Server reference (ID or exact name).
+
+        Returns:
+            Optional[Dict[str, Any]]: Server metadata dictionary or None if not found.
+        
+        Raises:
+            requests.RequestException: If the request fails.
+        """
+        # Strategy 1: Try as server ID first (direct lookup)
+        try:
+            # Check if it looks like a UUID (contains hyphens and is 36 chars)
+            if len(reference) == 36 and reference.count('-') == 4:
+                return self.get_server_info(reference)
+        except (ValueError, Exception):
+            pass
+        
+        # Strategy 2: Exact name match
+        servers, _ = self.list_servers()
+        
+        for server in servers:
+            if server.get("name") == reference:
+                try:
+                    return self.get_server_info(server["id"])
+                except Exception:
+                    continue
+                    
+        # If not found by ID or exact name, server is not in registry
+        return None

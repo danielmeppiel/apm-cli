@@ -53,6 +53,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         # Configure the mocks
         self.mock_registry.get_server_info.return_value = self.server_info
         self.mock_registry.get_server_by_name.return_value = self.server_info
+        self.mock_registry.find_server_by_reference.return_value = self.server_info
     
     def tearDown(self):
         """Tear down test fixtures."""
@@ -144,7 +145,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertIn("fetch", updated_config["servers"])
         
         # Verify the registry client was called
-        self.mock_registry.get_server_info.assert_called_once_with("fetch")
+        self.mock_registry.find_server_by_reference.assert_called_once_with("fetch")
         
         # Verify the server configuration
         self.assertEqual(updated_config["servers"]["fetch"]["type"], "stdio")
@@ -183,7 +184,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertIn("fetch", updated_config["servers"])
         
         # Verify the registry client was called
-        self.mock_registry.get_server_info.assert_called_once_with("fetch")
+        self.mock_registry.find_server_by_reference.assert_called_once_with("fetch")
         
         # Verify the server configuration
         self.assertEqual(updated_config["servers"]["fetch"]["type"], "stdio")
@@ -206,9 +207,8 @@ class TestVSCodeClientAdapter(unittest.TestCase):
     @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_configure_mcp_server_registry_error(self, mock_get_path):
         """Test error behavior when registry doesn't have server details."""
-        # Configure the mock to raise an exception when getting server info
-        self.mock_registry.get_server_info.side_effect = ValueError("Not found")
-        self.mock_registry.get_server_by_name.return_value = None
+        # Configure the mock to return None when server is not found
+        self.mock_registry.find_server_by_reference.return_value = None
         
         mock_get_path.return_value = self.temp_path
         adapter = VSCodeClientAdapter()
@@ -220,11 +220,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
                 server_name="unknown-server"
             )
         
-        self.assertIn("Failed to retrieve server details", str(context.exception))
-        
-        # Verify the registry client was called
-        self.mock_registry.get_server_info.assert_called_once_with("unknown-server")
-        self.mock_registry.get_server_by_name.assert_called_once_with("unknown-server")
+        self.assertIn("Failed to retrieve server details for 'unknown-server'. Server not found in registry.", str(context.exception))
     
     @patch("os.getcwd")
     def test_get_config_path_repository(self, mock_getcwd):
