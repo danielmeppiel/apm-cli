@@ -119,7 +119,17 @@ def run_workflow(ctx, workflow_name, param):
             
         click.echo(f"\n{INFO}Workflow output:{RESET}")
         click.echo(result)
-        click.echo(f"\n{SUCCESS}Workflow executed successfully!{RESET}")
+        
+        # Auto-copy workflow output to clipboard
+        try:
+            from .utils.clipboard import copy_to_clipboard
+            if copy_to_clipboard(result):
+                click.echo(f"\n{SUCCESS}Workflow executed successfully! ✓ Copied to clipboard{RESET}")
+            else:
+                click.echo(f"\n{SUCCESS}Workflow executed successfully!{RESET}")
+                click.echo(f"{WARNING}Note: Clipboard unavailable on this system{RESET}")
+        except ImportError:
+            click.echo(f"\n{SUCCESS}Workflow executed successfully!{RESET}")
         
     except Exception as e:
         click.echo(f"{ERROR}Error executing workflow: {e}{RESET}", err=True)
