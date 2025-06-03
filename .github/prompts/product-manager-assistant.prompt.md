@@ -1,4 +1,5 @@
 ---
+mode: agent
 description: Guide an AI agent through a structured process to identify missing features in a software project, prioritize them, and create detailed specifications as GitHub issues.
 author: Daniel Meppiel
 mcp:

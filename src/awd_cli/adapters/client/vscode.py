@@ -126,22 +126,15 @@ class VSCodeClientAdapter(MCPClientAdapter):
             server_name = server_url
             
         try:
-            # Try to get server info by ID first
-            try:
-                server_info = self.registry_client.get_server_info(server_url)
-            except (ValueError, Exception) as e:
-                # If that fails, try by name
-                server_info = self.registry_client.get_server_by_name(server_url)
-                if not server_info:
-                    # Re-raise the original exception if no server info is found
-                    raise ValueError(f"Failed to retrieve server details for '{server_url}'") from e
+            # Use enhanced lookup with multiple strategies
+            server_info = self.registry_client.find_server_by_reference(server_url)
+            
+            # Fail if server is not found in registry - security requirement
+            if not server_info:
+                raise ValueError(f"Failed to retrieve server details for '{server_url}'. Server not found in registry.")
             
             # Format server configuration
-            if server_info:
-                server_config = self._format_server_config(server_info)
-            else:
-                # Fail if server details cannot be retrieved
-                raise ValueError(f"Failed to retrieve server details for '{server_url}'")
+            server_config = self._format_server_config(server_info)
             
             config = self.get_current_config()
             

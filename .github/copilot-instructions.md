@@ -2,7 +2,7 @@
     - The virtual environment is created in the `.venv` directory. Create it with `uv create venv` if it doesn't exist.
     - To activate the environment, use `source .venv/bin/activate` (Linux/Mac) or `.venv\Scripts\activate` (Windows).
     - Install dependencies with `uv pip install -e .`.
-- Unit tests are run with pytest.
+- Unit tests are run with pytest, but remember you must activate the virtual environment first as described above.
 - The solution must meet the functionality as explained in the [README.md](README.md) file.
 - The general high-level basis to the solution is depicted in [APPROACH.md](../../APPROACH.md). 
 - When developing functionality, we need to respect our own [CONTRIBUTING.md](../../CONTRIBUTING.md) file.

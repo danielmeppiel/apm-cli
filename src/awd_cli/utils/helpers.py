@@ -50,15 +50,35 @@ def get_available_package_managers():
     """
     package_managers = {}
     
-    # Check for package managers
+    # Check for Python package managers
     if is_tool_available("uv"):
         package_managers["uv"] = "uv"
     if is_tool_available("pip"):
         package_managers["pip"] = "pip"
+    if is_tool_available("pipx"):
+        package_managers["pipx"] = "pipx"
+    
+    # Check for JavaScript package managers
     if is_tool_available("npm"):
         package_managers["npm"] = "npm"
-    if is_tool_available("brew"):
+    if is_tool_available("yarn"):
+        package_managers["yarn"] = "yarn"
+    if is_tool_available("pnpm"):
+        package_managers["pnpm"] = "pnpm"
+    
+    # Check for system package managers
+    if is_tool_available("brew"):  # macOS
         package_managers["brew"] = "brew"
+    if is_tool_available("apt"):   # Debian/Ubuntu
+        package_managers["apt"] = "apt"
+    if is_tool_available("yum"):   # CentOS/RHEL
+        package_managers["yum"] = "yum"
+    if is_tool_available("dnf"):   # Fedora
+        package_managers["dnf"] = "dnf"
+    if is_tool_available("apk"):   # Alpine
+        package_managers["apk"] = "apk"
+    if is_tool_available("pacman"): # Arch
+        package_managers["pacman"] = "pacman"
     
     return package_managers
 
