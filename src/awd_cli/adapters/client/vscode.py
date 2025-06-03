@@ -192,15 +192,16 @@ class VSCodeClientAdapter(MCPClientAdapter):
             
             # Handle npm packages
             if runtime_hint == "npx" or "npm" in package.get("registry_name", "").lower():
-                # Start with the base args array containing package name
-                args = [package.get("name")]
-                
-                # Add additional runtime arguments if present
+                # Get args directly from runtime_arguments
+                args = []
                 if "runtime_arguments" in package and package["runtime_arguments"]:
-                    # Skip the first argument as it's typically the package name which we've already added
-                    for arg in package["runtime_arguments"][1:]:
+                    for arg in package["runtime_arguments"]:
                         if arg.get("is_required", False) and arg.get("value_hint"):
                             args.append(arg.get("value_hint"))
+                
+                # Fallback if no runtime_arguments are provided
+                if not args and package.get("name"):
+                    args = [package.get("name")]
                 
                 server_config = {
                     "type": "stdio",
@@ -210,15 +211,16 @@ class VSCodeClientAdapter(MCPClientAdapter):
             
             # Handle docker packages
             elif runtime_hint == "docker":
-                # Start with the base docker run command
-                args = ["run", "-i", "--rm", package.get("name")]
-                
-                # Add additional runtime arguments if present
+                # Get args directly from runtime_arguments
+                args = []
                 if "runtime_arguments" in package and package["runtime_arguments"]:
-                    # Skip the first argument as it's typically the container name which we've already added
-                    for arg in package["runtime_arguments"][1:]:
+                    for arg in package["runtime_arguments"]:
                         if arg.get("is_required", False) and arg.get("value_hint"):
                             args.append(arg.get("value_hint"))
+                
+                # Fallback if no runtime_arguments are provided - use standard docker run command
+                if not args:
+                    args = ["run", "-i", "--rm", package.get("name")]
                 
                 server_config = {
                     "type": "stdio",
@@ -227,22 +229,31 @@ class VSCodeClientAdapter(MCPClientAdapter):
                 }
             
             # Handle Python packages
-            elif runtime_hint in ["uvx", "pip", "python"]:
+            elif runtime_hint in ["uvx", "pip", "python"] or "python" in runtime_hint or package.get("registry_name", "").lower() == "pypi":
+                # Determine the command based on runtime_hint
                 if runtime_hint == "uvx":
                     command = "uvx"
-                    module_name = package.get("name", "").replace("mcp-server-", "")
-                    args = [f"mcp-server-{module_name}"]
+                elif "python" in runtime_hint:
+                    # Use the specified Python path if it's a full path, otherwise default to python3
+                    command = "python3" if runtime_hint in ["python", "pip"] else runtime_hint
                 else:
                     command = "python3"
-                    module_name = package.get("name", "").replace("mcp-server-", "").replace("-", "_")
-                    args = ["-m", f"mcp_server_{module_name}"]
                 
-                # Add additional runtime arguments if present
+                # Get args directly from runtime_arguments
+                args = []
                 if "runtime_arguments" in package and package["runtime_arguments"]:
-                    # Skip the first argument as it's typically the module name which we've already added
-                    for arg in package["runtime_arguments"][1:]:
+                    for arg in package["runtime_arguments"]:
                         if arg.get("is_required", False) and arg.get("value_hint"):
                             args.append(arg.get("value_hint"))
+                
+                # Fallback if no runtime_arguments are provided
+                if not args:
+                    if runtime_hint == "uvx":
+                        module_name = package.get("name", "").replace("mcp-server-", "")
+                        args = [f"mcp-server-{module_name}"]
+                    else:
+                        module_name = package.get("name", "").replace("mcp-server-", "").replace("-", "_")
+                        args = ["-m", f"mcp_server_{module_name}"]
                 
                 server_config = {
                     "type": "stdio",
