@@ -8,12 +8,24 @@ import frontmatter
 
 
 def scan_workflows_for_dependencies():
-    """Scan all .awd.md files for MCP dependencies.
+    """Scan all workflow files for MCP dependencies following VSCode's .github/prompts convention.
     
     Returns:
         set: A set of unique MCP server names from all workflows.
     """
-    workflows = glob.glob("**/*.awd.md", recursive=True)
+    # Support VSCode's .github/prompts convention with .prompt.md files
+    prompt_patterns = [
+        "**/.github/prompts/*.prompt.md",     # VSCode convention: .github/prompts/
+        "**/*.prompt.md"                      # Generic .prompt.md files
+    ]
+    
+    workflows = []
+    for pattern in prompt_patterns:
+        workflows.extend(glob.glob(pattern, recursive=True))
+    
+    # Remove duplicates
+    workflows = list(set(workflows))
+    
     all_servers = set()
     
     for workflow_file in workflows:

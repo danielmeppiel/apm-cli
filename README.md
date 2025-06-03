@@ -2,7 +2,7 @@
 
 > **Turn complex DevOps tasks into reusable, AI-powered automation** - AWD lets you define workflows once and run them with any AI agent, bridging the gap between rigid vendor tools and complex custom agents.
 
-AWD allows you to define step-by-step procedures for AI agents to execute. These workflows are written in Markdown with YAML frontmatter (`.awd.md` files) and can be run by any target agent client.
+AWD allows you to define step-by-step procedures for AI agents to execute. These workflows are written in Markdown with YAML frontmatter (`.prompt.md` files following VSCode's `.github/prompts` convention) and can be run by any target agent client.
 
 - **Portable Agentic Workflows** - Author Agentic Workflows in plain Markdown and run them with any AI agent like GitHub Copilot, Cursor, Claude or ChatGPT
 - **MCP Package Management** - Define your workflow's required MCP Servers and let AWD install them from an MCP Registry
@@ -38,12 +38,12 @@ Create your first Agentic Workflow and start writing your Workflow Definition fi
 
 ```zsh
 # Create a new workflow template
-awd workflow create --name gh-repo-from-template               # Creates gh-repo-from-template.awd.md template
+awd workflow create --name gh-repo-from-template               # Creates .github/prompts/gh-repo-from-template.prompt.md template
 ```
 
 ### Workflow Definitions
 
-Workflows are defined in Markdown files with a `.awd.md` extension. Here's an example of `gh-repo-from-template.awd.md`:
+Workflows are defined in Markdown files following the VSCode prompt convention with a `.prompt.md` extension. Here's an example of `.github/prompts/gh-repo-from-template.prompt.md`:
 
 ```yaml 
 ---
