@@ -1,5 +1,6 @@
 """Runner for workflow execution."""
 
+import os
 import re
 from .parser import WorkflowDefinition
 from .discovery import discover_workflows
@@ -58,15 +59,33 @@ def collect_parameters(workflow_def, provided_params=None):
 
 
 def find_workflow_by_name(name, base_dir=None):
-    """Find a workflow by name.
+    """Find a workflow by name or file path.
     
     Args:
-        name (str): Name of the workflow.
+        name (str): Name of the workflow or file path.
         base_dir (str, optional): Base directory to search in.
     
     Returns:
         WorkflowDefinition: Workflow definition if found, None otherwise.
     """
+    if base_dir is None:
+        base_dir = os.getcwd()
+    
+    # If name looks like a file path, try to parse it directly
+    if name.endswith('.prompt.md') or name.endswith('.workflow.md'):
+        # Handle relative paths
+        if not os.path.isabs(name):
+            name = os.path.join(base_dir, name)
+        
+        if os.path.exists(name):
+            try:
+                from .parser import parse_workflow_file
+                return parse_workflow_file(name)
+            except Exception as e:
+                print(f"Error parsing workflow file {name}: {e}")
+                return None
+    
+    # Otherwise, search by name
     workflows = discover_workflows(base_dir)
     for workflow in workflows:
         if workflow.name == name:
@@ -87,6 +106,9 @@ def run_workflow(workflow_name, params=None, base_dir=None):
     """
     params = params or {}
     
+    # Extract runtime information
+    runtime_name = params.pop('_runtime', None)
+    
     # Find the workflow
     workflow = find_workflow_by_name(workflow_name, base_dir)
     if not workflow:
@@ -103,4 +125,18 @@ def run_workflow(workflow_name, params=None, base_dir=None):
     # Substitute parameters
     result_content = substitute_parameters(workflow.content, all_params)
     
+    # If runtime is specified, execute with LLM runtime
+    if runtime_name:
+        try:
+            from ..runtime.llm_runtime import LLMRuntime
+            llm_runtime = LLMRuntime(runtime_name)
+            
+            # Execute the prompt with the LLM runtime
+            response = llm_runtime.execute_prompt(result_content)
+            return True, response
+            
+        except Exception as e:
+            return False, f"Runtime execution failed: {str(e)}"
+    
+    # Default behavior: return the substituted content
     return True, result_content
