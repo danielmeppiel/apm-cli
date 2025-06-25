@@ -1,181 +1,197 @@
 # Agentic Workflow Definitions (AWD)
 
-> **Turn complex DevOps tasks into reusable, AI-powered automation** - AWD lets you define workflows once and run them with any AI agent, bridging the gap between rigid vendor tools and complex custom agents.
+**The NPM for AI-Native Development** - Natural language is the new scripting language. Now you can package, share, and run agentic prompts and workflows across any LLM runtime. 
 
-AWD allows you to define step-by-step procedures for AI agents to execute. These workflows are written in Markdown with YAML frontmatter (`.prompt.md` files following VSCode's `.github/prompts` convention) and can be run by any target agent client.
+**Think npm + Node.js, but for Natural Language.**
 
-- **Portable Agentic Workflows** - Author Agentic Workflows in plain Markdown and run them with any AI agent like GitHub Copilot, Cursor, Claude or ChatGPT
-- **MCP Package Management** - Define your workflow's required MCP Servers and let AWD install them from an MCP Registry
-- **Seamless Execution** - Run workflows with automatic clipboard integration - output is instantly ready to paste into your AI client
-- **Version control friendly** - Store and share workflows like code in your existing repositories
+## Quick Start (2 minutes)
 
-## Getting Started in 5 Minutes
+> **📋 Prerequisites**: Get a GitHub fine-grained Personal Access Token with **read-only Models permissions** at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
 
 ```bash
 # 1. Install AWD CLI
 pip install awd-cli
 
-# 2. Create your first workflow
-awd workflow create --name hello-world
+# 2. Configure GitHub Models
+llm keys set github
+# Paste your GitHub PAT when prompted
 
-# 3. Run the workflow (output auto-copied to clipboard ✓)
-awd workflow run hello-world
+# 3. Create your first prompt
+awd create prompt hello-world
+
+# 4. Run it with GitHub Models
+awd run hello-world --runtime=github/gpt-4o-mini
+
+# 5. Or preview without execution
+awd preview hello-world
 ```
 
-## Community & Contributing
+**That's it!** You're now running AI prompts across any LLM runtime.
 
-AWD is an open-source project built for developers, by developers. We welcome contributions of all kinds!
+> 💡 **Any LLM Runtime**: AWD is built on the [LLM library](https://llm.datasette.io/en/stable/index.html), so you can use any supported runtime - from local models with Ollama to cloud providers like OpenAI, Anthropic, and more.
 
-- [Share your workflows](https://github.com/danielmeppiel/awd-cli/examples)
-- [Read our contribution guide](CONTRIBUTING.md)
+## How It Works
 
-Star ⭐ this repo if you find it useful!
+**Write prompts in markdown:**
 
-## Usage
-
-### Creating and Managing Workflows
-
-Create your first Agentic Workflow and start writing your Workflow Definition file.
-
-```zsh
-# Create a new workflow template
-awd workflow create --name gh-repo-from-template               # Creates .github/prompts/gh-repo-from-template.prompt.md template
-```
-
-### Workflow Definitions
-
-Workflows are defined in Markdown files following the VSCode prompt convention with a `.prompt.md` extension. Here's an example of `.github/prompts/gh-repo-from-template.prompt.md`:
-
-```yaml 
+```markdown
 ---
-description: Creates a new GitHub repository by picking the right Repository Template from a GitHub Org and sets up a CI workflow by also picking the right GitHub Actions template. 
-author: Alice DevOps  
-mcp:
-  - ghcr.io/github/github-mcp-server
-input:
-  - language
-  - framework
+description: Analyzes application logs for errors  
+input: [service_name, time_window]
+mcp: [logs-analyzer]  # Optional: tools for advanced prompts
 ---
 
-# Create a GitHub Repo from a Repo Template
+# Analyze Application Logs
 
-1. Gather Requirements:
-   - Review provided parameters (language: ${input:language}, framework: ${input:framework})
-   - If any key parameters are missing, such as language or framework, ask the user for clarification
+Analyze logs for ${input:service_name} over the last ${input:time_window}.
 
-2. Find Repository Template:
-   - Use get-repository-templates tool to find matching GitHub Repository templates
-   - Filter by language, framework, architecture type if specified
-   - Consider features (example: oauth2, material-ui) and compliance (example: soc2) if specified
-   - Expand the search if you don't find matching templates at first, e.g. by removing filters - you must find a template. Do NEVER propose creating a repository without a template.
-   - Review options and recommend best match to user
-
-3. Create Repository:
-   - Once user confirms template choice, proceed with repository creation using GitHub MCP Server tools
-   - Once the repo is created, read the contents from the template repository and copy them to the new repository
-
-4. Setup CI:
-   - Use get-github-actions-templates tool to find in which Organizations we can look for approved GitHub Actions workflow templates
-   - Once you find out where we can look for templates, ask the user to select the appropriate source Organization to look for those templates
-   - Fetch the contents of the workflowsUrl of that organization - this is a folder containing all the approved CI GitHub Actions workflows
-   - Recommend appropriate workflows based on project type
-   - Ask the user to confirm the workflow template choice
-   - Once the user confirms the template choice, create a workflow in the new repository by reading/fetching the template workflow contents and then pushing a new workflow file to the new repo created above. Use the GitHub MCP tools for this.
-
-5. Final Steps:
-   - Summarize all actions taken
-   - Provide next steps (git clone command) and resources to the user
+1. Retrieve logs for the specified service and timeframe
+2. Identify ERROR and FATAL messages  
+3. Look for patterns and provide recommendations
 ```
 
-### Running Workflows
+**Run anywhere:**
 
-You can then ask AWD to "run" your workflow:
-
-```zsh
-# Run a workflow with parameters
-awd workflow run gh-repo-from-template --language=java --framework=spring
-
-# Run with interactive parameter input (prompted if missing)
-awd workflow run incident-response
+```bash
+# Same prompt, different runtimes
+awd run analyze-logs --runtime=github/gpt-4o-mini --service=api --time=1h
+awd run analyze-logs --runtime=ollama/llama3.2 --service=api --time=1h
+awd run analyze-logs --runtime=claude-3.5-sonnet --service=api --time=1h
 ```
 
-AWD will ensure all required MCP Servers are installed in the target client, generate the final prompt output by replacing the input parameter placeholders, and **automatically copy the result to your clipboard** ✓. Simply paste it directly into your MCP client.
+**Share like npm packages:**
 
-### Workflow and MCP Integration
+```bash
+# Install from GitHub
+awd install github.com/kubernetes/troubleshooting-prompts
+awd install github.com/security/vulnerability-scanners
 
-The AWD CLI intelligently manages the relationship between workflows and MCP servers:
-
-1. **Automatic Dependency Management**:
-   - When running a workflow, AWD checks if all required MCP servers (defined in the workflow's YAML frontmatter) are installed
-   - If missing servers are detected, AWD automatically installs them before executing the workflow
-   - This ensures workflows always have their required tools available
-
-2. **awd.yml Synchronization**:
-   - AWD can update the `awd.yml` file to include MCP servers required by workflows
-   - This keeps your central dependency file in sync with actual workflow requirements
-
-3. **Project-wide Management**:
-   - The `awd.yml` file serves as the central record of all MCP server dependencies across workflows
-   - Use it for version pinning, documentation, and to ensure consistent environments across team members
-
-This integration ensures that both individual workflows can declare their specific tool requirements while maintaining a central, manageable dependency manifest for the entire project.
-
-### MCP Configuration Files
-
-The `awd mcp` tool supports managing MCP servers using configuration files, similar to dependency management tools like pipenv. By default awd-cli points to [Azure Community MCP Registry](https://demo.registry.azure-mcp.net). You can set the `MCP_REGISTRY_URL` environment variable to use a different registry:
-
-```zsh
-export MCP_REGISTRY_URL=https://your-mcp-registry.example.com
-awd mcp registry list
+# Publish your prompts  
+awd publish github.com/myteam/custom-prompts
 ```
 
-#### Creating a Configuration File
+## Beyond Prompts: Agentic Workflows
 
-Create an `awd.yml` file in your project root:
+**Advanced users can create agentic workflows** that chain multiple prompts together:
 
-```yaml
-version: "1.0"
-servers:
-  - "ghcr.io/github/github-mcp-server"
-  - "..."
+**Advanced users can create agentic workflows** that chain multiple prompts together:
+
+```markdown
+---
+name: incident-response
+description: Complete incident response procedure
+input: [severity, affected_service]
+---
+
+# Incident Response Workflow
+
+## Step 1: Initial Analysis
+- [Analyze system logs](./prompts/analyze-logs.prompt.md) for ${input:affected_service}
+- Wait for analysis completion before proceeding
+
+## Step 2: Determine Response
+Based on the log analysis results:
+- If severity is **CRITICAL**: escalate immediately
+- If severity is **HIGH**: notify on-call team
+- Otherwise: create standard incident ticket
 ```
 
-or create a configuration file from currently installed servers:
+Run prompts and agentic workflows anywhere:
+```bash
+# Run any prompt or agentic workflow directly
+awd run analyze-logs --service=api-gateway --time=1h
+awd run incident-response --severity=HIGH --affected_service=api-gateway
+
+# Or preview processed content without execution
+awd preview analyze-logs --service=api-gateway --time=1h
+awd preview incident-response --severity=HIGH --affected_service=api-gateway
+```
+
+## Philosophy: The AWD Manifesto
+
+AWD follows our **[AWD Manifesto](MANIFESTO.md)** - core principles for AI-native development:
+
+- 🌐 **Portability over Vendor Lock-in** - Write once, run anywhere
+- 📝 **Natural Language over Code Complexity** - English beats any programming language  
+- ♻️ **Reusability over Reinvention** - Share prompts like code packages
+- 🔍 **Reliability over Magic** - Predictable, transparent execution
+- 🛠️ **Developer Experience over AI Sophistication** - Simple tools, powerful results
+
+## Why AWD?
+
+**The Problem**: Every team reinvents AI automation. Prompts are trapped in specific tools.
+
+**AWD Solution**: 
+- ✅ **Portable** - Same prompt runs on any LLM
+- ✅ **Reusable** - Share prompts like code packages  
+- ✅ **Composable** - Agentic workflows reference other prompts
+- ✅ **Tool-enabled** - Integrate with APIs via MCP servers
+
+## Architecture
+
+```mermaid
+graph TD
+    A[📝 Prompts<br/>.prompt.md] --> B[🔧 AWD CLI]
+    C[🔄 Agentic Workflows<br/>.workflow.md] --> B
+    B --> D[⚡ LLM Runtime<br/>any provider]
+    B --> E[📦 AWD + MCP Registries]
+    
+    style A fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    style B fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
+    style C fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
+    style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    style E fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+```
+
+## Installation & Usage
 
 ```bash
 awd mcp init
 ```
 
-#### Installing Servers from Configuration
-
-To install all servers defined in the configuration file:
-
-```bash
-awd mcp install
-```
-
 ### CLI Usage Reference
 
-```zsh
-# Workflow Management
-awd workflow list                                     # List all available workflows
-awd workflow create --name deploy-service             # Create a new workflow template
+```bash
+# Universal Commands (auto-detects prompts vs workflows)
+awd list                                              # List all available prompts and workflows
+awd create prompt analyze-logs                        # Create new prompt
+awd create workflow incident-response                 # Create new workflow
+awd run analyze-logs --param service_name=api         # Run any prompt or workflow
+awd preview analyze-logs --param service_name=api     # Preview any prompt or workflow without execution
 
-# Workflow Execution
-awd workflow run deploy-service --service-name=auth-api --target-env=staging  # Run with parameters (auto-copies to clipboard)
-
-# Workflow-MCP Integration
-awd workflow mcp-sync                                # Update awd.yml with workflow dependencies
+# Runtime Selection (works with both prompts and workflows)
+awd run analyze-logs --runtime=github/gpt-4o-mini     # Run on GitHub Models
+awd run deploy-service --runtime=ollama/llama3.2      # Run on local Ollama
 
 # MCP Server Management
 awd mcp list                                          # List all installed MCP servers
 awd mcp install                                       # Install servers from awd.yml
 awd mcp install redis-mcp-server                      # Install server by name
-
-# MCP Configuration Commands
 awd mcp verify                                        # Verify servers in awd.yml are installed
 awd mcp init                                          # Create awd.yml from installed client servers
+
+# Project Management
+awd mcp-sync                                          # Update awd.yml with dependencies from all prompts/workflows
+
+# Execution  
+awd run prompt-name --param key=value        # Run with parameters
+awd preview prompt-name --param key=value    # Preview without execution
+
+# Creation
+awd create prompt my-prompt                   # Create new prompt
+awd create workflow my-workflow               # Create new agentic workflow
 ```
+
+## Community
+
+- 📚 [Documentation](docs/) - Guides and examples
+- 🤝 [Contributing](CONTRIBUTING.md) - Help build the ecosystem  
+- ⭐ Star this repo if you find it useful!
+
+---
+
+**AWD makes AI prompts as shareable and reusable as code packages.**
+
 
 ## Development
 
@@ -192,6 +208,7 @@ black awd-cli tests
 ## Stack
 - Python 3.13+
 - `click` for CLI
+- `llm` for LLM runtime abstraction
 - `mcp` package with `FastMCP` for MCP server functionality
 - `pytest`, `flake8`, `black` for development
 - GitHub Actions for CI/CD

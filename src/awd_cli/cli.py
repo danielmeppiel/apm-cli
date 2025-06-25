@@ -71,11 +71,13 @@ def list_workflows(ctx):
         sys.exit(1)
 
 
-@workflow.command(name="create", help="Create a new workflow template")
+@workflow.command(name="create", help="Create a new workflow template (DEPRECATED: use 'awd create workflow' instead)")
 @click.option('--name', required=True, help="Name of the workflow to create")
 @click.pass_context
 def create_workflow(ctx, name):
-    """Create a new workflow template."""
+    """Create a new workflow template. (DEPRECATED)"""
+    click.echo(f"{WARNING}DEPRECATED: Use 'awd create workflow {name}' instead{RESET}")
+    
     from .workflow.discovery import create_workflow_template
     
     file_format = "VSCode .github/prompts format"
@@ -119,17 +121,7 @@ def run_workflow(ctx, workflow_name, param):
             
         click.echo(f"\n{INFO}Workflow output:{RESET}")
         click.echo(result)
-        
-        # Auto-copy workflow output to clipboard
-        try:
-            from .utils.clipboard import copy_to_clipboard
-            if copy_to_clipboard(result):
-                click.echo(f"\n{SUCCESS}Workflow executed successfully! ✓ Copied to clipboard{RESET}")
-            else:
-                click.echo(f"\n{SUCCESS}Workflow executed successfully!{RESET}")
-                click.echo(f"{WARNING}Note: Clipboard unavailable on this system{RESET}")
-        except ImportError:
-            click.echo(f"\n{SUCCESS}Workflow executed successfully!{RESET}")
+        click.echo(f"\n{SUCCESS}Workflow executed successfully!{RESET}")
         
     except Exception as e:
         click.echo(f"{ERROR}Error executing workflow: {e}{RESET}", err=True)
@@ -541,6 +533,244 @@ def config(ctx, set_client, show):
     else:
         # Show help if no options provided
         click.echo(ctx.get_help())
+
+
+# Create command group
+@cli.group(help="Create new prompts or workflows")
+@click.pass_context
+def create(ctx):
+    """Create management commands."""
+    pass
+
+
+@create.command(name="prompt", help="Create a new prompt template")
+@click.argument('name')
+@click.option('--description', '-d', help="Description for the prompt")
+@click.pass_context
+def create_prompt(ctx, name, description):
+    """Create a new prompt template."""
+    # TODO: Import prompt creation functionality when implemented
+    # For now, provide a placeholder implementation
+    click.echo(f"{SUCCESS}Creating new prompt: {HIGHLIGHT}{name}{RESET}")
+    
+    try:
+        # Create a basic .prompt.md template
+        import os
+        from pathlib import Path
+        
+        # Ensure prompts directory exists
+        prompts_dir = Path("prompts")
+        prompts_dir.mkdir(exist_ok=True)
+        
+        filename = f"{name}.prompt.md"
+        filepath = prompts_dir / filename
+        
+        # Basic prompt template
+        template_content = f"""---
+description: {description or f"AI prompt for {name}"}
+mcp: []
+input: []
+---
+
+# {name.replace('-', ' ').title()}
+
+[Add your prompt instructions here]
+
+## Instructions
+
+1. [Step 1]
+2. [Step 2] 
+3. [Step 3]
+
+## Expected Output
+
+[Describe the expected output format]
+"""
+        
+        with open(filepath, 'w') as f:
+            f.write(template_content)
+            
+        click.echo(f"{INFO}Prompt template created at: {filepath}{RESET}")
+        click.echo(f"{SUCCESS}Prompt template created successfully!{RESET}")
+        click.echo(f"{INFO}💡 Tip: Edit the file to add your specific prompt instructions.{RESET}")
+        
+    except Exception as e:
+        click.echo(f"{ERROR}Error creating prompt template: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+@create.command(name="workflow", help="Create a new workflow template")
+@click.argument('name')
+@click.option('--description', '-d', help="Description for the workflow")
+@click.pass_context
+def create_workflow_new(ctx, name, description):
+    """Create a new workflow template."""
+    from .workflow.discovery import create_workflow_template
+    
+    file_format = "VSCode .github/prompts format"
+    click.echo(f"{SUCCESS}Creating new workflow: {HIGHLIGHT}{name}{RESET} ({file_format})")
+    
+    try:
+        file_path = create_workflow_template(name, description=description, use_vscode_convention=True)
+        click.echo(f"{INFO}Workflow template created at: {file_path}{RESET}")
+        click.echo(f"{SUCCESS}Workflow template created successfully!{RESET}")
+        click.echo(f"{INFO}💡 Tip: This follows VSCode's .github/prompts convention for better integration.{RESET}")
+        
+    except Exception as e:
+        click.echo(f"{ERROR}Error creating workflow template: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+# Universal commands that work with both prompts and workflows
+@cli.command(help="List all available prompts and workflows")
+@click.pass_context
+def list(ctx):
+    """List all available prompts and workflows."""
+    from .workflow.discovery import discover_workflows
+    
+    click.echo(f"{INFO}Available prompts and workflows:{RESET}")
+    
+    try:
+        workflows = discover_workflows()
+        
+        if not workflows:
+            click.echo(f"{WARNING}No prompts or workflows found.{RESET}")
+            click.echo(f"{INFO}💡 Create your first prompt: awd create prompt my-prompt{RESET}")
+            click.echo(f"{INFO}💡 Create your first workflow: awd create workflow my-workflow{RESET}")
+            return
+            
+        for wf in workflows:
+            # Determine type based on file extension or content
+            file_type = "prompt" if ".prompt.md" in getattr(wf, 'file_path', '') else "workflow"
+            click.echo(f"  - {HIGHLIGHT}{wf.name}{RESET} ({file_type}): {wf.description}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error listing prompts and workflows: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+@cli.command(help="Run a prompt or workflow with parameters")
+@click.argument('name')
+@click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
+@click.option('--runtime', help="LLM runtime to use (ollama, github-models, azure-foundry, etc.)")
+@click.pass_context
+def run(ctx, name, param, runtime):
+    """Run a prompt or workflow."""
+    from .workflow.runner import run_workflow as execute_workflow
+    
+    if runtime:
+        click.echo(f"{INFO}Running {HIGHLIGHT}{name}{RESET} on {HIGHLIGHT}{runtime}{RESET} runtime")
+    else:
+        click.echo(f"{INFO}Running {HIGHLIGHT}{name}{RESET}")
+    
+    # Parse parameters
+    params = {}
+    for p in param:
+        if '=' in p:
+            param_name, value = p.split('=', 1)
+            params[param_name] = value
+            click.echo(f"  - {param_name}: {value}")
+    
+    # Add runtime to params if specified
+    if runtime:
+        params['_runtime'] = runtime
+    
+    try:
+        success, result = execute_workflow(name, params)
+        
+        if not success:
+            click.echo(f"{ERROR}{result}{RESET}", err=True)
+            sys.exit(1)
+            
+        click.echo(f"\n{INFO}Output:{RESET}")
+        click.echo(result)
+        click.echo(f"\n{SUCCESS}Executed successfully!{RESET}")
+        
+    except Exception as e:
+        click.echo(f"{ERROR}Error executing {name}: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+@cli.command(help="Preview a prompt or workflow with parameters substituted (without execution)")
+@click.argument('name')
+@click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
+@click.pass_context
+def preview(ctx, name, param):
+    """Preview a prompt or workflow with parameters substituted."""
+    from .workflow.runner import run_workflow as execute_workflow
+    
+    click.echo(f"{INFO}Previewing {HIGHLIGHT}{name}{RESET}")
+    
+    # Parse parameters
+    params = {}
+    for p in param:
+        if '=' in p:
+            param_name, value = p.split('=', 1)
+            params[param_name] = value
+            click.echo(f"  - {param_name}: {value}")
+    
+    try:
+        # Get the processed content without runtime execution
+        success, result = execute_workflow(name, params)
+        
+        if not success:
+            click.echo(f"{ERROR}{result}{RESET}", err=True)
+            sys.exit(1)
+        
+        click.echo(f"\n{INFO}Processed Content:{RESET}")
+        click.echo("-" * 50)
+        click.echo(result)
+        click.echo("-" * 50)
+        click.echo(f"{SUCCESS}Preview complete! Use 'awd run {name} --runtime=<model>' to execute.{RESET}")
+        
+    except Exception as e:
+        click.echo(f"{ERROR}Error previewing {name}: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+@cli.command(help="List available LLM runtime models")
+@click.pass_context
+def models(ctx):
+    """List available LLM runtime models."""
+    try:
+        from .runtime.llm_runtime import LLMRuntime
+        
+        click.echo(f"{TITLE}Available LLM Runtime Models:{RESET}")
+        
+        # Try to get a runtime instance to list models
+        try:
+            runtime = LLMRuntime()
+            models = runtime.list_available_models()
+            
+            if "error" in models:
+                click.echo(f"{ERROR}{models['error']}{RESET}")
+                return
+                
+            if not models:
+                click.echo(f"{WARNING}No models available. Install llm plugins first.{RESET}")
+                click.echo(f"{INFO}Example: pip install llm-ollama{RESET}")
+                return
+                
+            # Group by provider if possible
+            providers = {}
+            for model_id, info in models.items():
+                provider = info.get('provider', 'unknown')
+                if provider not in providers:
+                    providers[provider] = []
+                providers[provider].append(model_id)
+            
+            for provider, model_list in providers.items():
+                click.echo(f"\n{HIGHLIGHT}{provider.title()}:{RESET}")
+                for model in sorted(model_list):
+                    click.echo(f"  - {model}")
+                    
+        except Exception as e:
+            click.echo(f"{ERROR}Error listing models: {e}{RESET}")
+            click.echo(f"{INFO}Tip: Install LLM and configure API keys first{RESET}")
+            click.echo(f"{INFO}Example: pip install llm && llm keys set openai{RESET}")
+            
+    except ImportError:
+        click.echo(f"{ERROR}LLM runtime not available. Install with: pip install llm{RESET}")
 
 
 def main():

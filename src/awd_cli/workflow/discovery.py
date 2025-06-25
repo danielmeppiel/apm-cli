@@ -46,12 +46,13 @@ def discover_workflows(base_dir=None):
     return workflows
 
 
-def create_workflow_template(name, output_dir=None, use_vscode_convention=True):
+def create_workflow_template(name, output_dir=None, description=None, use_vscode_convention=True):
     """Create a basic workflow template file following VSCode's .github/prompts convention.
     
     Args:
         name (str): Name of the workflow.
         output_dir (str, optional): Directory to create the file in. Defaults to current directory.
+        description (str, optional): Description for the workflow. Defaults to generic description.
         use_vscode_convention (bool): Whether to use VSCode's .github/prompts structure. Defaults to True.
     
     Returns:
@@ -61,9 +62,10 @@ def create_workflow_template(name, output_dir=None, use_vscode_convention=True):
         output_dir = os.getcwd()
     
     title = name.replace("-", " ").title()
+    workflow_description = description or f"Workflow for {title.lower()}"
     
     template = f"""---
-description: Description here
+description: {workflow_description}
 author: Your Name
 mcp:
   - package1
