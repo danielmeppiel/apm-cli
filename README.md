@@ -28,7 +28,7 @@ awd preview hello-world
 
 **That's it!** You're now running AI prompts across any LLM runtime.
 
-> 💡 **Any LLM Runtime**: AWD is built on the [LLM library](https://llm.datasette.io/en/stable/index.html), so you can use any supported runtime - from local models with Ollama to cloud providers like OpenAI, Anthropic, and more.
+💡 AWD is built on the [LLM library](https://llm.datasette.io/en/stable/index.html), so you can use any supported runtime - from local models with Ollama to cloud providers like OpenAI, Anthropic, and more.
 
 ## How It Works
 
@@ -71,8 +71,6 @@ awd publish github.com/myteam/custom-prompts
 ```
 
 ## Beyond Prompts: Agentic Workflows
-
-**Advanced users can create agentic workflows** that chain multiple prompts together:
 
 **Advanced users can create agentic workflows** that chain multiple prompts together:
 
