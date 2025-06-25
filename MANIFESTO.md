@@ -1,5 +1,4 @@
-# The AWD Manifesto
-## Principles of Agentic Workflow Definitions
+# The AI-Native Development Manifesto
 
 *As Prompts become the new Code, we value...*
 
