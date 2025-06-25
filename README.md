@@ -1,6 +1,6 @@
 # Agentic Workflow Definitions (AWD)
 
-**The NPM for AI-Native Development** - Natural language is the new scripting language. Now you can package, share, and run agentic prompts and workflows across any LLM runtime. 
+**The NPM for AI-Native Development** - Natural language is the new scripting language. Now you can build, package, share, and run agentic prompts and workflows across any LLM runtime. 
 
 **Think npm + Node.js, but for Natural Language.**
 
@@ -70,9 +70,9 @@ awd install github.com/security/vulnerability-scanners
 awd publish github.com/myteam/custom-prompts
 ```
 
-## Beyond Prompts: Agentic Workflows
+## Beyond Simple Prompts: Composable Workflows
 
-**Advanced users can create agentic workflows** that chain multiple prompts together:
+**Prompts can reference other prompts** to create powerful agentic workflows:
 
 ```markdown
 ---
@@ -81,27 +81,31 @@ description: Complete incident response procedure
 input: [severity, affected_service]
 ---
 
-# Incident Response Workflow
+# Incident Response
 
 ## Step 1: Initial Analysis
-- [Analyze system logs](./prompts/analyze-logs.prompt.md) for ${input:affected_service}
-- Wait for analysis completion before proceeding
+Analyze logs using [analyze-logs](./analyze-logs.prompt.md) with ${service_name:${input:affected_service}} and ${time_window:1h}
 
 ## Step 2: Determine Response
 Based on the log analysis results:
-- If severity is **CRITICAL**: escalate immediately
-- If severity is **HIGH**: notify on-call team
+- If severity is **CRITICAL**: escalate immediately and proceed to emergency response
+- If severity is **HIGH**: notify team using [alert-team](./alert-team.prompt.md) with ${service:${input:affected_service}} and ${severity:${input:severity}}
 - Otherwise: create standard incident ticket
+
+## Step 3: Emergency Response (Critical Only)
+**Ask for approval**: "Critical incident detected for ${input:affected_service}. Execute emergency procedures? (yes/no)"
+
+If approved:
+- Scale service using [scale-service](./scale-service.prompt.md) with ${service:${input:affected_service}} and ${action:scale-up}
 ```
 
-Run prompts and agentic workflows anywhere:
+Run it as any other prompt:
 ```bash
-# Run any prompt or agentic workflow directly
-awd run analyze-logs --service=api-gateway --time=1h
+
+# Run complex agentic workflows  
 awd run incident-response --severity=HIGH --affected_service=api-gateway
 
-# Or preview processed content without execution
-awd preview analyze-logs --service=api-gateway --time=1h
+# Preview without execution
 awd preview incident-response --severity=HIGH --affected_service=api-gateway
 ```
 
@@ -122,7 +126,7 @@ AWD follows our **[AWD Manifesto](MANIFESTO.md)** - core principles for AI-nativ
 **AWD Solution**: 
 - ✅ **Portable** - Same prompt runs on any LLM
 - ✅ **Reusable** - Share prompts like code packages  
-- ✅ **Composable** - Agentic workflows reference other prompts
+- ✅ **Composable** - Prompts can reference other prompts to create workflows
 - ✅ **Tool-enabled** - Integrate with APIs via MCP servers
 
 ## Architecture
@@ -130,34 +134,27 @@ AWD follows our **[AWD Manifesto](MANIFESTO.md)** - core principles for AI-nativ
 ```mermaid
 graph TD
     A[📝 Prompts<br/>.prompt.md] --> B[🔧 AWD CLI]
-    C[🔄 Agentic Workflows<br/>.workflow.md] --> B
+    A --> A2[� Other Prompts<br/>via markdown links]
     B --> D[⚡ LLM Runtime<br/>any provider]
     B --> E[📦 AWD + MCP Registries]
     
     style A fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    style A2 fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
     style B fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
-    style C fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
     style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
     style E fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
 ```
 
-## Installation & Usage
+## CLI Usage Reference
 
 ```bash
-awd mcp init
-```
-
-### CLI Usage Reference
-
-```bash
-# Universal Commands (auto-detects prompts vs workflows)
-awd list                                              # List all available prompts and workflows
+# Universal Commands
+awd list                                              # List all available prompts
 awd create prompt analyze-logs                        # Create new prompt
-awd create workflow incident-response                 # Create new workflow
-awd run analyze-logs --param service_name=api         # Run any prompt or workflow
-awd preview analyze-logs --param service_name=api     # Preview any prompt or workflow without execution
+awd run analyze-logs --param service_name=api         # Run any prompt (simple or complex)
+awd preview analyze-logs --param service_name=api     # Preview without execution
 
-# Runtime Selection (works with both prompts and workflows)
+# Runtime Selection
 awd run analyze-logs --runtime=github/gpt-4o-mini     # Run on GitHub Models
 awd run deploy-service --runtime=ollama/llama3.2      # Run on local Ollama
 
@@ -176,8 +173,7 @@ awd run prompt-name --param key=value        # Run with parameters
 awd preview prompt-name --param key=value    # Preview without execution
 
 # Creation
-awd create prompt my-prompt                   # Create new prompt
-awd create workflow my-workflow               # Create new agentic workflow
+awd create prompt my-prompt                           # Create new prompt
 ```
 
 ## Community
