@@ -6,6 +6,7 @@
 
 ## Quick Start (2 minutes)
 
+> [!NOTE] 
 > **📋 Prerequisites**: Get a GitHub fine-grained Personal Access Token with **read-only Models permissions** at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
 
 ```bash
@@ -66,7 +67,8 @@ awd run analyze-logs --runtime=llm --llm=ollama/llama3.2 --param service_name=ap
 awd run analyze-logs --runtime=codex --param service_name=api --param time_window=1h
 ```
 
-> **Note**: Support for MCP server integration (like `mcp: [logs-analyzer] in the markdown frontmatter`) is planned. Current prompts work with natural language instructions.
+> [!NOTE]
+> MCP server integration (like `mcp: [logs-analyzer]` in frontmatter) is planned for Phase 2. Current prompts work with natural language instructions.
 
 **Share like npm packages:**
 
@@ -107,6 +109,9 @@ Based on the log analysis results:
 If approved:
 - Scale service using [scale-service](./scale-service.prompt.md) with ${service:${input:affected_service}} and ${action:scale-up}
 ```
+
+> [!WARNING]
+> Workflow composition and prompt chaining are part of the vision but not yet implemented. This is planned for Phase 3. Currently, AWD executes individual prompts only.
 
 Run it as any other prompt:
 ```bash
