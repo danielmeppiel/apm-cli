@@ -73,7 +73,7 @@ Deploy the ${input:service} service to production.
 """
     
     with tempfile.TemporaryDirectory() as temp_dir:
-        workflow_file = os.path.join(temp_dir, "test-copy.workflow.md")
+        workflow_file = os.path.join(temp_dir, "test-copy.prompt.md")
         with open(workflow_file, "w") as f:
             f.write(workflow_content)
         

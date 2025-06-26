@@ -4,6 +4,7 @@ import os
 import re
 from .parser import WorkflowDefinition
 from .discovery import discover_workflows
+from ..runtime.llm_runtime import LLMRuntime
 
 
 def substitute_parameters(content, params):
@@ -128,7 +129,6 @@ def run_workflow(workflow_name, params=None, base_dir=None):
     # If runtime is specified, execute with LLM runtime
     if runtime_name:
         try:
-            from ..runtime.llm_runtime import LLMRuntime
             llm_runtime = LLMRuntime(runtime_name)
             
             # Execute the prompt with the LLM runtime
