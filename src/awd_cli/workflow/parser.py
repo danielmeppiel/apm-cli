@@ -22,6 +22,7 @@ class WorkflowDefinition:
         self.author = metadata.get('author', '')
         self.mcp_dependencies = metadata.get('mcp', [])
         self.input_parameters = metadata.get('input', [])
+        self.llm_model = metadata.get('llm', None)  # LLM model specified in frontmatter
         self.content = content
     
     def validate(self):

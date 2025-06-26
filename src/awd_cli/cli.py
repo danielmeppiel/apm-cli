@@ -653,15 +653,13 @@ def list(ctx):
 @click.argument('name')
 @click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
 @click.option('--runtime', help="Runtime to use (llm, codex)")
+@click.option('--llm', help="LLM model to use (fallback if not specified in frontmatter)")
 @click.pass_context
-def run(ctx, name, param, runtime):
+def run(ctx, name, param, runtime, llm):
     """Run a prompt or workflow."""
     from .workflow.runner import run_workflow as execute_workflow
     
-    if runtime:
-        click.echo(f"{INFO}Running {HIGHLIGHT}{name}{RESET} on {HIGHLIGHT}{runtime}{RESET} runtime")
-    else:
-        click.echo(f"{INFO}Running {HIGHLIGHT}{name}{RESET}")
+    click.echo(f"{INFO}Running {HIGHLIGHT}{name}{RESET}")
     
     # Parse parameters
     params = {}
@@ -671,9 +669,11 @@ def run(ctx, name, param, runtime):
             params[param_name] = value
             click.echo(f"  - {param_name}: {value}")
     
-    # Add runtime to params if specified
+    # Add runtime and llm to params if specified
     if runtime:
         params['_runtime'] = runtime
+    if llm:
+        params['_llm'] = llm
     
     try:
         success, result = execute_workflow(name, params)
@@ -682,8 +682,6 @@ def run(ctx, name, param, runtime):
             click.echo(f"{ERROR}{result}{RESET}", err=True)
             sys.exit(1)
             
-        click.echo(f"\n{INFO}Output:{RESET}")
-        click.echo(result)
         click.echo(f"\n{SUCCESS}Executed successfully!{RESET}")
         
     except Exception as e:
@@ -697,7 +695,7 @@ def run(ctx, name, param, runtime):
 @click.pass_context
 def preview(ctx, name, param):
     """Preview a prompt or workflow with parameters substituted."""
-    from .workflow.runner import run_workflow as execute_workflow
+    from .workflow.runner import preview_workflow
     
     click.echo(f"{INFO}Previewing {HIGHLIGHT}{name}{RESET}")
     
@@ -711,7 +709,7 @@ def preview(ctx, name, param):
     
     try:
         # Get the processed content without runtime execution
-        success, result = execute_workflow(name, params)
+        success, result = preview_workflow(name, params)
         
         if not success:
             click.echo(f"{ERROR}{result}{RESET}", err=True)
@@ -721,7 +719,7 @@ def preview(ctx, name, param):
         click.echo("-" * 50)
         click.echo(result)
         click.echo("-" * 50)
-        click.echo(f"{SUCCESS}Preview complete! Use 'awd run {name} --runtime=<model>' to execute.{RESET}")
+        click.echo(f"{SUCCESS}Preview complete! Use 'awd run {name}' to execute.{RESET}")
         
     except Exception as e:
         click.echo(f"{ERROR}Error previewing {name}: {e}{RESET}", err=True)

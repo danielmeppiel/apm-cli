@@ -107,8 +107,9 @@ def run_workflow(workflow_name, params=None, base_dir=None):
     """
     params = params or {}
     
-    # Extract runtime information
+    # Extract runtime and model information
     runtime_name = params.pop('_runtime', None)
+    fallback_llm = params.pop('_llm', None)
     
     # Find the workflow
     workflow = find_workflow_by_name(workflow_name, base_dir)
@@ -126,18 +127,52 @@ def run_workflow(workflow_name, params=None, base_dir=None):
     # Substitute parameters
     result_content = substitute_parameters(workflow.content, all_params)
     
-    # If runtime is specified, execute with runtime adapter
-    if runtime_name:
-        try:
-            # Use specified runtime type only
-            runtime = RuntimeFactory.create_runtime(runtime_name)
-            
-            # Execute the prompt with the runtime
-            response = runtime.execute_prompt(result_content)
-            return True, response
-            
-        except Exception as e:
-            return False, f"Runtime execution failed: {str(e)}"
+    # Determine the LLM model to use
+    # Priority: frontmatter llm > --llm flag > runtime default
+    llm_model = workflow.llm_model or fallback_llm
     
-    # Default behavior: return the substituted content
+    # Always execute with runtime (use best available if not specified)
+    try:
+        # Use specified runtime type or get best available
+        if runtime_name:
+            runtime = RuntimeFactory.create_runtime(runtime_name, llm_model)
+        else:
+            runtime = RuntimeFactory.create_runtime(model_name=llm_model)
+        
+        # Execute the prompt with the runtime
+        response = runtime.execute_prompt(result_content)
+        return True, response
+        
+    except Exception as e:
+        return False, f"Runtime execution failed: {str(e)}"
+
+
+def preview_workflow(workflow_name, params=None, base_dir=None):
+    """Preview a workflow with parameters substituted (without execution).
+    
+    Args:
+        workflow_name (str): Name of the workflow to preview.
+        params (dict, optional): Parameters to use.
+        base_dir (str, optional): Base directory to search for workflows.
+    
+    Returns:
+        tuple: (bool, str) Success status and processed content.
+    """
+    params = params or {}
+    
+    # Find the workflow
+    workflow = find_workflow_by_name(workflow_name, base_dir)
+    if not workflow:
+        return False, f"Workflow '{workflow_name}' not found."
+    
+    # Validate the workflow
+    errors = workflow.validate()
+    if errors:
+        return False, f"Invalid workflow: {', '.join(errors)}"
+    
+    # Collect missing parameters
+    all_params = collect_parameters(workflow, params)
+    
+    # Substitute parameters and return the processed content
+    result_content = substitute_parameters(workflow.content, all_params)
     return True, result_content
