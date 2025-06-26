@@ -68,7 +68,7 @@ awd run analyze-logs --runtime=codex --param service_name=api --param time_windo
 ```
 
 > [!NOTE]
-> MCP server integration (like `mcp: [logs-analyzer]` in frontmatter) is planned for Phase 2. Current prompts work with natural language instructions.
+> MCP server integration (like `mcp: [logs-analyzer]` in frontmatter) is planned for Phase 2. Current prompts work with natural language instructions. See [MCP Integration details](docs/wip/mcp-integration.md) for roadmap and technical plan.
 
 **Share like npm packages:**
 
@@ -82,6 +82,9 @@ awd publish github.com/myteam/custom-prompts
 ```
 
 ## Beyond Simple Prompts: Composable Workflows
+
+> [!WARNING]
+> Workflow composition and prompt chaining are part of the vision but not yet implemented. This is planned for Phase 3. Currently, AWD executes individual prompts only.
 
 **Prompts can reference other prompts** to create powerful agentic workflows:
 
@@ -109,9 +112,6 @@ Based on the log analysis results:
 If approved:
 - Scale service using [scale-service](./scale-service.prompt.md) with ${service:${input:affected_service}} and ${action:scale-up}
 ```
-
-> [!WARNING]
-> Workflow composition and prompt chaining are part of the vision but not yet implemented. This is planned for Phase 3. Currently, AWD executes individual prompts only.
 
 Run it as any other prompt:
 ```bash
