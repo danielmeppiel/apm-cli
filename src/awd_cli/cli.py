@@ -681,6 +681,10 @@ def run(ctx, name, param, runtime, llm):
         if not success:
             click.echo(f"{ERROR}{result}{RESET}", err=True)
             sys.exit(1)
+        
+        # Display the LLM output
+        if result:
+            click.echo(f"\n{result}")
             
         click.echo(f"\n{SUCCESS}Executed successfully!{RESET}")
         
