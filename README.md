@@ -150,12 +150,12 @@ Just as npm enabled JavaScript's explosive growth, AWD enables the prompt-based 
 
 ```mermaid
 graph TD
-    A["📝 Prompts<br/>.prompt.md<br/><small>Natural Language Programs</small>"] --> B["🔧 AWD<br/><small>Package Manager Layer</small>"]
-    B --> D["⚡ LLM Runtime<br/>• llm library<br/>• OpenAI Codex<br/>• Future runtimes"]
-    B --> E["📦 Registries<br/>• AWD packages<br/>• MCP servers"]
+    A["📝 Prompts<br/>.prompt.md<br/>Natural Language Programs"] --> B["🔧 AWD<br/>Package Manager Layer"]
+    B --> D["⚡ LLM Runtime<br/>llm library<br/>OpenAI Codex<br/>Future runtimes"]
+    B --> E["📦 Registries<br/>AWD packages<br/>MCP servers"]
     
-    D -.-> F["🛠️ MCP Servers<br/><small>Tool Integration</small><br/>Managed by Runtime"]
-    D -.-> G["🧠 LLM Models<br/><small>Cloud:</small> Anthropic, Azure, GitHub<br/><small>Local:</small> Ollama"]
+    D -.-> F["🛠️ MCP Servers<br/>Tool Integration<br/>Managed by Runtime"]
+    D -.-> G["🧠 LLM Models<br/>Cloud: Anthropic, Azure, GitHub<br/>Local: Ollama"]
     
     style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
     style B fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
