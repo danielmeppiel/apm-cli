@@ -19,11 +19,10 @@ class TestRuntimeFactory:
     
     def test_get_runtime_by_name_llm_real(self):
         """Test getting LLM runtime by name (real system)."""
-        runtime = RuntimeFactory.get_runtime_by_name("llm", "gpt-4o-mini")
+        runtime = RuntimeFactory.get_runtime_by_name("llm")
         
         assert runtime is not None
         assert runtime.get_runtime_name() == "llm"
-        assert runtime.model_name == "gpt-4o-mini"
     
     def test_get_runtime_by_name_unknown(self):
         """Test getting unknown runtime by name."""
@@ -32,20 +31,18 @@ class TestRuntimeFactory:
     
     def test_get_best_available_runtime_real(self):
         """Test getting best available runtime on real system."""
-        runtime = RuntimeFactory.get_best_available_runtime("gpt-4o-mini")
+        runtime = RuntimeFactory.get_best_available_runtime()
         
         assert runtime is not None
         # Should be LLM since Codex is not installed
         assert runtime.get_runtime_name() == "llm"
-        assert runtime.model_name == "gpt-4o-mini"
     
     def test_create_runtime_with_name_real(self):
         """Test creating runtime with specific name (real system)."""
-        runtime = RuntimeFactory.create_runtime("llm", "gpt-4o-mini")
+        runtime = RuntimeFactory.create_runtime("llm")
         
         assert runtime is not None
         assert runtime.get_runtime_name() == "llm"
-        assert runtime.model_name == "gpt-4o-mini"
     
     def test_create_runtime_auto_detect_real(self):
         """Test creating runtime with auto-detection (real system)."""
