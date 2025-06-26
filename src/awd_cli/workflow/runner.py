@@ -4,7 +4,7 @@ import os
 import re
 from .parser import WorkflowDefinition
 from .discovery import discover_workflows
-from ..runtime.llm_runtime import LLMRuntime
+from ..runtime.factory import RuntimeFactory
 
 
 def substitute_parameters(content, params):
@@ -126,13 +126,14 @@ def run_workflow(workflow_name, params=None, base_dir=None):
     # Substitute parameters
     result_content = substitute_parameters(workflow.content, all_params)
     
-    # If runtime is specified, execute with LLM runtime
+    # If runtime is specified, execute with runtime adapter
     if runtime_name:
         try:
-            llm_runtime = LLMRuntime(runtime_name)
+            # Use factory to create the appropriate runtime
+            runtime = RuntimeFactory.create_runtime(runtime_name)
             
-            # Execute the prompt with the LLM runtime
-            response = llm_runtime.execute_prompt(result_content)
+            # Execute the prompt with the runtime
+            response = runtime.execute_prompt(result_content)
             return True, response
             
         except Exception as e:

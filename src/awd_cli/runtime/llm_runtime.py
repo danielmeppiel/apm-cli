@@ -2,9 +2,10 @@
 
 import llm
 from typing import Dict, Any, Optional
+from .base import RuntimeAdapter
 
 
-class LLMRuntime:
+class LLMRuntime(RuntimeAdapter):
     """AWD adapter for the llm library."""
     
     def __init__(self, model_name: str = "gpt-4o-mini"):
@@ -62,6 +63,50 @@ class LLMRuntime:
     def get_default_model() -> str:
         """Get the default model name."""
         return "gpt-4o-mini"
+    
+    def get_runtime_info(self) -> Dict[str, Any]:
+        """Get information about this runtime.
+        
+        Returns:
+            Dict[str, Any]: Runtime information including name, version, capabilities
+        """
+        try:
+            return {
+                "name": "llm",
+                "type": "llm_library",
+                "current_model": self.model_name,
+                "capabilities": {
+                    "model_execution": True,
+                    "mcp_servers": "runtime_dependent",
+                    "configuration": "llm_commands",
+                    "sandboxing": "runtime_dependent"
+                },
+                "description": "LLM library runtime adapter"
+            }
+        except Exception as e:
+            return {"error": f"Failed to get runtime info: {e}"}
+    
+    @staticmethod
+    def is_available() -> bool:
+        """Check if this runtime is available on the system.
+        
+        Returns:
+            bool: True if runtime is available, False otherwise
+        """
+        try:
+            import llm
+            return True
+        except ImportError:
+            return False
+    
+    @staticmethod
+    def get_runtime_name() -> str:
+        """Get the name of this runtime.
+        
+        Returns:
+            str: Runtime name
+        """
+        return "llm"
     
     def __str__(self) -> str:
         return f"LLMRuntime(model={self.model_name})"
