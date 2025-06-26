@@ -32,6 +32,7 @@ Please respond with a greeting.
             mock_runtime = Mock()
             mock_runtime.execute_prompt.return_value = "Hello World! Nice to meet you."
             mock_factory_class.create_runtime.return_value = mock_runtime
+            mock_factory_class.runtime_exists.return_value = False  # gpt-4o-mini is not a runtime type
             
             # Run the workflow with runtime parameter
             params = {
@@ -45,8 +46,10 @@ Please respond with a greeting.
             assert success is True
             assert result == "Hello World! Nice to meet you."
             
-            # Verify RuntimeFactory was called correctly
-            mock_factory_class.create_runtime.assert_called_once_with('gpt-4o-mini')
+            # Verify RuntimeFactory was called correctly for model name
+            # Since 'gpt-4o-mini' is not a known runtime, it should be treated as LLM model
+            mock_factory_class.runtime_exists.assert_called_once_with('gpt-4o-mini')
+            mock_factory_class.create_runtime.assert_called_once_with('llm', 'gpt-4o-mini')
             mock_runtime.execute_prompt.assert_called_once()
             
             # Check that the prompt was properly substituted
