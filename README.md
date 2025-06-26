@@ -9,8 +9,9 @@
 > **📋 Prerequisites**: Get a GitHub fine-grained Personal Access Token with **read-only Models permissions** at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
 
 ```bash
-# 1. Install AWD CLI
-pip install awd-cli
+# 1. Install AWD CLI (currently development install)
+git clone https://github.com/danielmeppiel/awd-cli.git
+cd awd-cli && pip install -e .
 
 # 2. Configure GitHub Models
 llm keys set github
@@ -20,7 +21,7 @@ llm keys set github
 awd create prompt hello-world
 
 # 4. Run it with GitHub Models
-awd run hello-world --runtime=github/gpt-4o-mini
+awd run hello-world --runtime=llm --llm=github/gpt-4o-mini
 
 # 5. Or preview without execution
 awd preview hello-world
@@ -28,7 +29,14 @@ awd preview hello-world
 
 **That's it!** You're now running AI prompts across any LLM runtime.
 
-💡 AWD is built on the [LLM library](https://llm.datasette.io/en/stable/index.html), so you can use any supported runtime - from local models with Ollama to cloud providers like OpenAI, Anthropic, and more.
+## Supported Runtimes
+
+AWD supports multiple AI runtime environments:
+
+- **🔧 LLM Library** (default) - Simon Willison's [`llm`](https://llm.datasette.io/en/stable/index.html) with 100+ models from GitHub, OpenAI, Anthropic, local Ollama, and more
+- **⚡ OpenAI Codex CLI** - OpenAI's [`codex`](https://github.com/openai/codex) with advanced code understanding and native MCP support
+
+📖 **Setup Guide**: See [Runtime Integration](docs/runtime-integration.md) for detailed setup instructions for both runtimes.
 
 ## How It Works
 
@@ -38,7 +46,6 @@ awd preview hello-world
 ---
 description: Analyzes application logs for errors  
 input: [service_name, time_window]
-mcp: [logs-analyzer]  # Optional: tools for advanced prompts
 ---
 
 # Analyze Application Logs
@@ -54,10 +61,12 @@ Analyze logs for ${input:service_name} over the last ${input:time_window}.
 
 ```bash
 # Same prompt, different runtimes
-awd run analyze-logs --runtime=github/gpt-4o-mini --service=api --time=1h
-awd run analyze-logs --runtime=ollama/llama3.2 --service=api --time=1h
-awd run analyze-logs --runtime=claude-3.5-sonnet --service=api --time=1h
+awd run analyze-logs --runtime=llm --llm=github/gpt-4o-mini --param service_name=api --param time_window=1h
+awd run analyze-logs --runtime=llm --llm=ollama/llama3.2 --param service_name=api --param time_window=1h
+awd run analyze-logs --runtime=codex --param service_name=api --param time_window=1h
 ```
+
+> **Note**: Support for MCP server integration (like `mcp: [logs-analyzer] in the markdown frontmatter`) is planned. Current prompts work with natural language instructions.
 
 **Share like npm packages:**
 

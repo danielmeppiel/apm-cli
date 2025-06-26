@@ -30,21 +30,44 @@ class CodexRuntime(RuntimeAdapter):
         Returns:
             str: The response text from Codex
         """
+        import sys
+        import os
+        
         try:
-            # Use codex exec to execute the prompt
-            result = subprocess.run(
+            # Use codex exec to execute the prompt with real-time streaming
+            process = subprocess.Popen(
                 ["codex", "exec", prompt_content],
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Merge stderr into stdout for streaming
                 text=True,
-                timeout=300  # 5 minute timeout
+                bufsize=1,  # Line buffered
+                universal_newlines=True
             )
             
-            if result.returncode != 0:
-                raise RuntimeError(f"Codex execution failed: {result.stderr}")
+            output_lines = []
             
-            return result.stdout.strip()
+            # Stream output in real-time
+            for line in iter(process.stdout.readline, ''):
+                # Print to terminal in real-time
+                print(line, end='', flush=True)
+                output_lines.append(line)
+            
+            # Wait for process to complete
+            return_code = process.wait(timeout=300)  # 5 minute timeout
+            
+            if return_code != 0:
+                full_output = ''.join(output_lines)
+                # Check for common API key issues
+                if "OPENAI_API_KEY" in full_output:
+                    raise RuntimeError("Codex execution failed: Missing or invalid OPENAI_API_KEY. Please set your OpenAI API key.")
+                else:
+                    raise RuntimeError(f"Codex execution failed with exit code {return_code}")
+            
+            return ''.join(output_lines).strip()
             
         except subprocess.TimeoutExpired:
+            if 'process' in locals():
+                process.kill()
             raise RuntimeError("Codex execution timed out after 5 minutes")
         except FileNotFoundError:
             raise RuntimeError("Codex CLI not found. Install with: npm i -g @openai/codex@native")

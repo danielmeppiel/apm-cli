@@ -659,37 +659,47 @@ def run(ctx, name, param, runtime, llm):
     """Run a prompt or workflow."""
     from .workflow.runner import run_workflow as execute_workflow
     
-    click.echo(f"{INFO}Running {HIGHLIGHT}{name}{RESET}")
+    # Enhanced logging for better user experience
+    click.echo(f"{TITLE}AWD: Running {HIGHLIGHT}{name}{RESET}")
     
-    # Parse parameters
+    # Parse and display parameters
     params = {}
-    for p in param:
-        if '=' in p:
-            param_name, value = p.split('=', 1)
-            params[param_name] = value
-            click.echo(f"  - {param_name}: {value}")
+    if param:
+        click.echo(f"{INFO}Parameters:{RESET}")
+        for p in param:
+            if '=' in p:
+                param_name, value = p.split('=', 1)
+                params[param_name] = value
+                click.echo(f"  • {param_name}: {HIGHLIGHT}{value}{RESET}")
     
-    # Add runtime and llm to params if specified
+    # Add runtime and llm to params if specified and display runtime info
     if runtime:
         params['_runtime'] = runtime
+        click.echo(f"{INFO}Runtime: {HIGHLIGHT}{runtime}{RESET}")
     if llm:
         params['_llm'] = llm
+        click.echo(f"{INFO}Model: {HIGHLIGHT}{llm}{RESET}")
+    
+    # Show execution start
+    click.echo(f"{INFO}Executing prompt...{RESET}")
+    click.echo()  # Add blank line before output
     
     try:
         success, result = execute_workflow(name, params)
         
         if not success:
-            click.echo(f"{ERROR}{result}{RESET}", err=True)
+            click.echo(f"\n{ERROR}Execution failed: {result}{RESET}", err=True)
             sys.exit(1)
         
-        # Display the LLM output
-        if result:
-            click.echo(f"\n{result}")
-            
-        click.echo(f"\n{SUCCESS}Executed successfully!{RESET}")
+        # The result is now already streamed to terminal via the runtime adapters
+        # Just show completion message
+        click.echo(f"\n{SUCCESS}✓ Execution completed successfully!{RESET}")
         
+    except KeyboardInterrupt:
+        click.echo(f"\n{WARNING}⚠ Execution interrupted by user{RESET}")
+        sys.exit(1)
     except Exception as e:
-        click.echo(f"{ERROR}Error executing {name}: {e}{RESET}", err=True)
+        click.echo(f"\n{ERROR}Error executing {name}: {e}{RESET}", err=True)
         sys.exit(1)
 
 

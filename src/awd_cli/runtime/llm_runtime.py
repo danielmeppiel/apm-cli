@@ -46,9 +46,32 @@ class LLMRuntime(RuntimeAdapter):
             # Add the prompt content
             cmd.append(prompt_content)
             
-            # Execute the command
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            return result.stdout.strip()
+            # Execute the command with real-time streaming
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Merge stderr into stdout for streaming
+                text=True,
+                bufsize=1,  # Line buffered
+                universal_newlines=True
+            )
+            
+            output_lines = []
+            
+            # Stream output in real-time
+            for line in iter(process.stdout.readline, ''):
+                # Print to terminal in real-time
+                print(line, end='', flush=True)
+                output_lines.append(line)
+            
+            # Wait for process to complete
+            return_code = process.wait()
+            
+            if return_code != 0:
+                full_output = ''.join(output_lines)
+                raise RuntimeError(f"LLM execution failed: {full_output}")
+            
+            return ''.join(output_lines).strip()
             
         except subprocess.CalledProcessError as e:
             error_msg = e.stderr.strip() if e.stderr else str(e)

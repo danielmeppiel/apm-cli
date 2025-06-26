@@ -3,17 +3,19 @@
 Welcome to the Agentic Workflow Definitions (AWD) documentation. Here you'll find everything you need to create, run, and share AI-powered workflows.
 
 ## Quick Start
-- [Getting Started Guide](getting-started.md) - Your first workflow in 5 minutes
-- [Installation](installation.md) - Setup AWD CLI on your system
+- [CLI Reference](cli-reference.md) - Complete command documentation
+- [Runtime Integration](runtime-integration.md) - Setup for LLM and Codex runtimes
 
 ## Core Concepts
 - [Prompts Guide](prompts.md) - Creating reusable AI instructions
-- [Workflows Guide](workflows.md) - Orchestrating prompts with natural language
 
-## Reference
-- [CLI Reference](cli-reference.md) - Complete command documentation
-- [File Formats](file-formats.md) - Prompt and workflow file specifications
+## Development
+- [Development Status](development-status.md) - Feature status and testing coverage
+- [Contributing](../CONTRIBUTING.md) - How to contribute to AWD
+
+## Work in Progress
+- [MCP Integration](wip/mcp-integration.md) - Phase 2 MCP tool calling (coming soon)
 
 ## Community
-- [Contributing](../CONTRIBUTING.md) - How to contribute to AWD
 - [AWD Manifesto](../MANIFESTO.md) - Our principles and philosophy
+- [GitHub Issues](https://github.com/danielmeppiel/awd-cli/issues) - Bug reports and feature requests
