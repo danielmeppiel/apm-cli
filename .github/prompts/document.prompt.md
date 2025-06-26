@@ -1,7 +1,8 @@
 ---
 mode: agent
-description: Guide an AI agent through a structured process to assess documentation coverage, identify **AI Agent Instructions:**
+description: Guide an AI agent through a structured process to assess documentation coverage, identify gaps, and create GitHub issues for documentation improvements
 author: Daniel Meppiel
+llm: github/gpt-4.1
 mcp:
   - ghcr.io/github/github-mcp-server
 ---
