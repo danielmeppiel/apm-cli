@@ -121,29 +121,52 @@ AWD follows our **[AWD Manifesto](MANIFESTO.md)** - core principles for AI-nativ
 
 ## Why AWD?
 
-**The Problem**: Every team reinvents AI automation. Prompts are trapped in specific tools.
+**Think NPM + Node.js, but for AI-Native Development**
 
-**AWD Solution**: 
-- ✅ **Portable** - Same prompt runs on any LLM
-- ✅ **Reusable** - Share prompts like code packages  
-- ✅ **Composable** - Prompts can reference other prompts to create workflows
-- ✅ **Tool-enabled** - Integrate with APIs via MCP servers
+Just as npm revolutionized JavaScript development by creating a package ecosystem, AWD creates the missing infrastructure for AI-native applications written in Markdown.
+
+**The Problem**: We have the new programming language (natural language in markdown) but lack the essential tooling infrastructure. Every team reinvents their prompts, cannot share them, cannot distribute them, can't run them at scale. It's like having JavaScript syntax but no npm, Node.js, or package ecosystem.
+
+**The AWD Solution**: Complete the tooling stack for AI-native development
+
+| Traditional Web Dev | AI-Native Development | Role |
+|---------------------|----------------------|------|
+| **npm** | **AWD-CLI** | Package manager, dependency resolution, distribution |
+| **Node.js** | **[llm](https://github.com/simonw/llm)/[codex](https://github.com/openai/codex)** | Runtime environment, execution engine |
+| **JavaScript** | **Natural Language Prompts** | Programming language |
+| **V8 Engine** | **LLM Models** | Core computation engine |
+
+**Key Benefits**:
+- 🏗️ **Infrastructure Layer** - AWD is the package manager, runtimes ([llm](https://github.com/simonw/llm), [codex](https://github.com/openai/codex)) are the execution engines
+- ✅ **Portable** - Same prompt runs on any LLM runtime (just like npm packages run on any Node.js version)
+- ✅ **Reusable** - Share prompts like code packages with versioning and dependencies
+- ✅ **Composable** - Prompts can reference other prompts to create complex workflows
+- ✅ **Tool-enabled** - Integrate with APIs via MCP servers, handled by your chosen runtime
+
+Just as npm enabled JavaScript's explosive growth, AWD enables the prompt-based application ecosystem to flourish.
 
 ## Architecture
 
+**Separation of Concerns: Package Management vs Runtime Execution**
+
 ```mermaid
 graph TD
-    A[📝 Prompts<br/>.prompt.md] --> B[🔧 AWD CLI]
-    A --> A2[� Other Prompts<br/>via markdown links]
-    B --> D[⚡ LLM Runtime<br/>any provider]
-    B --> E[📦 AWD + MCP Registries]
+    A["📝 Prompts<br/>.prompt.md<br/><small>Natural Language Programs</small>"] --> B["🔧 AWD CLI<br/><small>Package Manager Layer</small>"]
+    A --> A2["🔗 Other Prompts<br/>via markdown links<br/><small>Dependency Resolution</small>"]
+    B --> D["⚡ LLM Runtime<br/><small>Execution Engines</small><br/>• llm library<br/>• OpenAI Codex<br/>• Future runtimes"]
+    B --> E["📦 Registries<br/><small>Distribution Layer</small><br/>• AWD packages<br/>• MCP servers"]
     
-    style A fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
-    style A2 fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    D -.-> F["🛠️ MCP Servers<br/><small>Tool Integration</small><br/>Managed by Runtime"]
+    
+    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    style A2 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
     style B fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
-    style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    style D fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#000
     style E fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    style F fill:#e8f5e8,stroke:#388e3c,stroke-width:1px,color:#000
 ```
+
+**Key Insight**: AWD handles packaging and distribution (like npm), while runtimes handle execution and tool integration (like Node.js). This separation enables innovation at each layer without tight coupling. share, and run agentic prompts and workflows across any LLM runtime. 
 
 ## CLI Usage Reference
 
