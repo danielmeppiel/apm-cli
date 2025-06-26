@@ -652,7 +652,7 @@ def list(ctx):
 @cli.command(help="Run a prompt or workflow with parameters")
 @click.argument('name')
 @click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
-@click.option('--runtime', help="LLM runtime to use (ollama, github-models, azure-foundry, etc.)")
+@click.option('--runtime', help="Runtime to use (llm, codex) or model name for LLM runtime")
 @click.pass_context
 def run(ctx, name, param, runtime):
     """Run a prompt or workflow."""
@@ -726,6 +726,152 @@ def preview(ctx, name, param):
     except Exception as e:
         click.echo(f"{ERROR}Error previewing {name}: {e}{RESET}", err=True)
         sys.exit(1)
+
+
+@cli.command(help="List available LLM runtime models")
+@click.pass_context
+def models(ctx):
+    """List available LLM runtime models."""
+    try:
+        from .runtime.llm_runtime import LLMRuntime
+        
+        click.echo(f"{TITLE}Available LLM Runtime Models:{RESET}")
+        
+        # Try to get a runtime instance to list models
+        try:
+            runtime = LLMRuntime()
+            models = runtime.list_available_models()
+            
+            if "error" in models:
+                click.echo(f"{ERROR}{models['error']}{RESET}")
+                return
+                
+            if not models:
+                click.echo(f"{WARNING}No models available. Install llm plugins first.{RESET}")
+                click.echo(f"{INFO}Example: pip install llm-ollama{RESET}")
+                return
+                
+            # Group by provider if possible
+            providers = {}
+            for model_id, info in models.items():
+                provider = info.get('provider', 'unknown')
+                if provider not in providers:
+                    providers[provider] = []
+                providers[provider].append(model_id)
+            
+            for provider, model_list in providers.items():
+                click.echo(f"\n{HIGHLIGHT}{provider.title()}:{RESET}")
+                for model in sorted(model_list):
+                    click.echo(f"  - {model}")
+                    
+        except Exception as e:
+            click.echo(f"{ERROR}Error listing models: {e}{RESET}")
+            click.echo(f"{INFO}Tip: Install LLM and configure API keys first{RESET}")
+            click.echo(f"{INFO}Example: pip install llm && llm keys set openai{RESET}")
+            
+    except ImportError:
+        click.echo(f"{ERROR}LLM runtime not available. Install with: pip install llm{RESET}")
+
+
+# Runtime management group
+@cli.group(help="Manage LLM runtimes")
+@click.pass_context
+def runtime(ctx):
+    """Runtime management commands."""
+    pass
+
+
+@runtime.command(help="List available runtimes on the system")
+@click.pass_context  
+def list(ctx):
+    """List all available runtimes."""
+    try:
+        from .runtime.factory import RuntimeFactory
+        
+        click.echo(f"{TITLE}Available Runtimes:{RESET}")
+        
+        available_runtimes = RuntimeFactory.get_available_runtimes()
+        
+        if not available_runtimes:
+            click.echo(f"{WARNING}No runtimes available.{RESET}")
+            click.echo(f"{INFO}Install at least one of:{RESET}")
+            click.echo(f"  - Codex CLI: npm i -g @openai/codex@native")
+            click.echo(f"  - LLM library: pip install llm")
+            return
+        
+        for runtime_info in available_runtimes:
+            name = runtime_info.get("name", "unknown")
+            runtime_type = runtime_info.get("type", "unknown")
+            version = runtime_info.get("version", "unknown")
+            
+            click.echo(f"\n{HIGHLIGHT}{name}:{RESET}")
+            click.echo(f"  Type: {runtime_type}")
+            if version != "unknown":
+                click.echo(f"  Version: {version}")
+            
+            capabilities = runtime_info.get("capabilities", {})
+            if capabilities:
+                click.echo(f"  Capabilities:")
+                for cap, value in capabilities.items():
+                    click.echo(f"    - {cap}: {value}")
+            
+            if "error" in runtime_info:
+                click.echo(f"  {WARNING}Warning: {runtime_info['error']}{RESET}")
+                
+    except Exception as e:
+        click.echo(f"{ERROR}Error listing runtimes: {e}{RESET}")
+
+
+@runtime.command(help="Show detailed information about a specific runtime")
+@click.argument('name')
+@click.pass_context
+def info(ctx, name):
+    """Show detailed information about a runtime."""
+    try:
+        from .runtime.factory import RuntimeFactory
+        
+        click.echo(f"{TITLE}Runtime Information: {HIGHLIGHT}{name}{RESET}")
+        
+        try:
+            runtime = RuntimeFactory.get_runtime_by_name(name)
+            runtime_info = runtime.get_runtime_info()
+            
+            # Display basic info
+            click.echo(f"\n{HIGHLIGHT}Basic Information:{RESET}")
+            for key, value in runtime_info.items():
+                if key != "capabilities":
+                    click.echo(f"  {key}: {value}")
+            
+            # Display capabilities
+            capabilities = runtime_info.get("capabilities", {})
+            if capabilities:
+                click.echo(f"\n{HIGHLIGHT}Capabilities:{RESET}")
+                for cap, value in capabilities.items():
+                    click.echo(f"  {cap}: {value}")
+            
+            # Try to list models if available
+            try:
+                models = runtime.list_available_models()
+                if models and "error" not in models:
+                    click.echo(f"\n{HIGHLIGHT}Available Models:{RESET}")
+                    for model_id, model_info in models.items():
+                        click.echo(f"  - {model_id}")
+                        if isinstance(model_info, dict) and "provider" in model_info:
+                            click.echo(f"    Provider: {model_info['provider']}")
+                            
+            except Exception:
+                # Don't fail the whole command if model listing fails
+                pass
+                
+        except ValueError as e:
+            click.echo(f"{ERROR}{str(e)}{RESET}")
+            click.echo(f"\n{INFO}Available runtimes:{RESET}")
+            available_runtimes = RuntimeFactory.get_available_runtimes()
+            for runtime_info in available_runtimes:
+                click.echo(f"  - {runtime_info.get('name', 'unknown')}")
+                
+    except Exception as e:
+        click.echo(f"{ERROR}Error getting runtime info: {e}{RESET}")
 
 
 @cli.command(help="List available LLM runtime models")
