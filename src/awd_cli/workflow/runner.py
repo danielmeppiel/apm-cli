@@ -129,13 +129,8 @@ def run_workflow(workflow_name, params=None, base_dir=None):
     # If runtime is specified, execute with runtime adapter
     if runtime_name:
         try:
-            # Check if runtime_name is a known runtime type
-            if RuntimeFactory.runtime_exists(runtime_name):
-                # Use as runtime type
-                runtime = RuntimeFactory.create_runtime(runtime_name)
-            else:
-                # Assume it's a model name for LLM runtime (backward compatibility)
-                runtime = RuntimeFactory.create_runtime("llm", runtime_name)
+            # Use specified runtime type only
+            runtime = RuntimeFactory.create_runtime(runtime_name)
             
             # Execute the prompt with the runtime
             response = runtime.execute_prompt(result_content)

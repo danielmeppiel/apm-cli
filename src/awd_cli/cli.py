@@ -652,7 +652,7 @@ def list(ctx):
 @cli.command(help="Run a prompt or workflow with parameters")
 @click.argument('name')
 @click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
-@click.option('--runtime', help="Runtime to use (llm, codex) or model name for LLM runtime")
+@click.option('--runtime', help="Runtime to use (llm, codex)")
 @click.pass_context
 def run(ctx, name, param, runtime):
     """Run a prompt or workflow."""
