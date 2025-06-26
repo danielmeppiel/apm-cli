@@ -147,23 +147,22 @@ Just as npm enabled JavaScript's explosive growth, AWD enables the prompt-based 
 
 ## Architecture
 
-**Separation of Concerns: Package Management vs Runtime Execution**
 
 ```mermaid
 graph TD
-    A["📝 Prompts<br/>.prompt.md<br/><small>Natural Language Programs</small>"] --> B["🔧 AWD CLI<br/><small>Package Manager Layer</small>"]
-    A --> A2["🔗 Other Prompts<br/>via markdown links<br/><small>Dependency Resolution</small>"]
-    B --> D["⚡ LLM Runtime<br/><small>Execution Engines</small><br/>• llm library<br/>• OpenAI Codex<br/>• Future runtimes"]
-    B --> E["📦 Registries<br/><small>Distribution Layer</small><br/>• AWD packages<br/>• MCP servers"]
+    A["📝 Prompts<br/>.prompt.md<br/><small>Natural Language Programs</small>"] --> B["🔧 AWD<br/><small>Package Manager Layer</small>"]
+    B --> D["⚡ LLM Runtime<br/>• llm library<br/>• OpenAI Codex<br/>• Future runtimes"]
+    B --> E["📦 Registries<br/>• AWD packages<br/>• MCP servers"]
     
     D -.-> F["🛠️ MCP Servers<br/><small>Tool Integration</small><br/>Managed by Runtime"]
+    D -.-> G["🧠 LLM Models<br/><small>Cloud:</small> Anthropic, Azure, GitHub<br/><small>Local:</small> Ollama"]
     
     style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
-    style A2 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
     style B fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
     style D fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#000
     style E fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
     style F fill:#e8f5e8,stroke:#388e3c,stroke-width:1px,color:#000
+    style G fill:#fff3e0,stroke:#ff9800,stroke-width:1px,color:#000
 ```
 
 **Key Insight**: AWD handles packaging and distribution (like npm), while runtimes handle execution and tool integration (like Node.js). This separation enables innovation at each layer without tight coupling. share, and run agentic prompts and workflows across any LLM runtime. 
