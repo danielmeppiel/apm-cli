@@ -2,9 +2,14 @@
 
 import os
 import re
+from colorama import Fore, Style
 from .parser import WorkflowDefinition
 from .discovery import discover_workflows
 from ..runtime.factory import RuntimeFactory
+
+# Color constants (matching cli.py)
+WARNING = f"{Fore.YELLOW}"
+RESET = f"{Style.RESET_ALL}"
 
 
 def substitute_parameters(content, params):
@@ -130,6 +135,10 @@ def run_workflow(workflow_name, params=None, base_dir=None):
     # Determine the LLM model to use
     # Priority: frontmatter llm > --llm flag > runtime default
     llm_model = workflow.llm_model or fallback_llm
+    
+    # Show warning if both frontmatter and --llm flag are specified
+    if workflow.llm_model and fallback_llm:
+        print(f"{WARNING}WARNING: Both frontmatter 'llm: {workflow.llm_model}' and --llm '{fallback_llm}' specified. Using frontmatter value: {workflow.llm_model}{RESET}")
     
     # Always execute with runtime (use best available if not specified)
     try:
