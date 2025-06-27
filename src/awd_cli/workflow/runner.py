@@ -144,7 +144,13 @@ def run_workflow(workflow_name, params=None, base_dir=None):
     try:
         # Use specified runtime type or get best available
         if runtime_name:
-            runtime = RuntimeFactory.create_runtime(runtime_name, llm_model)
+            # Check if runtime_name is a valid runtime type
+            if RuntimeFactory.runtime_exists(runtime_name):
+                runtime = RuntimeFactory.create_runtime(runtime_name, llm_model)
+            else:
+                # Invalid runtime name - fail with clear error message
+                available_runtimes = [adapter.get_runtime_name() for adapter in RuntimeFactory._RUNTIME_ADAPTERS if adapter.is_available()]
+                return False, f"Invalid runtime '{runtime_name}'. Available runtimes: {', '.join(available_runtimes)}"
         else:
             runtime = RuntimeFactory.create_runtime(model_name=llm_model)
         

@@ -31,6 +31,7 @@ ${input:message}
             mock_runtime = Mock()
             mock_runtime.execute_prompt.return_value = "Response from runtime"
             mock_factory_class.create_runtime.return_value = mock_runtime
+            mock_factory_class.runtime_exists.return_value = True  # 'llm' is a valid runtime
             
             # Test with runtime type
             params = {
@@ -44,8 +45,9 @@ ${input:message}
             assert success is True
             assert result == "Response from runtime"
             
-            # Verify factory calls for runtime type
-            mock_factory_class.create_runtime.assert_called_once_with('llm')
+            # Verify factory calls for runtime type (runtime name and model name)
+            mock_factory_class.runtime_exists.assert_called_once_with('llm')
+            mock_factory_class.create_runtime.assert_called_once_with('llm', None)
 
 
 def test_invalid_runtime_type():

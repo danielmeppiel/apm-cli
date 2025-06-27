@@ -1,8 +1,8 @@
 # Agentic Workflow Definitions (AWD)
 
-**The NPM for AI-Native Development** - Natural language is the new scripting language. Now you can build, package, share, and run agentic prompts and workflows across any LLM runtime. 
+**The NPM for AI-Native Development** - Natural language in Markdown is the new scripting language. Now you can build, package, share, and run Markdown agentic prompts and workflows across any LLM runtime. 
 
-**Think npm + Node.js, but for Natural Language.**
+**Think npm + Node.js, but for Natural Language (Markdown).**
 
 ## Quick Start (30 seconds)
 
