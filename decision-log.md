@@ -38,6 +38,7 @@ Internal tracking of major decisions and changes.
 3. **Project-based**: Everything starts with `awd init` (no standalone prompts)
 4. **Breaking changes**: Clean slate, no backward compatibility
 5. **Real integration**: Hello world uses actual GitHub MCP with `get_me` tool
+6. **Binary distribution**: Eliminate Python installation barrier with self-contained executables
 
 ### Implementation Status
 
@@ -49,6 +50,10 @@ Internal tracking of major decisions and changes.
 - Complete documentation updates
 - Full CLI redesign with 6 simple commands
 - End-to-end validation of complete workflow
+- **Binary distribution system with PyInstaller**
+- **Zero-dependency installation via curl script**
+- **Cross-platform binaries (Linux x86_64, macOS x86_64/ARM64)**
+- **11MB self-contained executables with UPX compression**
 
 ### Files Updated
 

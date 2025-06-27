@@ -4,13 +4,28 @@ Complete command-line interface reference for Agentic Workflow Definitions (AWD)
 
 ## Installation
 
+### Quick Install (Recommended)
 ```bash
-# Development installation (current)
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+```
+
+### Manual Download
+Download from [GitHub Releases](https://github.com/danielmeppiel/awd-cli/releases/latest):
+```bash
+# Linux x86_64
+curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-linux-x86_64 -o awd && chmod +x awd
+
+# macOS Intel
+curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-x86_64 -o awd && chmod +x awd
+
+# macOS Apple Silicon  
+curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-arm64 -o awd && chmod +x awd
+```
+
+### From Source (Developers)
+```bash
 git clone https://github.com/danielmeppiel/awd-cli.git
 cd awd-cli && pip install -e .
-
-# Future PyPI installation
-pip install awd-cli
 ```
 
 ## Global Options
