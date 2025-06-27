@@ -106,13 +106,6 @@ jobs:
       
       - name: Build binary
         run: |
-          # Debug: Show current directory and files
-          pwd
-          ls -la
-          ls -la build/ || echo "build/ directory not found"
-          ls -la scripts/ || echo "scripts/ directory not found"
-          
-          # Make script executable and run
           chmod +x scripts/build-binary.sh
           ./scripts/build-binary.sh
       

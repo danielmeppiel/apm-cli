@@ -196,37 +196,16 @@ graph TD
 
 **Key Insight**: AWD handles packaging and distribution (like npm), while runtimes handle execution and tool integration (like Node.js). This separation enables innovation at each layer without tight coupling. share, and run agentic prompts and workflows across any LLM runtime. 
 
-## CLI Usage Reference
-
-```bash
-# Project Management (like npm)
-awd init [project-name]                      # Initialize new AWD project (like npm init)
-awd install                                  # Install MCP dependencies from awd.yml (like npm install)
-awd list                                     # List all available prompts in project
-
-# Execution  
-awd run                                      # Run entrypoint prompt
-awd run prompt-name --param key=value       # Run specific prompt with parameters
-awd preview --param key=value               # Preview entrypoint without execution
-awd preview prompt-name --param key=value   # Preview specific prompt without execution
-
-# Runtime Selection
-awd run --runtime=llm --llm=github/gpt-4o-mini    # Run with GitHub Models (free)
-awd run --runtime=llm --llm=ollama/llama3.2       # Run with local Ollama
-awd run --runtime=codex                           # Run with OpenAI Codex
-
-# Configuration
-awd config --show                            # Show current configuration
-awd models                                   # List available LLM models
-```
-
-**Complete CLI Reference**: See [CLI Reference](docs/cli-reference.md) for detailed documentation.
-
 ## Installation
 
 ### Quick Install (Recommended)
 ```bash
 curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+```
+
+### Python Package
+```bash
+pip install awd-cli
 ```
 
 ### Manual Download
@@ -249,10 +228,25 @@ git clone https://github.com/danielmeppiel/awd-cli.git
 cd awd-cli && pip install -e .
 ```
 
+## CLI Usage Reference
+
+**Complete CLI Reference**: See [CLI Reference](docs/cli-reference.md) for detailed documentation.
+
+```bash
+# Quick start commands
+awd init my-project                          # Initialize new AWD project
+awd install                                  # Install dependencies
+awd run --param key=value                    # Run entrypoint prompt
+awd run prompt-name --param key=value       # Run specific prompt
+
+# Runtime selection
+awd run --runtime=llm --llm=github/gpt-4o-mini    # Use GitHub Models
+awd run --runtime=codex                           # Use OpenAI Codex
+```
 
 ## Community
 
-- 📚 [Documentation](docs/) - Guides and examples
+- 📚 [Documentation](docs/index.md) - Guides and examples
 - 🤝 [Contributing](CONTRIBUTING.md) - Help build the ecosystem  
 - ⭐ Star this repo if you find it useful!
 
