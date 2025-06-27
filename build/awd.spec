@@ -48,6 +48,9 @@ hiddenimports = [
     'awd_cli.utils',
     'awd_cli.utils.helpers',
     'awd_cli.workflow',
+    'awd_cli.workflow.runner',
+    'awd_cli.workflow.parser', 
+    'awd_cli.workflow.discovery',
     # Common dependencies
     'yaml',
     'click',
