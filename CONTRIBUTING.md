@@ -43,13 +43,26 @@ Enhancement suggestions are welcome! Please:
 
 ### Pull Request Process
 
-1. Follow the template provided.
-2. Ensure your PR addresses only one concern (one feature, one bug fix).
-3. Include tests for new functionality.
-4. Update documentation if needed.
-5. PRs must pass all checks before they can be merged.
-6. A maintainer will review your PR and may request changes.
-7. Once approved, your PR will be merged.
+1. **Choose the appropriate PR template** for your change:
+   - **🚀 New Feature**: [Create Feature PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=feature.md)
+   - **🐛 Bug Fix**: [Create Bug Fix PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=bugfix.md)  
+   - **📖 Documentation**: [Create Docs PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=documentation.md)
+   - **🔧 Maintenance**: [Create Maintenance PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=maintenance.md)
+   - **Other**: [Create Standard PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD)
+
+2. **Apply the correct label** after creating your PR:
+   - `enhancement` or `feature` - New functionality
+   - `bug` or `fix` - Bug fixes
+   - `documentation` or `docs` - Documentation updates
+   - `ignore-for-release` - Exclude from release notes
+
+3. Follow the template provided.
+4. Ensure your PR addresses only one concern (one feature, one bug fix).
+5. Include tests for new functionality.
+6. Update documentation if needed.
+7. PRs must pass all checks before they can be merged.
+
+**Note**: Labels are used to automatically categorize changes in release notes. The correct label helps maintainers and users understand what changed in each release.
 
 ## Development Environment
 
