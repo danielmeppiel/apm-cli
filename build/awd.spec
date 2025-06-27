@@ -32,6 +32,10 @@ hiddenimports = [
     'awd_cli.config',
     'awd_cli.factory',
     'awd_cli.adapters',
+    'awd_cli.adapters.client',
+    'awd_cli.adapters.client.base',
+    'awd_cli.adapters.client.vscode',
+    'awd_cli.adapters.package_manager',
     'awd_cli.core',
     'awd_cli.core.operations',
     'awd_cli.deps',
@@ -56,6 +60,8 @@ hiddenimports = [
     'click',
     'colorama',
     'pathlib',
+    'frontmatter',
+    'requests',
 ]
 
 # Modules to exclude to reduce binary size
