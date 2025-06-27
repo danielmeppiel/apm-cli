@@ -66,7 +66,7 @@ jobs:
             platform: linux
             arch: x86_64
             binary_name: awd-linux-x86_64
-          - os: macos-14
+          - os: macos-13
             platform: darwin
             arch: x86_64
             binary_name: awd-darwin-x86_64
