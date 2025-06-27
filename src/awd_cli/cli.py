@@ -255,9 +255,15 @@ def run(ctx, prompt_name, param, runtime, llm):
                 
         # Import and use existing runtime functionality
         try:
-            from .workflow.runner import run_workflow
+            from awd_cli.workflow.runner import run_workflow
             
-            success, result = run_workflow(prompt_name, params, runtime=runtime, llm=llm)
+            # Add runtime options to params (with proper naming)
+            if runtime:
+                params['_runtime'] = runtime
+            if llm:
+                params['_llm'] = llm
+            
+            success, result = run_workflow(prompt_name, params)
             
             if not success:
                 click.echo(f"{ERROR}{result}{RESET}", err=True)
@@ -267,8 +273,12 @@ def run(ctx, prompt_name, param, runtime, llm):
             click.echo(result)
             click.echo(f"\n{SUCCESS}Prompt executed successfully!{RESET}")
             
-        except ImportError:
+        except ImportError as ie:
             click.echo(f"{WARNING}Runtime functionality not available yet{RESET}")
+            click.echo(f"{INFO}Import error: {ie}{RESET}")
+            click.echo(f"{INFO}Would run: {prompt_name} with params {params}{RESET}")
+        except Exception as ee:
+            click.echo(f"{WARNING}Runtime error: {ee}{RESET}")
             click.echo(f"{INFO}Would run: {prompt_name} with params {params}{RESET}")
             
     except Exception as e:
