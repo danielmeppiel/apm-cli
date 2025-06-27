@@ -10,7 +10,7 @@
 > **📋 Prerequisites**: Get a GitHub fine-grained Personal Access Token with **read-only Models permissions** at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
 
 ```bash
-# 1. Install AWD CLI (currently development install)
+# 1. Install AWD CLI
 git clone https://github.com/danielmeppiel/awd-cli.git
 cd awd-cli && pip install -e .
 
@@ -18,17 +18,19 @@ cd awd-cli && pip install -e .
 llm keys set github
 # Paste your GitHub PAT when prompted
 
-# 3. Create your first prompt
-awd create prompt hello-world
+# 3. Initialize your first AWD project (like npm init)
+awd init my-hello-world
 
-# 4. Run it with GitHub Models
-awd run hello-world --runtime=llm --llm=github/gpt-4o-mini
+# 4. Install AWD and MCP dependencies and run (like npm install && npm start)
+cd my-hello-world
+awd install
+awd run --param name="Developer"
 
-# 5. Or preview without execution
-awd preview hello-world
+# 5. Preview before execution
+awd preview --param name="Developer"
 ```
 
-**That's it!** You're now running AI prompts across any LLM runtime.
+**That's it!** You're now running AI prompt applications against an LLM runtime.
 
 ## Supported Runtimes
 
@@ -41,11 +43,23 @@ AWD supports multiple AI runtime environments:
 
 ## How It Works
 
-**Write prompts in markdown:**
+**Initialize like npm:**
+
+```bash
+# Create new AWD project (like npm init)
+awd init my-app
+
+# Install MCP dependencies (like npm install)
+cd my-app && awd install
+```
+
+**Write prompts with MCP integration:**
 
 ```markdown
 ---
-description: Analyzes application logs for errors  
+description: Analyzes application logs for errors
+mcp:
+  - ghcr.io/github/github-mcp-server
 input: [service_name, time_window]
 ---
 
@@ -53,29 +67,38 @@ input: [service_name, time_window]
 
 Analyze logs for ${input:service_name} over the last ${input:time_window}.
 
-1. Retrieve logs for the specified service and timeframe
-2. Identify ERROR and FATAL messages  
-3. Look for patterns and provide recommendations
+## Instructions
+
+1. Use the **get_me** tool to identify the user
+2. Retrieve logs for the specified service and timeframe
+3. Identify ERROR and FATAL messages  
+4. Look for patterns and provide recommendations
 ```
 
 **Run anywhere:**
 
 ```bash
-# Same prompt, different runtimes
-awd run analyze-logs --runtime=llm --llm=github/gpt-4o-mini --param service_name=api --param time_window=1h
-awd run analyze-logs --runtime=llm --llm=ollama/llama3.2 --param service_name=api --param time_window=1h
-awd run analyze-logs --runtime=codex --param service_name=api --param time_window=1h
+# Run entrypoint prompt (no name needed)
+awd run --param service_name=api --param time_window=1h
+
+# Run specific prompts with different runtimes
+awd run analyze-logs --runtime=llm --llm=github/gpt-4o-mini
+awd run analyze-logs --runtime=llm --llm=ollama/llama3.2  
+awd run analyze-logs --runtime=codex
 ```
 
-> [!NOTE]
-> MCP server integration (like `mcp: [logs-analyzer]` in frontmatter) is planned for Phase 2. Current prompts work with natural language instructions. See [MCP Integration details](docs/wip/mcp-integration.md) for roadmap and technical plan.
-
-**Share like npm packages:**
+**Manage like npm packages:**
 
 ```bash
-# Install from GitHub
-awd install github.com/kubernetes/troubleshooting-prompts
-awd install github.com/security/vulnerability-scanners
+# Project configuration (awd.yml)
+name: my-logging-app
+version: 1.0.0
+entrypoint: analyze-logs.prompt.md
+dependencies:
+  mcp:
+    - ghcr.io/github/github-mcp-server
+    - logs-analyzer-mcp-server
+```
 
 # Publish your prompts  
 awd publish github.com/myteam/custom-prompts
@@ -184,33 +207,28 @@ graph TD
 ## CLI Usage Reference
 
 ```bash
-# Universal Commands
-awd list                                              # List all available prompts
-awd create prompt analyze-logs                        # Create new prompt
-awd run analyze-logs --param service_name=api         # Run any prompt (simple or complex)
-awd preview analyze-logs --param service_name=api     # Preview without execution
-
-# Runtime Selection
-awd run analyze-logs --runtime=github/gpt-4o-mini     # Run on GitHub Models
-awd run deploy-service --runtime=ollama/llama3.2      # Run on local Ollama
-
-# MCP Server Management
-awd mcp list                                          # List all installed MCP servers
-awd mcp install                                       # Install servers from awd.yml
-awd mcp install redis-mcp-server                      # Install server by name
-awd mcp verify                                        # Verify servers in awd.yml are installed
-awd mcp init                                          # Create awd.yml from installed client servers
-
-# Project Management
-awd mcp-sync                                          # Update awd.yml with dependencies from all prompts/workflows
+# Project Management (like npm)
+awd init [project-name]                      # Initialize new AWD project (like npm init)
+awd install                                  # Install MCP dependencies from awd.yml (like npm install)
+awd list                                     # List all available prompts in project
 
 # Execution  
-awd run prompt-name --param key=value        # Run with parameters
-awd preview prompt-name --param key=value    # Preview without execution
+awd run                                      # Run entrypoint prompt
+awd run prompt-name --param key=value       # Run specific prompt with parameters
+awd preview --param key=value               # Preview entrypoint without execution
+awd preview prompt-name --param key=value   # Preview specific prompt without execution
 
-# Creation
-awd create prompt my-prompt                           # Create new prompt
+# Runtime Selection
+awd run --runtime=llm --llm=github/gpt-4o-mini    # Run with GitHub Models (free)
+awd run --runtime=llm --llm=ollama/llama3.2       # Run with local Ollama
+awd run --runtime=codex                           # Run with OpenAI Codex
+
+# Configuration
+awd config --show                            # Show current configuration
+awd models                                   # List available LLM models
 ```
+
+**Complete CLI Reference**: See [CLI Reference](docs/cli-reference.md) for detailed documentation.
 
 ## Community
 

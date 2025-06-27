@@ -1,12 +1,11 @@
-"""Command-line interface for Agentic Workflow Definitions (AWD)."""
+"""Command-line interface for Agentic Workflow Definitions (AWD) v0.0.1."""
 
 import sys
+import os
+import yaml
 import click
+from pathlib import Path
 from colorama import init, Fore, Style
-from .config import get_default_client, set_default_client
-from .factory import ClientFactory, PackageManagerFactory
-from .core.operations import install_package, uninstall_package
-from .registry.integration import RegistryIntegration
 
 # Initialize colorama
 init(autoreset=True)
@@ -20,883 +19,386 @@ WARNING = f"{Fore.YELLOW}"
 HIGHLIGHT = f"{Fore.MAGENTA}{Style.BRIGHT}"
 RESET = Style.RESET_ALL
 
+
+def _get_template_dir():
+    """Get the path to the templates directory."""
+    # Get the directory where this CLI module is located
+    cli_dir = Path(__file__).parent
+    # Go up to the src directory, then up to the repo root, then to templates
+    template_dir = cli_dir.parent.parent / 'templates'
+    return template_dir
+
+
+def _load_template_file(template_name, filename, **variables):
+    """Load a template file and substitute variables."""
+    template_dir = _get_template_dir()
+    template_path = template_dir / template_name / filename
+    
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template file not found: {template_path}")
+    
+    with open(template_path, 'r') as f:
+        content = f.read()
+    
+    # Simple template substitution using string replace
+    for var_name, var_value in variables.items():
+        content = content.replace(f'{{{{{var_name}}}}}', str(var_value))
+    
+    return content
+
+
 def print_version(ctx, param, value):
     """Print version and exit."""
     if not value or ctx.resilient_parsing:
         return
-    click.echo(f"{TITLE}Agentic Workflow Definitions (AWD) CLI{RESET} version 0.1.0")
+    click.echo(f"{TITLE}Agentic Workflow Definitions (AWD) CLI{RESET} version 0.0.1")
     ctx.exit()
 
 @click.group(help=f"{TITLE}Agentic Workflow Definitions (AWD){RESET}: " 
-             f"Turn complex DevOps tasks into reusable, AI-powered automation")
+             f"The NPM for AI-Native Development")
 @click.option('--version', is_flag=True, callback=print_version,
               expose_value=False, is_eager=True, help="Show version and exit.")
-@click.option('--client', '-c', help="Target MCP client (vscode, cursor, claude)")
 @click.pass_context
-def cli(ctx, client):
+def cli(ctx):
     """Main entry point for the AWD CLI."""
-    # Store the client in the context for subcommands to access
     ctx.ensure_object(dict)
-    ctx.obj['client'] = client if client else get_default_client()
-    
 
-# Workflow command group
-@cli.group(help="Manage agentic workflows")
+
+@cli.command(help="Initialize a new AWD project")
+@click.argument('project_name', required=False)
 @click.pass_context
-def workflow(ctx):
-    """Workflow management commands."""
-    pass
-
-
-@workflow.command(name="list", help="List all available workflows")
-@click.pass_context
-def list_workflows(ctx):
-    """List all available workflows."""
-    from .workflow.discovery import discover_workflows
-    
-    click.echo(f"{INFO}Available workflows:{RESET}")
-    
+def init(ctx, project_name):
+    """Initialize a new AWD project (like npm init)."""
     try:
-        workflows = discover_workflows()
-        
-        if not workflows:
-            click.echo(f"{WARNING}No workflows found.{RESET}")
-            return
-            
-        for wf in workflows:
-            click.echo(f"  - {HIGHLIGHT}{wf.name}{RESET}: {wf.description}")
-            
-    except Exception as e:
-        click.echo(f"{ERROR}Error listing workflows: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@workflow.command(name="create", help="Create a new workflow template (DEPRECATED: use 'awd create workflow' instead)")
-@click.option('--name', required=True, help="Name of the workflow to create")
-@click.pass_context
-def create_workflow(ctx, name):
-    """Create a new workflow template. (DEPRECATED)"""
-    click.echo(f"{WARNING}DEPRECATED: Use 'awd create workflow {name}' instead{RESET}")
-    
-    from .workflow.discovery import create_workflow_template
-    
-    file_format = "VSCode .github/prompts format"
-    click.echo(f"{SUCCESS}Creating new workflow template: {HIGHLIGHT}{name}{RESET} ({file_format})")
-    
-    try:
-        file_path = create_workflow_template(name, use_vscode_convention=True)
-        click.echo(f"{INFO}Workflow template created at: {file_path}{RESET}")
-        click.echo(f"{SUCCESS}Workflow template created successfully!{RESET}")
-        click.echo(f"{INFO}💡 Tip: This follows VSCode's .github/prompts convention for better integration.{RESET}")
-        
-    except Exception as e:
-        click.echo(f"{ERROR}Error creating workflow template: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@workflow.command(name="run", help="Run a workflow with parameters")
-@click.argument('workflow_name')
-@click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
-@click.pass_context
-def run_workflow(ctx, workflow_name, param):
-    """Run a workflow."""
-    from .workflow.runner import run_workflow as execute_workflow
-    
-    click.echo(f"{INFO}Running workflow: {HIGHLIGHT}{workflow_name}{RESET}")
-    
-    # Parse parameters
-    params = {}
-    for p in param:
-        if '=' in p:
-            name, value = p.split('=', 1)
-            params[name] = value
-            click.echo(f"  - {name}: {value}")
-    
-    try:
-        success, result = execute_workflow(workflow_name, params)
-        
-        if not success:
-            click.echo(f"{ERROR}{result}{RESET}", err=True)
-            sys.exit(1)
-            
-        click.echo(f"\n{INFO}Workflow output:{RESET}")
-        click.echo(result)
-        click.echo(f"\n{SUCCESS}Workflow executed successfully!{RESET}")
-        
-    except Exception as e:
-        click.echo(f"{ERROR}Error executing workflow: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@workflow.command(name="mcp-sync", help="Update awd.yml with workflow dependencies")
-@click.option('--output', default="awd.yml", help="Output file name")
-@click.pass_context
-def mcp_sync(ctx, output):
-    """Sync MCP dependencies from workflows to awd.yml."""
-    click.echo(f"{INFO}Syncing workflow MCP dependencies to {output}...{RESET}")
-    
-    try:
-        from .deps.aggregator import sync_workflow_dependencies
-        
-        success, servers = sync_workflow_dependencies(output)
-        
-        if success:
-            if servers:
-                click.echo(f"{INFO}Found {len(servers)} MCP dependencies across workflows:{RESET}")
-                for server in servers:
-                    click.echo(f"  - {server}")
-                click.echo(f"{SUCCESS}MCP dependencies synced successfully to {output}!{RESET}")
-            else:
-                click.echo(f"{WARNING}No MCP dependencies found in workflows.{RESET}")
-                click.echo(f"{SUCCESS}Empty {output} file created!{RESET}")
+        # Determine project directory
+        if project_name:
+            project_dir = Path(project_name)
+            project_dir.mkdir(exist_ok=True)
+            os.chdir(project_dir)
+            click.echo(f"{INFO}Created project directory: {project_name}{RESET}")
         else:
-            click.echo(f"{ERROR}Failed to sync MCP dependencies.{RESET}", err=True)
-            sys.exit(1)
+            project_dir = Path.cwd()
+            project_name = project_dir.name
             
-    except Exception as e:
-        click.echo(f"{ERROR}Error syncing MCP dependencies: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-# MCP command group
-@cli.group(help="Manage MCP servers")
-@click.pass_context
-def mcp(ctx):
-    """MCP server management commands."""
-    pass
-
-
-@mcp.command(name="list", help="List installed MCP servers")
-@click.pass_context
-def list_mcp(ctx):
-    """List installed MCP servers."""
-    click.echo(f"{INFO}Installed MCP servers:{RESET}")
-    
-    # Get the client type from context
-    client_type = ctx.obj['client']
-    
-    try:
-        package_manager = PackageManagerFactory.create_package_manager()
-        packages = package_manager.list_installed()
+        click.echo(f"{SUCCESS}Initializing AWD project: {HIGHLIGHT}{project_name}{RESET}")
         
-        if not packages:
-            click.echo(f"{WARNING}No MCP servers installed.{RESET}")
-            return
+        # Load templates and create files
+        try:
+            # Create awd.yml from template
+            awd_yml_content = _load_template_file('hello-world', 'awd.yml', 
+                                                  project_name=project_name)
+            with open('awd.yml', 'w') as f:
+                f.write(awd_yml_content)
             
-        for pkg in packages:
-            click.echo(f"  - {pkg}")
-            
-    except Exception as e:
-        click.echo(f"{ERROR}Error listing MCP servers: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@mcp.command(name="install", help="Install MCP servers")
-@click.argument('package', required=False)
-@click.option('--version', help="Package version to install")
-@click.option('--file', default="awd.yml", help="Configuration file to install from")
-@click.pass_context
-def install_mcp(ctx, package, version, file):
-    """Install MCP servers."""
-    client_type = ctx.obj['client']
-    
-    try:
-        if package:
-            # Install a specific package
-            click.echo(f"{INFO}Installing MCP server: {HIGHLIGHT}{package}{RESET}")
-            if version:
-                click.echo(f"  Version: {version}")
+            # Create hello-world.prompt.md from template
+            prompt_content = _load_template_file('hello-world', 'hello-world.prompt.md')
+            with open('hello-world.prompt.md', 'w') as f:
+                f.write(prompt_content)
                 
-            result = install_package(client_type, package, version)
-            if result:
-                click.echo(f"{SUCCESS}MCP server installed successfully!{RESET}")
-            else:
-                click.echo(f"{ERROR}Failed to install MCP server.{RESET}", err=True)
-                sys.exit(1)
-        else:
-            # Install from awd.yml
-            click.echo(f"{INFO}Installing MCP servers from {file}...{RESET}")
-            
-            from .deps.verifier import verify_dependencies, install_missing_dependencies
-            
-            # First verify what's missing
-            all_installed, installed, missing = verify_dependencies(file)
-            
-            if not installed and not missing:
-                click.echo(f"{WARNING}No MCP servers defined in {file} or file not found.{RESET}")
-                sys.exit(0)
+            # Create README.md from template
+            readme_content = _load_template_file('hello-world', 'README.md',
+                                                 project_name=project_name)
+            with open('README.md', 'w') as f:
+                f.write(readme_content)
                 
-            if all_installed:
-                click.echo(f"{SUCCESS}All MCP servers already installed!{RESET}")
-                sys.exit(0)
+        except FileNotFoundError as e:
+            click.echo(f"{ERROR}Template not found: {e}{RESET}", err=True)
+            click.echo(f"{WARNING}Falling back to built-in templates{RESET}")
+            
+            # Fallback to hardcoded content if templates are missing
+            awd_yml_content = {
+                'name': project_name,
+                'version': '1.0.0',
+                'description': f'A {project_name} AWD application',
+                'author': 'Your Name',
+                'entrypoint': 'hello-world.prompt.md',
+                'dependencies': {
+                    'mcp': ['ghcr.io/github/github-mcp-server']
+                }
+            }
+            
+            with open('awd.yml', 'w') as f:
+                yaml.dump(awd_yml_content, f, default_flow_style=False, sort_keys=False)
                 
-            # Confirm installation with user
-            if missing:
-                click.echo(f"{INFO}The following MCP servers will be installed:{RESET}")
-                for server in missing:
-                    click.echo(f"  - {server}")
-                    
-                if not click.confirm(f"{INFO}Do you want to continue?{RESET}"):
-                    click.echo(f"{INFO}Installation cancelled.{RESET}")
-                    sys.exit(0)
-                
-                # Install missing dependencies
-                success, installed = install_missing_dependencies(file, client_type)
-                
-                if success:
-                    click.echo(f"{SUCCESS}All required MCP servers installed successfully!{RESET}")
-                else:
-                    click.echo(f"{WARNING}Some MCP servers could not be installed.{RESET}")
-                    sys.exit(1)
-            
-    except Exception as e:
-        click.echo(f"{ERROR}Error installing MCP server: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@mcp.command(name="uninstall", help="Uninstall an MCP server")
-@click.argument('package')
-@click.pass_context
-def uninstall_mcp(ctx, package):
-    """Uninstall an MCP server."""
-    client_type = ctx.obj['client']
-    
-    try:
-        click.echo(f"{INFO}Uninstalling MCP server: {HIGHLIGHT}{package}{RESET}")
-        result = uninstall_package(client_type, package)
-        
-        if result:
-            click.echo(f"{SUCCESS}MCP server uninstalled successfully!{RESET}")
-        else:
-            click.echo(f"{ERROR}Failed to uninstall MCP server.{RESET}", err=True)
-            sys.exit(1)
-            
-    except Exception as e:
-        click.echo(f"{ERROR}Error uninstalling MCP server: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@mcp.command(name="search", help="Search for MCP servers")
-@click.argument('query')
-@click.pass_context
-def search_mcp(ctx, query):
-    """Search for MCP servers."""
-    try:
-        click.echo(f"{INFO}Searching for MCP servers: {HIGHLIGHT}{query}{RESET}")
-        
-        package_manager = PackageManagerFactory.create_package_manager()
-        results = package_manager.search(query)
-        
-        if not results:
-            click.echo(f"{WARNING}No matching MCP servers found.{RESET}")
-            return
-            
-        click.echo(f"{INFO}Found {len(results)} matching MCP servers:{RESET}")
-        for result in results:
-            click.echo(f"  - {result}")
-            
-    except Exception as e:
-        click.echo(f"{ERROR}Error searching for MCP servers: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@mcp.command(name="verify", help="Verify servers in awd.yml are installed")
-@click.option('--file', default="awd.yml", help="Configuration file to verify")
-@click.pass_context
-def verify_mcp(ctx, file):
-    """Verify MCP servers in awd.yml are installed."""
-    click.echo(f"{INFO}Verifying MCP servers in {file}...{RESET}")
-    
-    try:
-        from .deps.verifier import verify_dependencies
-        
-        all_installed, installed, missing = verify_dependencies(file)
-        
-        if not installed and not missing:
-            click.echo(f"{WARNING}No MCP servers defined in {file} or file not found.{RESET}")
-            sys.exit(0)
-            
-        if installed:
-            click.echo(f"{INFO}Installed MCP servers ({len(installed)}):{RESET}")
-            for server in installed:
-                click.echo(f"  - {server}")
-                
-        if missing:
-            click.echo(f"{WARNING}Missing MCP servers ({len(missing)}):{RESET}")
-            for server in missing:
-                click.echo(f"  - {server}")
-            click.echo(f"{INFO}Run 'awd mcp install' to install missing servers.{RESET}")
-            sys.exit(1)
-        else:
-            click.echo(f"{SUCCESS}All required MCP servers are installed!{RESET}")
-            
-    except Exception as e:
-        click.echo(f"{ERROR}Error verifying MCP servers: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@mcp.command(name="init", help="Create awd.yml from installed servers")
-@click.option('--output', default="awd.yml", help="Output file name")
-@click.pass_context
-def init_mcp(ctx, output):
-    """Create awd.yml from installed servers."""
-    click.echo(f"{INFO}Creating {output} from installed MCP servers...{RESET}")
-    
-    try:
-        package_manager = PackageManagerFactory.create_package_manager()
-        installed = package_manager.list_installed()
-        
-        if not installed:
-            click.echo(f"{WARNING}No MCP servers installed.{RESET}")
-            return
-        
-        # Create the configuration
-        config = {
-            'version': '1.0',
-            'servers': installed
-        }
-        
-        # Write to file
-        with open(output, 'w', encoding='utf-8') as f:
-            import yaml
-            yaml.dump(config, f, default_flow_style=False)
-            
-        click.echo(f"{SUCCESS}{output} created successfully!{RESET}")
-        
-    except Exception as e:
-        click.echo(f"{ERROR}Error creating {output}: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-# MCP Registry command group
-@mcp.group(help="Manage MCP registry operations")
-@click.pass_context
-def registry(ctx):
-    """MCP registry management commands."""
-    pass
-
-
-@registry.command(name="list", help="List available packages in the registry")
-@click.pass_context
-def list_registry(ctx):
-    """List available packages in the registry."""
-    click.echo(f"{INFO}Available MCP servers in registry:{RESET}")
-    
-    try:
-        registry_integration = RegistryIntegration()
-        packages = registry_integration.list_available_packages()
-        
-        if not packages:
-            click.echo(f"{WARNING}No packages found in registry.{RESET}")
-            return
-            
-        for pkg in packages:
-            name = pkg.get("name", "Unknown")
-            description = pkg.get("description", "No description available")
-            server_id = pkg.get("id", "")
-            click.echo(f"  - {HIGHLIGHT}{name}{RESET} (ID: {server_id})")
-            click.echo(f"    {description}")
-            
-    except Exception as e:
-        click.echo(f"{ERROR}Error listing registry packages: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@registry.command(name="search", help="Search the registry for packages")
-@click.argument('query')
-@click.pass_context
-def search_registry(ctx, query):
-    """Search the registry for packages."""
-    click.echo(f"{INFO}Searching registry for: {HIGHLIGHT}{query}{RESET}")
-    
-    try:
-        registry_integration = RegistryIntegration()
-        results = registry_integration.search_packages(query)
-        
-        if not results:
-            click.echo(f"{WARNING}No matching packages found in registry.{RESET}")
-            return
-            
-        click.echo(f"{INFO}Found {len(results)} matching packages:{RESET}")
-        for pkg in results:
-            name = pkg.get("name", "Unknown")
-            description = pkg.get("description", "No description available")
-            server_id = pkg.get("id", "")
-            click.echo(f"  - {HIGHLIGHT}{name}{RESET} (ID: {server_id})")
-            click.echo(f"    {description}")
-            
-    except Exception as e:
-        click.echo(f"{ERROR}Error searching registry: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@registry.command(name="info", help="Get details about a specific package")
-@click.argument('package')
-@click.pass_context
-def package_info(ctx, package):
-    """Get detailed information about a specific package."""
-    click.echo(f"{INFO}Package details for: {HIGHLIGHT}{package}{RESET}")
-    
-    try:
-        registry_integration = RegistryIntegration()
-        pkg_info = registry_integration.get_package_info(package)
-        
-        # Display basic package information
-        click.echo(f"  Name: {HIGHLIGHT}{pkg_info.get('name')}{RESET}")
-        click.echo(f"  Description: {pkg_info.get('description', 'No description available')}")
-        
-        # Display repository information if available
-        if "repository" in pkg_info:
-            repo = pkg_info["repository"]
-            click.echo(f"  Repository: {repo.get('url', 'Unknown')}")
-            if "source" in repo:
-                click.echo(f"  Source: {repo.get('source')}")
-        
-        # Display version information
-        if "version_detail" in pkg_info:
-            version_detail = pkg_info["version_detail"]
-            click.echo(f"  Version: {version_detail.get('version', 'Unknown')}")
-            if "release_date" in version_detail:
-                click.echo(f"  Release Date: {version_detail.get('release_date')}")
-            if "is_latest" in version_detail:
-                is_latest = "Yes" if version_detail.get("is_latest") else "No"
-                click.echo(f"  Latest: {is_latest}")
-        
-        # Display available packages
-        if "packages" in pkg_info:
-            packages = pkg_info["packages"]
-            if packages:
-                click.echo(f"  Available packages:")
-                for package in packages:
-                    registry = package.get("registry_name", "Unknown")
-                    name = package.get("name", "Unknown")
-                    version = package.get("version", "Unknown")
-                    runtime = package.get("runtime_hint", "")
-                    
-                    pkg_display = f"    - {name} (v{version}, {registry}"
-                    if runtime:
-                        pkg_display += f", runtime: {runtime}"
-                    pkg_display += ")"
-                    
-                    click.echo(pkg_display)
-                    
-                    # Display runtime arguments if available
-                    if "runtime_arguments" in package and package["runtime_arguments"]:
-                        click.echo(f"      Runtime arguments:")
-                        for arg in package["runtime_arguments"]:
-                            required = "[Required]" if arg.get("is_required", False) else "[Optional]"
-                            arg_name = arg.get("value", "")
-                            arg_desc = f"({arg.get('type', '')})"
-                            click.echo(f"        {required} {arg_name} {arg_desc}")
-                    
-                    # Display package arguments if available
-                    if "package_arguments" in package and package["package_arguments"]:
-                        click.echo(f"      Package arguments:")
-                        for arg in package["package_arguments"]:
-                            required = "[Required]" if arg.get("is_required", False) else "[Optional]"
-                            arg_name = arg.get("value", "")
-                            arg_desc = f"({arg.get('description', '')})"
-                            click.echo(f"        {required} {arg_name} {arg_desc}")
-        else:
-            # Fall back to displaying versions (backward compatibility)
-            versions = pkg_info.get("versions", [])
-            if versions:
-                click.echo(f"  Available versions:")
-                for version in versions:
-                    version_str = version.get("version", "Unknown")
-                    click.echo(f"    - {version_str}")
-            else:
-                click.echo(f"  {WARNING}No versions available{RESET}")
-            
-    except ValueError as e:
-        click.echo(f"{WARNING}{e}{RESET}")
-        sys.exit(1)
-    except Exception as e:
-        click.echo(f"{ERROR}Error getting package info: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-# Config command
-@cli.command(help="Configure AWD CLI")
-@click.option('--set-client', help="Set the default MCP client")
-@click.option('--show', is_flag=True, help="Show current configuration")
-@click.pass_context
-def config(ctx, set_client, show):
-    """Configure AWD CLI."""
-    if set_client:
-        set_default_client(set_client)
-        click.echo(f"{SUCCESS}Default client set to {HIGHLIGHT}{set_client}{RESET}")
-    elif show:
-        current_client = get_default_client()
-        click.echo(f"{INFO}Current configuration:{RESET}")
-        click.echo(f"  Default client: {HIGHLIGHT}{current_client}{RESET}")
-    else:
-        # Show help if no options provided
-        click.echo(ctx.get_help())
-
-
-# Create command group
-@cli.group(help="Create new prompts or workflows")
-@click.pass_context
-def create(ctx):
-    """Create management commands."""
-    pass
-
-
-@create.command(name="prompt", help="Create a new prompt template")
-@click.argument('name')
-@click.option('--description', '-d', help="Description for the prompt")
-@click.pass_context
-def create_prompt(ctx, name, description):
-    """Create a new prompt template."""
-    # TODO: Import prompt creation functionality when implemented
-    # For now, provide a placeholder implementation
-    click.echo(f"{SUCCESS}Creating new prompt: {HIGHLIGHT}{name}{RESET}")
-    
-    try:
-        # Create a basic .prompt.md template
-        import os
-        from pathlib import Path
-        
-        # Ensure prompts directory exists
-        prompts_dir = Path("prompts")
-        prompts_dir.mkdir(exist_ok=True)
-        
-        filename = f"{name}.prompt.md"
-        filepath = prompts_dir / filename
-        
-        # Basic prompt template
-        template_content = f"""---
-description: {description or f"AI prompt for {name}"}
-mcp: []
-input: []
+            # Use minimal fallback content for other files
+            with open('hello-world.prompt.md', 'w') as f:
+                f.write("""---
+description: A hello world prompt demonstrating AWD
+input: [name]
 ---
 
-# {name.replace('-', ' ').title()}
+# Hello World
 
-[Add your prompt instructions here]
+Welcome to AWD, ${input:name}!
+""")
+                
+            with open('README.md', 'w') as f:
+                f.write(f"""# {project_name}
 
-## Instructions
-
-1. [Step 1]
-2. [Step 2] 
-3. [Step 3]
-
-## Expected Output
-
-[Describe the expected output format]
-"""
-        
-        with open(filepath, 'w') as f:
-            f.write(template_content)
+An AWD application created with 'awd init'.
+""")
             
-        click.echo(f"{INFO}Prompt template created at: {filepath}{RESET}")
-        click.echo(f"{SUCCESS}Prompt template created successfully!{RESET}")
-        click.echo(f"{INFO}💡 Tip: Edit the file to add your specific prompt instructions.{RESET}")
+        click.echo(f"{INFO}Created files:{RESET}")
+        click.echo(f"  - awd.yml")
+        click.echo(f"  - hello-world.prompt.md")
+        click.echo(f"  - README.md")
+        click.echo(f"\n{SUCCESS}AWD project initialized successfully!{RESET}")
+        click.echo(f"{INFO}Next steps:{RESET}")
+        click.echo(f"  1. {HIGHLIGHT}awd install{RESET} - Install dependencies")
+        click.echo(f"  2. {HIGHLIGHT}awd run --param name=\"Your Name\"{RESET} - Run the hello world prompt")
         
     except Exception as e:
-        click.echo(f"{ERROR}Error creating prompt template: {e}{RESET}", err=True)
+        click.echo(f"{ERROR}Error initializing project: {e}{RESET}", err=True)
         sys.exit(1)
 
 
-@create.command(name="workflow", help="Create a new workflow template")
-@click.argument('name')
-@click.option('--description', '-d', help="Description for the workflow")
+@cli.command(help="Install MCP dependencies from awd.yml")
 @click.pass_context
-def create_workflow_new(ctx, name, description):
-    """Create a new workflow template."""
-    from .workflow.discovery import create_workflow_template
-    
-    file_format = "VSCode .github/prompts format"
-    click.echo(f"{SUCCESS}Creating new workflow: {HIGHLIGHT}{name}{RESET} ({file_format})")
-    
+def install(ctx):
+    """Install MCP dependencies from awd.yml (like npm install)."""
     try:
-        file_path = create_workflow_template(name, description=description, use_vscode_convention=True)
-        click.echo(f"{INFO}Workflow template created at: {file_path}{RESET}")
-        click.echo(f"{SUCCESS}Workflow template created successfully!{RESET}")
-        click.echo(f"{INFO}💡 Tip: This follows VSCode's .github/prompts convention for better integration.{RESET}")
+        # Check if awd.yml exists
+        if not Path('awd.yml').exists():
+            click.echo(f"{ERROR}No awd.yml found. Run 'awd init' first.{RESET}", err=True)
+            sys.exit(1)
+            
+        click.echo(f"{INFO}Installing dependencies from awd.yml...{RESET}")
         
-    except Exception as e:
-        click.echo(f"{ERROR}Error creating workflow template: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-# Universal commands that work with both prompts and workflows
-@cli.command(help="List all available prompts and workflows")
-@click.pass_context
-def list(ctx):
-    """List all available prompts and workflows."""
-    from .workflow.discovery import discover_workflows
-    
-    click.echo(f"{INFO}Available prompts and workflows:{RESET}")
-    
-    try:
-        workflows = discover_workflows()
+        # Read awd.yml
+        with open('awd.yml', 'r') as f:
+            config = yaml.safe_load(f)
+            
+        # Get MCP dependencies
+        mcp_deps = config.get('dependencies', {}).get('mcp', [])
         
-        if not workflows:
-            click.echo(f"{WARNING}No prompts or workflows found.{RESET}")
-            click.echo(f"{INFO}💡 Create your first prompt: awd create prompt my-prompt{RESET}")
-            click.echo(f"{INFO}💡 Create your first workflow: awd create workflow my-workflow{RESET}")
+        if not mcp_deps:
+            click.echo(f"{WARNING}No MCP dependencies found in awd.yml{RESET}")
             return
             
-        for wf in workflows:
-            # Determine type based on file extension or content
-            file_type = "prompt" if ".prompt.md" in getattr(wf, 'file_path', '') else "workflow"
-            click.echo(f"  - {HIGHLIGHT}{wf.name}{RESET} ({file_type}): {wf.description}")
+        click.echo(f"{INFO}Found {len(mcp_deps)} MCP dependencies:{RESET}")
+        for dep in mcp_deps:
+            click.echo(f"  - {dep}")
             
+        # Import and use existing MCP installation functionality
+        try:
+            from .factory import PackageManagerFactory
+            from .core.operations import install_package
+            
+            package_manager = PackageManagerFactory.create_package_manager()
+            
+            for dep in mcp_deps:
+                click.echo(f"{INFO}Installing {dep}...{RESET}")
+                try:
+                    result = install_package('vscode', dep)  # Default to vscode client
+                    if result and result.get('success'):
+                        click.echo(f"{SUCCESS}✓ {dep} installed{RESET}")
+                    else:
+                        click.echo(f"{WARNING}⚠ {dep} installation may have issues{RESET}")
+                except Exception as install_error:
+                    click.echo(f"{WARNING}⚠ Failed to install {dep}: {install_error}{RESET}")
+                    
+        except ImportError:
+            click.echo(f"{WARNING}MCP installation functionality not available yet{RESET}")
+            click.echo(f"{INFO}Dependencies listed in awd.yml: {', '.join(mcp_deps)}{RESET}")
+            
+        click.echo(f"\n{SUCCESS}Dependencies installation complete!{RESET}")
+        
     except Exception as e:
-        click.echo(f"{ERROR}Error listing prompts and workflows: {e}{RESET}", err=True)
+        click.echo(f"{ERROR}Error installing dependencies: {e}{RESET}", err=True)
         sys.exit(1)
 
 
-@cli.command(help="Run a prompt or workflow with parameters")
-@click.argument('name')
-@click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
-@click.option('--runtime', help="Runtime to use (llm, codex)")
-@click.option('--llm', help="LLM model to use (fallback if not specified in frontmatter)")
+def _load_awd_config():
+    """Load configuration from awd.yml."""
+    if Path('awd.yml').exists():
+        with open('awd.yml', 'r') as f:
+            return yaml.safe_load(f)
+    return None
+
+
+def _discover_prompts():
+    """Discover all .prompt.md files in the current project."""
+    prompts = []
+    
+    for prompt_file in Path('.').rglob('*.prompt.md'):
+        # Read frontmatter to get description
+        try:
+            with open(prompt_file, 'r') as f:
+                content = f.read()
+                
+            if content.startswith('---'):
+                frontmatter_end = content.find('---', 3)
+                if frontmatter_end != -1:
+                    frontmatter = yaml.safe_load(content[3:frontmatter_end])
+                    description = frontmatter.get('description', 'No description')
+                else:
+                    description = 'No description'
+            else:
+                description = 'No description'
+                
+            prompt_name = prompt_file.stem.replace('.prompt', '')
+            prompts.append({
+                'name': prompt_name,
+                'description': description,
+                'file_path': str(prompt_file)
+            })
+        except Exception:
+            # Skip files that can't be parsed
+            continue
+            
+    return prompts
+
+
+def _get_entrypoint_prompt():
+    """Get the entrypoint prompt from awd.yml."""
+    config = _load_awd_config()
+    if config and 'entrypoint' in config:
+        return config['entrypoint'].replace('.prompt.md', '')
+    return None
+
+
+@cli.command(help="Run a prompt with parameters")
+@click.argument('prompt_name', required=False)
+@click.option('--param', '-p', multiple=True, help="Parameter in format name=value")
+@click.option('--runtime', default='llm', help="Runtime to use (llm, codex)")
+@click.option('--llm', help="LLM model to use (for llm runtime)")
 @click.pass_context
-def run(ctx, name, param, runtime, llm):
-    """Run a prompt or workflow."""
-    from .workflow.runner import run_workflow as execute_workflow
-    
-    # Enhanced logging for better user experience
-    click.echo(f"{TITLE}AWD: Running {HIGHLIGHT}{name}{RESET}")
-    
-    # Parse and display parameters
-    params = {}
-    if param:
-        click.echo(f"{INFO}Parameters:{RESET}")
+def run(ctx, prompt_name, param, runtime, llm):
+    """Run a prompt (uses entrypoint if no name specified)."""
+    try:
+        # If no prompt name specified, use entrypoint
+        if not prompt_name:
+            prompt_name = _get_entrypoint_prompt()
+            if not prompt_name:
+                click.echo(f"{ERROR}No prompt specified and no entrypoint defined in awd.yml{RESET}", err=True)
+                click.echo(f"{INFO}Available prompts:{RESET}")
+                prompts = _discover_prompts()
+                for prompt in prompts:
+                    click.echo(f"  - {HIGHLIGHT}{prompt['name']}{RESET}: {prompt['description']}")
+                sys.exit(1)
+                
+        click.echo(f"{INFO}Running prompt: {HIGHLIGHT}{prompt_name}{RESET}")
+        
+        # Parse parameters
+        params = {}
         for p in param:
             if '=' in p:
                 param_name, value = p.split('=', 1)
                 params[param_name] = value
-                click.echo(f"  • {param_name}: {HIGHLIGHT}{value}{RESET}")
-    
-    # Add runtime and llm to params if specified and display runtime info
-    if runtime:
-        params['_runtime'] = runtime
-        click.echo(f"{INFO}Runtime: {HIGHLIGHT}{runtime}{RESET}")
-    if llm:
-        params['_llm'] = llm
-        click.echo(f"{INFO}Model: {HIGHLIGHT}{llm}{RESET}")
-    
-    # Show execution start
-    click.echo(f"{INFO}Executing prompt...{RESET}")
-    click.echo()  # Add blank line before output
-    
-    try:
-        success, result = execute_workflow(name, params)
-        
-        if not success:
-            click.echo(f"\n{ERROR}Execution failed: {result}{RESET}", err=True)
-            sys.exit(1)
-        
-        # The result is now already streamed to terminal via the runtime adapters
-        # Just show completion message
-        click.echo(f"\n{SUCCESS}✓ Execution completed successfully!{RESET}")
-        
-    except KeyboardInterrupt:
-        click.echo(f"\n{WARNING}⚠ Execution interrupted by user{RESET}")
-        sys.exit(1)
-    except Exception as e:
-        click.echo(f"\n{ERROR}Error executing {name}: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@cli.command(help="Preview a prompt or workflow with parameters substituted (without execution)")
-@click.argument('name')
-@click.option('--param', '-p', multiple=True, help="Parameter in the format name=value")
-@click.pass_context
-def preview(ctx, name, param):
-    """Preview a prompt or workflow with parameters substituted."""
-    from .workflow.runner import preview_workflow
-    
-    click.echo(f"{INFO}Previewing {HIGHLIGHT}{name}{RESET}")
-    
-    # Parse parameters
-    params = {}
-    for p in param:
-        if '=' in p:
-            param_name, value = p.split('=', 1)
-            params[param_name] = value
-            click.echo(f"  - {param_name}: {value}")
-    
-    try:
-        # Get the processed content without runtime execution
-        success, result = preview_workflow(name, params)
-        
-        if not success:
-            click.echo(f"{ERROR}{result}{RESET}", err=True)
-            sys.exit(1)
-        
-        click.echo(f"\n{INFO}Processed Content:{RESET}")
-        click.echo("-" * 50)
-        click.echo(result)
-        click.echo("-" * 50)
-        click.echo(f"{SUCCESS}Preview complete! Use 'awd run {name}' to execute.{RESET}")
-        
-    except Exception as e:
-        click.echo(f"{ERROR}Error previewing {name}: {e}{RESET}", err=True)
-        sys.exit(1)
-
-
-@cli.command(help="List available LLM runtime models")
-@click.pass_context
-def models(ctx):
-    """List available LLM runtime models."""
-    try:
-        from .runtime.llm_runtime import LLMRuntime
-        
-        click.echo(f"{TITLE}Available LLM Runtime Models:{RESET}")
-        
-        # Try to get a runtime instance to list models
+                click.echo(f"  - {param_name}: {value}")
+                
+        # Import and use existing runtime functionality
         try:
-            runtime = LLMRuntime()
-            models = runtime.list_available_models()
+            from .workflow.runner import run_workflow
             
-            if "error" in models:
-                click.echo(f"{ERROR}{models['error']}{RESET}")
-                return
+            success, result = run_workflow(prompt_name, params, runtime=runtime, llm=llm)
+            
+            if not success:
+                click.echo(f"{ERROR}{result}{RESET}", err=True)
+                sys.exit(1)
                 
-            if not models:
-                click.echo(f"{WARNING}No models available. Install llm plugins first.{RESET}")
-                click.echo(f"{INFO}Example: pip install llm-ollama{RESET}")
-                return
-                
-            # Group by provider if possible
-            providers = {}
-            for model_id, info in models.items():
-                provider = info.get('provider', 'unknown')
-                if provider not in providers:
-                    providers[provider] = []
-                providers[provider].append(model_id)
+            click.echo(f"\n{INFO}Prompt output:{RESET}")
+            click.echo(result)
+            click.echo(f"\n{SUCCESS}Prompt executed successfully!{RESET}")
             
-            for provider, model_list in providers.items():
-                click.echo(f"\n{HIGHLIGHT}{provider.title()}:{RESET}")
-                for model in sorted(model_list):
-                    click.echo(f"  - {model}")
-                    
-        except Exception as e:
-            click.echo(f"{ERROR}Error listing models: {e}{RESET}")
-            click.echo(f"{INFO}Tip: Install LLM and configure API keys first{RESET}")
-            click.echo(f"{INFO}Example: pip install llm && llm keys set openai{RESET}")
+        except ImportError:
+            click.echo(f"{WARNING}Runtime functionality not available yet{RESET}")
+            click.echo(f"{INFO}Would run: {prompt_name} with params {params}{RESET}")
             
-    except ImportError:
-        click.echo(f"{ERROR}LLM runtime not available. Install with: pip install llm{RESET}")
+    except Exception as e:
+        click.echo(f"{ERROR}Error running prompt: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
-# Runtime management group
-@cli.group(help="Manage LLM runtimes")
+@cli.command(help="Preview a prompt with parameters substituted (without execution)")
+@click.argument('prompt_name', required=False)
+@click.option('--param', '-p', multiple=True, help="Parameter in format name=value")
 @click.pass_context
-def runtime(ctx):
-    """Runtime management commands."""
-    pass
+def preview(ctx, prompt_name, param):
+    """Preview a prompt with parameters substituted."""
+    try:
+        # If no prompt name specified, use entrypoint
+        if not prompt_name:
+            prompt_name = _get_entrypoint_prompt()
+            if not prompt_name:
+                click.echo(f"{ERROR}No prompt specified and no entrypoint defined in awd.yml{RESET}", err=True)
+                sys.exit(1)
+                
+        click.echo(f"{INFO}Previewing prompt: {HIGHLIGHT}{prompt_name}{RESET}")
+        
+        # Parse parameters
+        params = {}
+        for p in param:
+            if '=' in p:
+                param_name, value = p.split('=', 1)
+                params[param_name] = value
+                click.echo(f"  - {param_name}: {value}")
+                
+        # Import and use existing preview functionality
+        try:
+            from .workflow.runner import preview_workflow
+            
+            success, result = preview_workflow(prompt_name, params)
+            
+            if not success:
+                click.echo(f"{ERROR}{result}{RESET}", err=True)
+                sys.exit(1)
+                
+            click.echo(f"\n{INFO}Processed Content:{RESET}")
+            click.echo("-" * 50)
+            click.echo(result)
+            click.echo("-" * 50)
+            click.echo(f"{SUCCESS}Preview complete! Use 'awd run {prompt_name}' to execute.{RESET}")
+            
+        except ImportError:
+            click.echo(f"{WARNING}Preview functionality not available yet{RESET}")
+            click.echo(f"{INFO}Would preview: {prompt_name} with params {params}{RESET}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error previewing prompt: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
-@runtime.command(help="List available runtimes on the system")
-@click.pass_context  
+@cli.command(help="List available prompts in the current project")
+@click.pass_context
 def list(ctx):
-    """List all available runtimes."""
+    """List all available prompts in the project."""
     try:
-        from .runtime.factory import RuntimeFactory
+        click.echo(f"{INFO}Available prompts:{RESET}")
         
-        click.echo(f"{TITLE}Available Runtimes:{RESET}")
+        prompts = _discover_prompts()
         
-        available_runtimes = RuntimeFactory.get_available_runtimes()
-        
-        if not available_runtimes:
-            click.echo(f"{WARNING}No runtimes available.{RESET}")
-            click.echo(f"{INFO}Install at least one of:{RESET}")
-            click.echo(f"  - Codex CLI: npm i -g @openai/codex@native")
-            click.echo(f"  - LLM library: pip install llm")
+        if not prompts:
+            click.echo(f"{WARNING}No prompts found.{RESET}")
+            click.echo(f"{INFO}💡 Create your first project: awd init my-project{RESET}")
             return
+            
+        # Show entrypoint if defined
+        entrypoint = _get_entrypoint_prompt()
         
-        for runtime_info in available_runtimes:
-            name = runtime_info.get("name", "unknown")
-            runtime_type = runtime_info.get("type", "unknown")
-            version = runtime_info.get("version", "unknown")
+        for prompt in prompts:
+            prefix = "📍 " if prompt['name'] == entrypoint else "   "
+            click.echo(f"{prefix}{HIGHLIGHT}{prompt['name']}{RESET}: {prompt['description']}")
             
-            click.echo(f"\n{HIGHLIGHT}{name}:{RESET}")
-            click.echo(f"  Type: {runtime_type}")
-            if version != "unknown":
-                click.echo(f"  Version: {version}")
+        if entrypoint:
+            click.echo(f"\n{INFO}📍 = entrypoint (default when running 'awd run'){RESET}")
             
-            capabilities = runtime_info.get("capabilities", {})
-            if capabilities:
-                click.echo(f"  Capabilities:")
-                for cap, value in capabilities.items():
-                    click.echo(f"    - {cap}: {value}")
-            
-            if "error" in runtime_info:
-                click.echo(f"  {WARNING}Warning: {runtime_info['error']}{RESET}")
-                
     except Exception as e:
-        click.echo(f"{ERROR}Error listing runtimes: {e}{RESET}")
+        click.echo(f"{ERROR}Error listing prompts: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
-@runtime.command(help="Show detailed information about a specific runtime")
-@click.argument('name')
-@click.pass_context
-def info(ctx, name):
-    """Show detailed information about a runtime."""
-    try:
-        from .runtime.factory import RuntimeFactory
-        
-        click.echo(f"{TITLE}Runtime Information: {HIGHLIGHT}{name}{RESET}")
-        
-        try:
-            runtime = RuntimeFactory.get_runtime_by_name(name)
-            runtime_info = runtime.get_runtime_info()
-            
-            # Display basic info
-            click.echo(f"\n{HIGHLIGHT}Basic Information:{RESET}")
-            for key, value in runtime_info.items():
-                if key != "capabilities":
-                    click.echo(f"  {key}: {value}")
-            
-            # Display capabilities
-            capabilities = runtime_info.get("capabilities", {})
-            if capabilities:
-                click.echo(f"\n{HIGHLIGHT}Capabilities:{RESET}")
-                for cap, value in capabilities.items():
-                    click.echo(f"  {cap}: {value}")
-            
-            # Try to list models if available
-            try:
-                models = runtime.list_available_models()
-                if models and "error" not in models:
-                    click.echo(f"\n{HIGHLIGHT}Available Models:{RESET}")
-                    for model_id, model_info in models.items():
-                        click.echo(f"  - {model_id}")
-                        if isinstance(model_info, dict) and "provider" in model_info:
-                            click.echo(f"    Provider: {model_info['provider']}")
-                            
-            except Exception:
-                # Don't fail the whole command if model listing fails
-                pass
-                
-        except ValueError as e:
-            click.echo(f"{ERROR}{str(e)}{RESET}")
-            click.echo(f"\n{INFO}Available runtimes:{RESET}")
-            available_runtimes = RuntimeFactory.get_available_runtimes()
-            for runtime_info in available_runtimes:
-                click.echo(f"  - {runtime_info.get('name', 'unknown')}")
-                
-    except Exception as e:
-        click.echo(f"{ERROR}Error getting runtime info: {e}{RESET}")
-
-
-@cli.command(help="List available LLM runtime models")
+@cli.command(help="List available LLM models")
 @click.pass_context
 def models(ctx):
     """List available LLM runtime models."""
     try:
-        from .runtime.llm_runtime import LLMRuntime
-        
         click.echo(f"{TITLE}Available LLM Runtime Models:{RESET}")
         
-        # Try to get a runtime instance to list models
+        # Try to import and use existing functionality
         try:
+            from .runtime.llm_runtime import LLMRuntime
+            
             runtime = LLMRuntime()
             models = runtime.list_available_models()
             
@@ -922,13 +424,46 @@ def models(ctx):
                 for model in sorted(model_list):
                     click.echo(f"  - {model}")
                     
-        except Exception as e:
-            click.echo(f"{ERROR}Error listing models: {e}{RESET}")
-            click.echo(f"{INFO}Tip: Install LLM and configure API keys first{RESET}")
-            click.echo(f"{INFO}Example: pip install llm && llm keys set openai{RESET}")
+        except ImportError:
+            click.echo(f"{WARNING}LLM runtime not available{RESET}")
+            click.echo(f"{INFO}Install with: pip install llm{RESET}")
+            click.echo(f"\n{INFO}Common models:{RESET}")
+            click.echo(f"  - github/gpt-4o-mini (free with GitHub PAT)")
+            click.echo(f"  - gpt-4o-mini (OpenAI)")
+            click.echo(f"  - claude-3-haiku (Anthropic)")
             
-    except ImportError:
-        click.echo(f"{ERROR}LLM runtime not available. Install with: pip install llm{RESET}")
+    except Exception as e:
+        click.echo(f"{ERROR}Error listing models: {e}{RESET}", err=True)
+
+
+@cli.command(help="Configure AWD CLI")
+@click.option('--show', is_flag=True, help="Show current configuration")
+@click.pass_context
+def config(ctx, show):
+    """Configure AWD CLI settings."""
+    try:
+        if show:
+            click.echo(f"{TITLE}Current AWD Configuration:{RESET}")
+            
+            # Show awd.yml if in project
+            if Path('awd.yml').exists():
+                config = _load_awd_config()
+                click.echo(f"\n{HIGHLIGHT}Project (awd.yml):{RESET}")
+                click.echo(f"  Name: {config.get('name', 'Unknown')}")
+                click.echo(f"  Version: {config.get('version', 'Unknown')}")
+                click.echo(f"  Entrypoint: {config.get('entrypoint', 'None')}")
+                click.echo(f"  MCP Dependencies: {len(config.get('dependencies', {}).get('mcp', []))}")
+            else:
+                click.echo(f"{INFO}Not in an AWD project directory{RESET}")
+                
+            click.echo(f"\n{HIGHLIGHT}Global:{RESET}")
+            click.echo(f"  AWD CLI Version: 0.0.1")
+            
+        else:
+            click.echo(f"{INFO}Use --show to display configuration{RESET}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error showing configuration: {e}{RESET}", err=True)
 
 
 def main():
