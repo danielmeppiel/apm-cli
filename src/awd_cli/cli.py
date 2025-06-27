@@ -373,7 +373,7 @@ def models(ctx):
         
         # Try to import and use existing functionality
         try:
-            from .runtime.llm_runtime import LLMRuntime
+            from awd_cli.runtime.llm_runtime import LLMRuntime
             
             runtime = LLMRuntime()
             models = runtime.list_available_models()
@@ -440,6 +440,108 @@ def config(ctx, show):
             
     except Exception as e:
         click.echo(f"{ERROR}Error showing configuration: {e}{RESET}", err=True)
+
+
+@cli.group(help="Manage AI runtimes")
+def runtime():
+    """Manage AI runtime installations and configurations."""
+    pass
+
+
+@runtime.command(help="Set up a runtime")
+@click.argument('runtime_name', type=click.Choice(['codex', 'llm']))
+@click.option('--version', help="Specific version to install")
+def setup(runtime_name, version):
+    """Set up an AI runtime with AWD-managed installation."""
+    try:
+        from awd_cli.runtime.manager import RuntimeManager
+        
+        manager = RuntimeManager()
+        success = manager.setup_runtime(runtime_name, version)
+        
+        if not success:
+            sys.exit(1)
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error setting up runtime: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+@runtime.command(help="List available and installed runtimes")
+def list():
+    """List all available runtimes and their installation status."""
+    try:
+        from awd_cli.runtime.manager import RuntimeManager
+        
+        manager = RuntimeManager()
+        runtimes = manager.list_runtimes()
+        
+        click.echo(f"{TITLE}Available Runtimes:{RESET}")
+        click.echo()
+        
+        for name, info in runtimes.items():
+            status_icon = "✅" if info["installed"] else "❌"
+            status_text = "Installed" if info["installed"] else "Not installed"
+            
+            click.echo(f"{status_icon} {HIGHLIGHT}{name}{RESET}")
+            click.echo(f"   Description: {info['description']}")
+            click.echo(f"   Status: {status_text}")
+            
+            if info["installed"]:
+                click.echo(f"   Path: {info['path']}")
+                if "version" in info:
+                    click.echo(f"   Version: {info['version']}")
+            
+            click.echo()
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error listing runtimes: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+@runtime.command(help="Remove an installed runtime")
+@click.argument('runtime_name', type=click.Choice(['codex', 'llm']))
+@click.confirmation_option(prompt='Are you sure you want to remove this runtime?')
+def remove(runtime_name):
+    """Remove an installed runtime from AWD management."""
+    try:
+        from awd_cli.runtime.manager import RuntimeManager
+        
+        manager = RuntimeManager()
+        success = manager.remove_runtime(runtime_name)
+        
+        if not success:
+            sys.exit(1)
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error removing runtime: {e}{RESET}", err=True)
+        sys.exit(1)
+
+
+@runtime.command(help="Check which runtime will be used")
+def status():
+    """Show which runtime AWD will use for execution."""
+    try:
+        from awd_cli.runtime.manager import RuntimeManager
+        
+        manager = RuntimeManager()
+        available_runtime = manager.get_available_runtime()
+        preference = manager.get_runtime_preference()
+        
+        click.echo(f"{TITLE}Runtime Status:{RESET}")
+        click.echo()
+        
+        click.echo(f"Preference order: {' → '.join(preference)}")
+        
+        if available_runtime:
+            click.echo(f"{SUCCESS}Active runtime: {available_runtime}{RESET}")
+        else:
+            click.echo(f"{ERROR}No runtimes available{RESET}")
+            click.echo(f"{INFO}Run 'awd runtime setup codex' to install the primary runtime{RESET}")
+            
+    except Exception as e:
+        click.echo(f"{ERROR}Error checking runtime status: {e}{RESET}", err=True)
+        sys.exit(1)
 
 
 def main():

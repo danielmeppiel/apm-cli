@@ -35,8 +35,9 @@ class CodexRuntime(RuntimeAdapter):
         
         try:
             # Use codex exec to execute the prompt with real-time streaming
+            # Always skip git repo check when running from AWD
             process = subprocess.Popen(
-                ["codex", "exec", prompt_content],
+                ["codex", "exec", "--skip-git-repo-check", prompt_content],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,  # Merge stderr into stdout for streaming
                 text=True,

@@ -13,9 +13,9 @@
 # 1. Install AWD CLI (zero dependencies)
 curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
 
-# 2. Configure GitHub Models
-llm keys set github
-# Paste your GitHub PAT when prompted
+# 2. Setup AI runtime with GitHub Models
+awd runtime setup codex
+export GITHUB_TOKEN=your_token_here
 
 # 3. Initialize your first AWD project (like npm init)
 awd init my-hello-world
@@ -30,12 +30,17 @@ awd run --param name="Developer"
 
 ## Supported Runtimes
 
-AWD supports multiple AI runtime environments:
+AWD manages LLM runtime installation and configuration automatically:
 
-- **🔧 LLM Library** (default) - Simon Willison's [`llm`](https://llm.datasette.io/en/stable/index.html) with 100+ models from GitHub, OpenAI, Anthropic, local Ollama, and more
-- **⚡ OpenAI Codex CLI** - OpenAI's [`codex`](https://github.com/openai/codex) with advanced code understanding and native MCP support
+- **⚡ OpenAI Codex CLI** (recommended) - OpenAI's [`codex`](https://github.com/openai/codex) with advanced code understanding and native MCP support
+- **🔧 LLM Library** - Simon Willison's [`llm`](https://llm.datasette.io/en/stable/index.html) with 100+ models from GitHub, OpenAI, Anthropic, local Ollama, and more
 
-📖 **Setup Guide**: See [Runtime Integration](docs/runtime-integration.md) for detailed setup instructions for both runtimes.
+```bash
+# AWD manages runtime installation
+awd runtime setup codex        # Install Codex with GitHub Models
+awd runtime setup llm          # Install LLM library  
+awd runtime list              # Show installed runtimes
+```
 
 ## How It Works
 
@@ -234,14 +239,16 @@ cd awd-cli && pip install -e .
 
 ```bash
 # Quick start commands
+awd runtime setup codex                      # Install Codex runtime
 awd init my-project                          # Initialize new AWD project
 awd install                                  # Install dependencies
 awd run --param key=value                    # Run entrypoint prompt
 awd run prompt-name --param key=value       # Run specific prompt
 
 # Runtime selection
-awd run --runtime=llm --llm=github/gpt-4o-mini    # Use GitHub Models
-awd run --runtime=codex                           # Use OpenAI Codex
+awd run --runtime=codex                           # Use Codex (default when installed)
+awd run --runtime=llm --llm=github/gpt-4o-mini    # Use LLM with GitHub Models
+awd run --runtime=llm --llm=ollama/llama3.2       # Use LLM with local Ollama
 ```
 
 ## Community

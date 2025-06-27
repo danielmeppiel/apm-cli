@@ -23,6 +23,7 @@ entry_point = repo_root / 'src' / 'awd_cli' / 'cli.py'
 # Data files to include
 datas = [
     (str(repo_root / 'templates'), 'templates'),  # Bundle templates directory
+    (str(repo_root / 'scripts' / 'runtime'), 'scripts/runtime'),  # Bundle runtime setup scripts
 ]
 
 # Hidden imports for AWD modules that might not be auto-detected
@@ -49,6 +50,7 @@ hiddenimports = [
     'awd_cli.runtime.codex_runtime',
     'awd_cli.runtime.factory',
     'awd_cli.runtime.llm_runtime',
+    'awd_cli.runtime.manager',  # Add runtime manager
     'awd_cli.utils',
     'awd_cli.utils.helpers',
     'awd_cli.workflow',
@@ -62,6 +64,7 @@ hiddenimports = [
     'pathlib',
     'frontmatter',
     'requests',
+    'pkg_resources',  # For accessing embedded scripts
 ]
 
 # Modules to exclude to reduce binary size
