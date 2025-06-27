@@ -55,6 +55,7 @@ jobs:
           name: python-package
           path: dist/
           retention-days: 30
+          if-no-files-found: error
 
   # Build platform-specific binaries
   build:
@@ -140,3 +141,4 @@ jobs:
             ./dist/${{ matrix.binary_name }}
             ./dist/${{ matrix.binary_name }}.sha256
           retention-days: 30
+          if-no-files-found: error
