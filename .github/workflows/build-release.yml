@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       
@@ -62,15 +62,15 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             platform: linux
             arch: x86_64
             binary_name: awd-linux-x86_64
-          - os: macos-latest
+          - os: macos-14
             platform: darwin
             arch: x86_64
             binary_name: awd-darwin-x86_64
-          - os: macos-latest
+          - os: macos-14
             platform: darwin
             arch: arm64
             binary_name: awd-darwin-arm64
@@ -83,7 +83,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'  # Use 3.11 for better compatibility
       
@@ -104,31 +104,9 @@ jobs:
           pip install -e .
           pip install pyinstaller
       
-      - name: Build binary (macOS ARM64)
-        if: matrix.target_arch == 'arm64'
-        run: |
-          # Set target architecture for ARM64 build
-          export ARCHFLAGS="-arch arm64"
-          pyinstaller --target-arch universal2 build/awd.spec
-          mv dist/awd dist/${{ matrix.binary_name }}
-          chmod +x dist/${{ matrix.binary_name }}
-      
-      - name: Build binary (Other platforms)
-        if: matrix.target_arch != 'arm64'
+      - name: Build binary
         run: |
           ./scripts/build-binary.sh
-      
-      - name: Test binary
-        run: |
-          ./dist/${{ matrix.binary_name }} --version
-      
-      - name: Generate checksum
-        run: |
-          if command -v sha256sum &> /dev/null; then
-            sha256sum dist/${{ matrix.binary_name }} > dist/${{ matrix.binary_name }}.sha256
-          else
-            shasum -a 256 dist/${{ matrix.binary_name }} > dist/${{ matrix.binary_name }}.sha256
-          fi
       
       - name: Upload binary to release
         if: github.event_name == 'release'
