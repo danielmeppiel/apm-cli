@@ -1,32 +1,39 @@
-# Description
+# Pull Request
 
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context.
+## ⚡ Quick Start - Use Specialized Templates
+
+For better guidance, consider using our specialized templates:
+
+- **🚀 New Feature**: [Create Feature PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=feature.md)
+- **🐛 Bug Fix**: [Create Bug Fix PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=bugfix.md)  
+- **📖 Documentation**: [Create Docs PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=documentation.md)
+- **🔧 Maintenance**: [Create Maintenance PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=maintenance.md)
+
+## Description
+
+Brief description of changes and motivation.
+
+## Type of Change
+
+**🏷️ IMPORTANT: Apply the appropriate label after creating this PR:**
+
+- [ ] 🚀 **New Feature** → Apply label: `enhancement` or `feature`
+- [ ] 🐛 **Bug Fix** → Apply label: `bug` or `fix`  
+- [ ] 📖 **Documentation** → Apply label: `documentation` or `docs`
+- [ ] 🔧 **Other Changes** → No specific label needed
+- [ ] 🚫 **Exclude from Release Notes** → Apply label: `ignore-for-release`
+
+## Testing
+
+- [ ] Tested locally
+- [ ] All existing tests pass
+- [ ] Added tests for new functionality (if applicable)
+
+## Checklist
+
+- [ ] **✅ LABEL APPLIED**: I have applied the appropriate label to this PR
+- [ ] Code follows project style guidelines
+- [ ] Updated documentation if needed
+- [ ] Updated CHANGELOG.md for significant changes
 
 Fixes # (issue)
-
-## Type of change
-
-Please delete options that are not relevant.
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-
-## How Has This Been Tested?
-
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce.
-
-- [ ] Test A
-- [ ] Test B
-
-## Checklist:
-
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
