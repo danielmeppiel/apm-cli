@@ -83,60 +83,21 @@ def init(ctx, project_name):
         click.echo(f"{SUCCESS}Initializing AWD project: {HIGHLIGHT}{project_name}{RESET}")
         
         # Load templates and create files
-        try:
-            # Create awd.yml from template
-            awd_yml_content = _load_template_file('hello-world', 'awd.yml', 
-                                                  project_name=project_name)
-            with open('awd.yml', 'w') as f:
-                f.write(awd_yml_content)
+        awd_yml_content = _load_template_file('hello-world', 'awd.yml', 
+                                              project_name=project_name)
+        with open('awd.yml', 'w') as f:
+            f.write(awd_yml_content)
+        
+        # Create hello-world.prompt.md from template
+        prompt_content = _load_template_file('hello-world', 'hello-world.prompt.md')
+        with open('hello-world.prompt.md', 'w') as f:
+            f.write(prompt_content)
             
-            # Create hello-world.prompt.md from template
-            prompt_content = _load_template_file('hello-world', 'hello-world.prompt.md')
-            with open('hello-world.prompt.md', 'w') as f:
-                f.write(prompt_content)
-                
-            # Create README.md from template
-            readme_content = _load_template_file('hello-world', 'README.md',
-                                                 project_name=project_name)
-            with open('README.md', 'w') as f:
-                f.write(readme_content)
-                
-        except FileNotFoundError as e:
-            click.echo(f"{ERROR}Template not found: {e}{RESET}", err=True)
-            click.echo(f"{WARNING}Falling back to built-in templates{RESET}")
-            
-            # Fallback to hardcoded content if templates are missing
-            awd_yml_content = {
-                'name': project_name,
-                'version': '1.0.0',
-                'description': f'A {project_name} AWD application',
-                'author': 'Your Name',
-                'entrypoint': 'hello-world.prompt.md',
-                'dependencies': {
-                    'mcp': ['ghcr.io/github/github-mcp-server']
-                }
-            }
-            
-            with open('awd.yml', 'w') as f:
-                yaml.dump(awd_yml_content, f, default_flow_style=False, sort_keys=False)
-                
-            # Use minimal fallback content for other files
-            with open('hello-world.prompt.md', 'w') as f:
-                f.write("""---
-description: A hello world prompt demonstrating AWD
-input: [name]
----
-
-# Hello World
-
-Welcome to AWD, ${input:name}!
-""")
-                
-            with open('README.md', 'w') as f:
-                f.write(f"""# {project_name}
-
-An AWD application created with 'awd init'.
-""")
+        # Create README.md from template
+        readme_content = _load_template_file('hello-world', 'README.md',
+                                             project_name=project_name)
+        with open('README.md', 'w') as f:
+            f.write(readme_content)
             
         click.echo(f"{INFO}Created files:{RESET}")
         click.echo(f"  - awd.yml")

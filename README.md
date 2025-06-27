@@ -100,10 +100,6 @@ dependencies:
     - logs-analyzer-mcp-server
 ```
 
-# Publish your prompts  
-awd publish github.com/myteam/custom-prompts
-```
-
 ## Beyond Simple Prompts: Composable Workflows
 
 > [!WARNING]
