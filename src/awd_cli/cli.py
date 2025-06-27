@@ -22,11 +22,16 @@ RESET = Style.RESET_ALL
 
 def _get_template_dir():
     """Get the path to the templates directory."""
-    # Get the directory where this CLI module is located
-    cli_dir = Path(__file__).parent
-    # Go up to the src directory, then up to the repo root, then to templates
-    template_dir = cli_dir.parent.parent / 'templates'
-    return template_dir
+    if getattr(sys, 'frozen', False):
+        # Running in PyInstaller bundle
+        base_path = sys._MEIPASS
+        return Path(base_path) / 'templates'
+    else:
+        # Running in development
+        cli_dir = Path(__file__).parent
+        # Go up to the src directory, then up to the repo root, then to templates
+        template_dir = cli_dir.parent.parent / 'templates'
+        return template_dir
 
 
 def _load_template_file(template_name, filename, **variables):

@@ -4,15 +4,14 @@
 
 **Think npm + Node.js, but for Natural Language.**
 
-## Quick Start (2 minutes)
+## Quick Start (30 seconds)
 
 > [!NOTE] 
 > **📋 Prerequisites**: Get a GitHub fine-grained Personal Access Token with **read-only Models permissions** at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
 
 ```bash
-# 1. Install AWD CLI
-git clone https://github.com/danielmeppiel/awd-cli.git
-cd awd-cli && pip install -e .
+# 1. Install AWD CLI (zero dependencies)
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
 
 # 2. Configure GitHub Models
 llm keys set github
@@ -21,13 +20,10 @@ llm keys set github
 # 3. Initialize your first AWD project (like npm init)
 awd init my-hello-world
 
-# 4. Install AWD and MCP dependencies and run (like npm install && npm start)
+# 4. Install and run (like npm install && npm start)
 cd my-hello-world
 awd install
 awd run --param name="Developer"
-
-# 5. Preview before execution
-awd preview --param name="Developer"
 ```
 
 **That's it!** You're now running AI prompt applications against an LLM runtime.
@@ -226,6 +222,34 @@ awd models                                   # List available LLM models
 
 **Complete CLI Reference**: See [CLI Reference](docs/cli-reference.md) for detailed documentation.
 
+## Installation
+
+### Quick Install (Recommended)
+```bash
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+```
+
+### Manual Download
+Download the binary for your platform from [GitHub Releases](https://github.com/danielmeppiel/awd-cli/releases/latest):
+
+```bash
+# Linux x86_64
+curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-linux-x86_64 -o awd && chmod +x awd
+
+# macOS Intel
+curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-x86_64 -o awd && chmod +x awd
+
+# macOS Apple Silicon  
+curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-arm64 -o awd && chmod +x awd
+```
+
+### From Source (Developers)
+```bash
+git clone https://github.com/danielmeppiel/awd-cli.git
+cd awd-cli && pip install -e .
+```
+
+
 ## Community
 
 - 📚 [Documentation](docs/) - Guides and examples
@@ -235,24 +259,3 @@ awd models                                   # List available LLM models
 ---
 
 **AWD makes AI prompts as shareable and reusable as code packages.**
-
-
-## Development
-
-```zsh
-# Install with dev dependencies
-uv pip install -e ".[dev]"
-
-# Run tests, lint and format
-pytest
-flake8 awd-cli tests
-black awd-cli tests
-```
-
-## Stack
-- Python 3.13+
-- `click` for CLI
-- `llm` for LLM runtime abstraction
-- `mcp` package with `FastMCP` for MCP server functionality
-- `pytest`, `flake8`, `black` for development
-- GitHub Actions for CI/CD

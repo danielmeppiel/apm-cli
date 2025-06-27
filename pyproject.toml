@@ -36,6 +36,9 @@ dev = [
     "isort>=5.0.0",
     "mypy>=1.0.0",
 ]
+build = [
+    "pyinstaller>=6.0.0",
+]
 
 [project.scripts]
 awd = "awd_cli.cli:main"
