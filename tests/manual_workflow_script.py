@@ -2,6 +2,9 @@
 """
 Manual test script for workflow commands.
 This script creates a sample workflow, lists workflows, and runs a workflow.
+
+NOTE: This is a manual test script that requires API keys and should not be run 
+as part of the automated test suite. Run it manually when needed.
 """
 
 import os
@@ -16,7 +19,7 @@ from awd_cli.workflow.discovery import create_workflow_template
 from awd_cli.workflow.discovery import discover_workflows
 from awd_cli.workflow.runner import run_workflow
 
-def test_workflow_commands():
+def manual_test_workflow_commands():
     """Test the workflow commands."""
     # Create a temporary directory for testing
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -69,4 +72,4 @@ def test_workflow_commands():
 
 
 if __name__ == "__main__":
-    test_workflow_commands()
+    manual_test_workflow_commands()

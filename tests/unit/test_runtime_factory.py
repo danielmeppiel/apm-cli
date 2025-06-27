@@ -34,8 +34,8 @@ class TestRuntimeFactory:
         runtime = RuntimeFactory.get_best_available_runtime()
         
         assert runtime is not None
-        # Should be LLM since Codex is not installed
-        assert runtime.get_runtime_name() == "llm"
+        # Should be Codex if available, otherwise LLM
+        assert runtime.get_runtime_name() in ["codex", "llm"]
     
     def test_create_runtime_with_name_real(self):
         """Test creating runtime with specific name (real system)."""
@@ -49,8 +49,8 @@ class TestRuntimeFactory:
         runtime = RuntimeFactory.create_runtime()
         
         assert runtime is not None
-        # Should be LLM since Codex is not installed
-        assert runtime.get_runtime_name() == "llm"
+        # Should be Codex if available, otherwise LLM
+        assert runtime.get_runtime_name() in ["codex", "llm"]
     
     def test_runtime_exists_llm_true(self):
         """Test runtime exists check for LLM - true."""

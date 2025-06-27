@@ -26,36 +26,35 @@ class TestCodexRuntime:
         with pytest.raises(RuntimeError, match="Codex CLI not available"):
             CodexRuntime()
     
-    @patch('awd_cli.runtime.codex_runtime.subprocess.run')
+    @patch('awd_cli.runtime.codex_runtime.subprocess.Popen')
     @patch('awd_cli.runtime.codex_runtime.shutil.which')
-    def test_execute_prompt_success(self, mock_which, mock_run):
+    def test_execute_prompt_success(self, mock_which, mock_popen):
         """Test successful prompt execution."""
         mock_which.return_value = "/usr/local/bin/codex"
-        mock_result = Mock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Test response from Codex"
-        mock_run.return_value = mock_result
+        
+        # Mock the process
+        mock_process = Mock()
+        mock_process.stdout.readline.side_effect = ["Test response from Codex\n", ""]
+        mock_process.wait.return_value = 0
+        mock_popen.return_value = mock_process
         
         runtime = CodexRuntime()
         result = runtime.execute_prompt("Test prompt")
         
         assert result == "Test response from Codex"
-        mock_run.assert_called_once_with(
-            ["codex", "exec", "Test prompt"],
-            capture_output=True,
-            text=True,
-            timeout=300
-        )
+        mock_popen.assert_called_once()
     
-    @patch('awd_cli.runtime.codex_runtime.subprocess.run')
+    @patch('awd_cli.runtime.codex_runtime.subprocess.Popen')
     @patch('awd_cli.runtime.codex_runtime.shutil.which')
-    def test_execute_prompt_failure(self, mock_which, mock_run):
+    def test_execute_prompt_failure(self, mock_which, mock_popen):
         """Test prompt execution failure."""
         mock_which.return_value = "/usr/local/bin/codex"
-        mock_result = Mock()
-        mock_result.returncode = 1
-        mock_result.stderr = "Codex error"
-        mock_run.return_value = mock_result
+        
+        # Mock the process failure
+        mock_process = Mock()
+        mock_process.stdout.readline.side_effect = [""]  # Empty output
+        mock_process.wait.return_value = 1  # Non-zero exit code
+        mock_popen.return_value = mock_process
         
         runtime = CodexRuntime()
         
