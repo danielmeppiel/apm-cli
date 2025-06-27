@@ -60,8 +60,6 @@ if command -v upx &> /dev/null; then
     echo -e "${GREEN}UPX found - binary will be compressed${NC}"
 else
     echo -e "${YELLOW}UPX not found - binary will not be compressed (install with: brew install upx)${NC}"
-    # Disable UPX in spec file if not available
-    sed -i.bak 's/upx=True/upx=False/' build/awd.spec
 fi
 
 # Build binary
