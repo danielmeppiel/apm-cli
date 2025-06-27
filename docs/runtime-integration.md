@@ -1,217 +1,153 @@
 # Runtime Integration Guide
 
-AWD supports multiple AI runtime environments for executing prompts. This guide covers setup and usage for each supported runtime.
+AWD manages LLM runtime installation and configuration automatically. This guide covers the supported runtimes and how to use them.
 
 ## Overview
 
-AWD acts as a universal interface to different AI runtimes:
+AWD acts as a runtime package manager, downloading and configuring LLM runtimes from their official sources:
 
-| Runtime | Description | Best For | API Keys Required |
-|---------|-------------|----------|-------------------|
-| [**LLM Library**](https://llm.datasette.io/en/stable/index.html) | Simon Willison's `llm` CLI | General use, many providers | Provider-specific |
-| [**OpenAI Codex**](https://github.com/openai/codex) | OpenAI's Codex CLI | Code-focused tasks, MCP support | OpenAI API key |
+| Runtime | Description | Best For | Configuration |
+|---------|-------------|----------|---------------|
+| [**OpenAI Codex**](https://github.com/openai/codex) | OpenAI's Codex CLI | Code tasks, MCP support | Auto-configured with GitHub Models |
+| [**LLM Library**](https://llm.datasette.io/en/stable/index.html) | Simon Willison's `llm` CLI | General use, many providers | Manual API key setup |
 
-## LLM Runtime (Recommended)
+## Quick Setup
 
-The `llm` library is included automatically with AWD installation and supports 100+ models across multiple providers, including GitHub Models.
+### Install AWD and Setup Runtime
+```bash
+# 1. Install AWD
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+
+# 2. Setup AI runtime (downloads and configures automatically)
+awd runtime setup codex
+
+# 3. Set GitHub token for free models
+export GITHUB_TOKEN=your_github_token
+```
+
+### Runtime Management
+```bash
+awd runtime list              # Show installed runtimes
+awd runtime setup llm         # Install LLM library
+awd runtime setup codex       # Install Codex CLI
+```
+
+## OpenAI Codex Runtime (Recommended)
+
+AWD automatically downloads, installs, and configures the Codex CLI with GitHub Models for free usage.
 
 ### Setup
 
-#### 1. No installation needed
-The `llm` library is automatically installed as an AWD dependency.
+#### 1. Install via AWD
+```bash
+awd runtime setup codex
+```
 
-#### 2. Configure API Keys
+This automatically:
+- Downloads the latest Codex binary for your platform
+- Installs to `~/.awd/runtimes/codex`
+- Creates configuration for GitHub Models (`openai/gpt-4.1`)
+- Updates your PATH
 
-**GitHub Models (Free Tier - Recommended)**
+#### 2. Set GitHub Token
 ```bash
 # Get a GitHub Personal Access Token with "Models" permission
 # Visit: https://github.com/settings/personal-access-tokens/new
-
-llm keys set github
-# Paste your GitHub PAT when prompted
-```
-
-**OpenAI (Paid)**
-```bash
-llm keys set openai
-# Enter your OpenAI API key from https://platform.openai.com
-```
-
-**Anthropic (Paid)**
-```bash
-llm keys set anthropic  
-# Enter your Anthropic API key from https://console.anthropic.com
-```
-
-**Local Models with Ollama (Free)**
-```bash
-# Install Ollama first: https://ollama.ai
-# Pull a model
-ollama pull llama3.2
-
-# Install llm-ollama plugin
-pip install llm-ollama
-
-# No API key needed for local models
+export GITHUB_TOKEN=your_github_token
 ```
 
 ### Usage
 
-#### Basic Execution
 ```bash
-# Use GitHub Models (free)
-awd run my-prompt --runtime=llm --llm=github/gpt-4o-mini
+# Run with Codex (auto-selected when installed)
+awd run my-prompt
 
-# Use OpenAI GPT-4
-awd run my-prompt --runtime=llm --llm=gpt-4o
-
-# Use Anthropic Claude
-awd run my-prompt --runtime=llm --llm=claude-3.5-sonnet
-
-# Use local Ollama model
-awd run my-prompt --runtime=llm --llm=llama3.2
+# Explicit runtime selection
+awd run my-prompt --runtime=codex
 ```
 
-#### Available Models
-```bash
-# List all available models
-awd models
+## LLM Runtime
 
-# Common models:
-# - github/gpt-4o-mini (free, fast)
-# - github/gpt-4o (free, high quality) 
-# - gpt-4o (paid, OpenAI)
-# - claude-3.5-sonnet (paid, Anthropic)
-# - ollama/llama3.2 (free, local)
-```
-
-#### Advanced Configuration
-```bash
-# Set default model in prompt frontmatter
----
-description: My prompt
-llm: github/gpt-4o-mini
----
-
-# Or override at runtime
-awd run my-prompt --runtime=llm --llm=gpt-4o
-```
-
-### Troubleshooting
-
-**"No API key configured"**
-```bash
-# Check configured keys
-llm keys list
-
-# Set missing key
-llm keys set <provider>
-```
-
-**"Model not found"**
-```bash
-# List available models
-awd models
-
-# Check if provider plugin is installed
-pip list | grep llm-
-```
-
-**"Rate limit exceeded"**
-- Try GitHub Models (higher rate limits)
-- Switch to different provider
-- Wait and retry
-
-## OpenAI Codex Runtime
-
-OpenAI's Codex CLI provides advanced code understanding and MCP server support.
+AWD can also install the LLM library for advanced model support and manual configuration.
 
 ### Setup
 
-#### 1. Install Codex CLI
+#### 1. Install via AWD
 ```bash
-npm install -g @openai/codex@native
+awd runtime setup llm
 ```
 
-#### 2. Configure API Key
-```bash
-# Set OpenAI API key
-export OPENAI_API_KEY=your_openai_api_key
+This automatically:
+- Creates a Python virtual environment
+- Installs the `llm` library and dependencies
+- Creates a wrapper script at `~/.awd/runtimes/llm`
 
-# Or add to your shell profile
-echo 'export OPENAI_API_KEY=your_key' >> ~/.bashrc
-```
-
-#### 3. Verify Installation
+#### 2. Configure API Keys (Manual)
 ```bash
-codex --version
-# Should show: codex-cli 0.0.2505291458 or similar
+# GitHub Models (free)
+llm keys set github
+# Paste your GitHub PAT when prompted
+
+# Other providers
+llm keys set openai     # OpenAI API key
+llm keys set anthropic  # Anthropic API key
 ```
 
 ### Usage
 
-#### Basic Execution
 ```bash
-# Run with Codex (uses OpenAI API)
-awd run my-prompt --runtime=codex
-
-# Parameters work the same way
-awd run analyze-code --runtime=codex --param file_path=src/main.py
+# Run with LLM runtime
+awd run my-prompt --runtime=llm --llm=github/gpt-4o-mini
+awd run my-prompt --runtime=llm --llm=gpt-4o
+awd run my-prompt --runtime=llm --llm=claude-3.5-sonnet
 ```
 
 ## Examples by Use Case
 
-### Documentation Analysis
+### Basic Usage
 ```bash
-# Use GitHub Models (free, good for text)
+# Default: Uses Codex if installed, otherwise LLM
+awd run my-prompt --param key=value
+
+# Explicit runtime selection
+awd run my-prompt --runtime=codex
+awd run my-prompt --runtime=llm --llm=github/gpt-4o-mini
+```
+
+### Code Analysis
+```bash
+# Codex excels at code understanding
+awd run code-review --runtime=codex --param pull_request=123
+```
+
+### Documentation Tasks
+```bash
+# Use GitHub Models for free text processing
 awd run document --runtime=llm --llm=github/gpt-4o-mini \
   --param project_name=my-project
 ```
 
-### Code Review
-```bash
-# Use Codex for code understanding
-awd run code-review --runtime=codex \
-  --param pull_request=123
+## Troubleshooting
 
-# Or use LLM with GPT-4 for high quality
-awd run code-review --runtime=llm --llm=gpt-4o \
-  --param pull_request=123
+**"Runtime not found"**
+```bash
+# Install missing runtime
+awd runtime setup codex
+awd runtime setup llm
+
+# Check installed runtimes
+awd runtime list
 ```
 
-### Unit Test Generation
+**"No GitHub token"**
 ```bash
-# Codex excels at code generation
-awd run tests --runtime=codex \
-  --param test_file=src/utils.py
-
-# LLM works too with good prompts
-awd run tests --runtime=llm --llm=github/gpt-4o \
-  --param test_file=src/utils.py
+# Set GitHub token for free models
+export GITHUB_TOKEN=your_github_token
 ```
 
-### Cost Optimization Analysis
+**"Command not found: codex"**
 ```bash
-# Use GitHub Models for free analysis
-awd run az-cost-optimize --runtime=llm --llm=github/gpt-4o-mini \
-  --param subscription_id=your-sub-id
+# Ensure PATH is updated (restart terminal)
+# Or reinstall runtime
+awd runtime setup codex
 ```
-
-## Runtime Development
-
-### Adding Custom Models (LLM Runtime)
-```bash
-# Install provider plugins
-pip install llm-claude-3        # Anthropic
-pip install llm-ollama          # Local models
-pip install llm-gpt4all         # Local models
-
-# List new models
-awd models
-```
-
-### Getting Help
-- Run commands with `--help` flag
-- Check `awd models` for available models  
-- Use `awd preview` to debug prompt issues
-- Check the [AWD CLI Reference](cli-reference.md) for command details

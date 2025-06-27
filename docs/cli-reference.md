@@ -2,6 +2,21 @@
 
 Complete command-line interface reference for Agentic Workflow Definitions (AWD) v0.0.1.
 
+## Quick Start
+
+```bash
+# 1. Install AWD
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+
+# 2. Setup runtime
+awd runtime setup codex
+export GITHUB_TOKEN=your_github_token
+
+# 3. Create and run project  
+awd init my-project && cd my-project
+awd install && awd run --param name="Developer"
+```
+
 ## Installation
 
 ### Quick Install (Recommended)
@@ -94,19 +109,19 @@ awd run [PROMPT_NAME] [OPTIONS]
 
 **Options:**
 - `-p, --param TEXT` - Parameter in format `name=value` (can be used multiple times)
-- `--runtime TEXT` - Runtime to use (`llm`, `codex`) - default: `llm`
+- `--runtime TEXT` - Runtime to use (`codex`, `llm`) - default: auto-detect installed
 - `--llm TEXT` - LLM model to use (for llm runtime)
 
 **Examples:**
 ```bash
-# Run entrypoint prompt
+# Run entrypoint prompt (uses installed runtime automatically)
 awd run --param name="Developer"
 
-# Run specific prompt with GitHub Models (free tier)
-awd run hello-world --runtime=llm --llm=github/gpt-4o-mini --param name="Alice"
+# Run with Codex (recommended - pre-configured with GitHub Models)
+awd run hello-world --runtime=codex --param name="Alice"
 
-# Run with Codex (requires OPENAI_API_KEY)
-awd run my-prompt --runtime=codex --param service=api
+# Run with LLM and specific model
+awd run my-prompt --runtime=llm --llm=github/gpt-4o-mini --param service=api
 
 # Run with OpenAI GPT-4 (requires llm keys set openai)
 awd run code-review --runtime=llm --llm=gpt-4o
@@ -198,6 +213,72 @@ awd config [OPTIONS]
 awd config --show
 ```
 
+## Runtime Management
+
+### `awd runtime` - Manage AI runtimes
+
+AWD manages AI runtime installation and configuration automatically.
+
+```bash
+awd runtime COMMAND [OPTIONS]
+```
+
+#### `awd runtime setup` - Install AI runtime
+
+Download and configure an AI runtime from official sources.
+
+```bash
+awd runtime setup RUNTIME_NAME
+```
+
+**Arguments:**
+- `RUNTIME_NAME` - Runtime to install: `codex` or `llm`
+
+**Examples:**
+```bash
+# Install Codex CLI with GitHub Models (recommended)
+awd runtime setup codex
+
+# Install LLM library in managed environment
+awd runtime setup llm
+```
+
+#### `awd runtime list` - Show installed runtimes
+
+List all available runtimes and their installation status.
+
+```bash
+awd runtime list
+```
+
+**Output includes:**
+- Runtime name and description
+- Installation status (✅ Installed / ❌ Not installed)
+- Installation path and version
+- Configuration details
+
+#### `awd runtime remove` - Uninstall runtime
+
+Remove an installed runtime and its configuration.
+
+```bash
+awd runtime remove RUNTIME_NAME
+```
+
+**Arguments:**
+- `RUNTIME_NAME` - Runtime to remove: `codex` or `llm`
+
+#### `awd runtime status` - Show runtime status
+
+Display detailed status for a specific runtime.
+
+```bash
+awd runtime status RUNTIME_NAME
+```
+
+**Arguments:**
+- `RUNTIME_NAME` - Runtime to check: `codex` or `llm`
+
 ## Prerequisites by Runtime
 
 ### LLM Runtime
@@ -288,8 +369,8 @@ awd list
 
 ## Tips & Best Practices
 
-1. **Start with init**: Always begin with `awd init` to create proper project structure
-2. **Use GitHub Models for free tier**: Start with `--runtime=llm --llm=github/gpt-4o-mini`
+1. **Start with runtime setup**: Run `awd runtime setup codex` for best experience
+2. **Use GitHub Models for free tier**: Set `GITHUB_TOKEN` for free Codex access
 3. **Preview before running**: Use `awd preview` to check parameter substitution
 4. **Organize prompts**: Use descriptive names and place in logical directories
 5. **Version control**: Include `.prompt.md` files and `awd.yml` in your git repository
@@ -301,13 +382,17 @@ awd list
 
 ### In CI/CD (GitHub Actions)
 ```yaml
-- name: Setup AWD project
+- name: Setup AWD runtime
   run: |
-    awd install
+    awd runtime setup codex
+    export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+    
+- name: Setup AWD project
+  run: awd install
     
 - name: Run code review
   run: |
-    awd run code-review --runtime=llm --llm=github/gpt-4o-mini \
+    awd run code-review --runtime=codex \
       --param pr_number=${{ github.event.number }}
 ```
 
@@ -315,11 +400,14 @@ awd list
 ```bash
 #!/bin/bash
 # Setup and run AWD project
+awd runtime setup codex
+export GITHUB_TOKEN=your_token
+
 cd my-awd-project
 awd install
 
 # Run documentation analysis
-if awd run document --runtime=llm --llm=github/gpt-4o-mini --param project_name=$(basename $PWD); then
+if awd run document --runtime=codex --param project_name=$(basename $PWD); then
     echo "Documentation analysis completed"
 else
     echo "Documentation analysis failed" 
