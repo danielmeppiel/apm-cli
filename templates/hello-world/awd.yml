@@ -4,9 +4,9 @@ description: A {{project_name}} AWD application
 author: Your Name
 
 scripts:
-  start: "codex hello-world.prompt.md"
+  start: "codex --skip-git-repo-check hello-world.prompt.md"
   llm: "llm hello-world.prompt.md -m github/gpt-4o-mini"
-  debug: "DEBUG=true codex hello-world.prompt.md"
+  debug: "DEBUG=true codex --skip-git-repo-check hello-world.prompt.md"
 
 dependencies:
   mcp:
