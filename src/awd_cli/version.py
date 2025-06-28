@@ -1,5 +1,6 @@
 """Version management for AWD CLI."""
 
+import sys
 from pathlib import Path
 import re
 
@@ -34,7 +35,14 @@ def get_version() -> str:
         str: Version string
     """
     try:
-        pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+        # Handle PyInstaller bundle vs development
+        if getattr(sys, 'frozen', False):
+            # Running in PyInstaller bundle
+            pyproject_path = Path(sys._MEIPASS) / 'pyproject.toml'
+        else:
+            # Running in development
+            pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
+            
         if pyproject_path.exists():
             data = _load_toml(pyproject_path)
             version = data.get('project', {}).get('version', 'unknown')

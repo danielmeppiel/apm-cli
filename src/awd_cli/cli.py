@@ -6,7 +6,18 @@ import yaml
 import click
 from pathlib import Path
 from colorama import init, Fore, Style
-from .version import get_version
+
+# Handle version import for both package and PyInstaller contexts
+try:
+    from .version import get_version
+except ImportError:
+    # Fallback for PyInstaller or direct execution
+    try:
+        from awd_cli.version import get_version
+    except ImportError:
+        # Last resort fallback
+        def get_version():
+            return "unknown"
 
 # Initialize colorama
 init(autoreset=True)
@@ -148,8 +159,12 @@ def install(ctx):
             
         # Import and use existing MCP installation functionality
         try:
-            from .factory import PackageManagerFactory
-            from .core.operations import install_package
+            try:
+                from .factory import PackageManagerFactory
+                from .core.operations import install_package
+            except ImportError:
+                from awd_cli.factory import PackageManagerFactory
+                from awd_cli.core.operations import install_package
             
             package_manager = PackageManagerFactory.create_package_manager()
             
@@ -313,7 +328,10 @@ def preview(ctx, prompt_name, param):
                 
         # Import and use existing preview functionality
         try:
-            from .workflow.runner import preview_workflow
+            try:
+                from .workflow.runner import preview_workflow
+            except ImportError:
+                from awd_cli.workflow.runner import preview_workflow
             
             success, result = preview_workflow(prompt_name, params)
             

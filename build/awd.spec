@@ -24,6 +24,7 @@ entry_point = repo_root / 'src' / 'awd_cli' / 'cli.py'
 datas = [
     (str(repo_root / 'templates'), 'templates'),  # Bundle templates directory
     (str(repo_root / 'scripts' / 'runtime'), 'scripts/runtime'),  # Bundle runtime setup scripts
+    (str(repo_root / 'pyproject.toml'), '.'),  # Bundle pyproject.toml for version reading
 ]
 
 # Hidden imports for AWD modules that might not be auto-detected
