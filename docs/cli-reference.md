@@ -1,6 +1,6 @@
-# AWD CLI Reference v0.0.1
+# AWD CLI Reference v0.0.4
 
-Complete command-line interface reference for Agentic Workflow Definitions (AWD) v0.0.1.
+Complete command-line interface reference for Agentic Workflow Definitions (AWD) v0.0.4.
 
 ## Quick Start
 
