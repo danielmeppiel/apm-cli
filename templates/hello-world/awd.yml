@@ -2,7 +2,11 @@ name: {{project_name}}
 version: 1.0.0
 description: A {{project_name}} AWD application
 author: Your Name
-entrypoint: hello-world.prompt.md
+
+scripts:
+  start: "codex hello-world.prompt.md"
+  llm: "llm hello-world.prompt.md -m github/gpt-4o-mini"
+  debug: "DEBUG=true codex hello-world.prompt.md"
 
 dependencies:
   mcp:

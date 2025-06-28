@@ -123,7 +123,8 @@ def init(ctx, project_name):
         click.echo(f"\n{SUCCESS}AWD project initialized successfully!{RESET}")
         click.echo(f"{INFO}Next steps:{RESET}")
         click.echo(f"  1. {HIGHLIGHT}awd install{RESET} - Install dependencies")
-        click.echo(f"  2. {HIGHLIGHT}awd run --param name=\"Your Name\"{RESET} - Run the hello world prompt")
+        click.echo(f"  2. {HIGHLIGHT}awd run start --param name=\"Your Name\"{RESET} - Run the start script")
+        click.echo(f"  3. {HIGHLIGHT}awd list{RESET} - See all available scripts")
         
     except Exception as e:
         click.echo(f"{ERROR}Error initializing project: {e}{RESET}", err=True)
@@ -198,68 +199,41 @@ def _load_awd_config():
     return None
 
 
-def _discover_prompts():
-    """Discover all .prompt.md files in the current project."""
-    prompts = []
-    
-    for prompt_file in Path('.').rglob('*.prompt.md'):
-        # Read frontmatter to get description
-        try:
-            with open(prompt_file, 'r') as f:
-                content = f.read()
-                
-            if content.startswith('---'):
-                frontmatter_end = content.find('---', 3)
-                if frontmatter_end != -1:
-                    frontmatter = yaml.safe_load(content[3:frontmatter_end])
-                    description = frontmatter.get('description', 'No description')
-                else:
-                    description = 'No description'
-            else:
-                description = 'No description'
-                
-            prompt_name = prompt_file.stem.replace('.prompt', '')
-            prompts.append({
-                'name': prompt_name,
-                'description': description,
-                'file_path': str(prompt_file)
-            })
-        except Exception:
-            # Skip files that can't be parsed
-            continue
-            
-    return prompts
-
-
-def _get_entrypoint_prompt():
-    """Get the entrypoint prompt from awd.yml."""
+def _get_default_script():
+    """Get the default script (start) from awd.yml scripts."""
     config = _load_awd_config()
-    if config and 'entrypoint' in config:
-        return config['entrypoint'].replace('.prompt.md', '')
+    if config and 'scripts' in config and 'start' in config['scripts']:
+        return 'start'
     return None
 
 
-@cli.command(help="Run a prompt with parameters")
-@click.argument('prompt_name', required=False)
+def _list_available_scripts():
+    """List all available scripts from awd.yml."""
+    config = _load_awd_config()
+    if config and 'scripts' in config:
+        return config['scripts']
+    return {}
+
+
+@cli.command(help="Run a script with parameters")
+@click.argument('script_name', required=False)
 @click.option('--param', '-p', multiple=True, help="Parameter in format name=value")
-@click.option('--runtime', default='llm', help="Runtime to use (llm, codex)")
-@click.option('--llm', help="LLM model to use (for llm runtime)")
 @click.pass_context
-def run(ctx, prompt_name, param, runtime, llm):
-    """Run a prompt (uses entrypoint if no name specified)."""
+def run(ctx, script_name, param):
+    """Run a script from awd.yml (uses 'start' script if no name specified)."""
     try:
-        # If no prompt name specified, use entrypoint
-        if not prompt_name:
-            prompt_name = _get_entrypoint_prompt()
-            if not prompt_name:
-                click.echo(f"{ERROR}No prompt specified and no entrypoint defined in awd.yml{RESET}", err=True)
-                click.echo(f"{INFO}Available prompts:{RESET}")
-                prompts = _discover_prompts()
-                for prompt in prompts:
-                    click.echo(f"  - {HIGHLIGHT}{prompt['name']}{RESET}: {prompt['description']}")
+        # If no script name specified, use 'start' script
+        if not script_name:
+            script_name = _get_default_script()
+            if not script_name:
+                click.echo(f"{ERROR}No script specified and no 'start' script defined in awd.yml{RESET}", err=True)
+                click.echo(f"{INFO}Available scripts:{RESET}")
+                scripts = _list_available_scripts()
+                for name, command in scripts.items():
+                    click.echo(f"  - {HIGHLIGHT}{name}{RESET}: {command}")
                 sys.exit(1)
                 
-        click.echo(f"{INFO}Running prompt: {HIGHLIGHT}{prompt_name}{RESET}")
+        click.echo(f"{INFO}Running script: {HIGHLIGHT}{script_name}{RESET}")
         
         # Parse parameters
         params = {}
@@ -269,54 +243,47 @@ def run(ctx, prompt_name, param, runtime, llm):
                 params[param_name] = value
                 click.echo(f"  - {param_name}: {value}")
                 
-        # Import and use existing runtime functionality
+        # Import and use script runner
         try:
-            from awd_cli.workflow.runner import run_workflow
+            from awd_cli.core.script_runner import ScriptRunner
             
-            # Add runtime options to params (with proper naming)
-            if runtime:
-                params['_runtime'] = runtime
-            if llm:
-                params['_llm'] = llm
-            
-            success, result = run_workflow(prompt_name, params)
+            script_runner = ScriptRunner()
+            success = script_runner.run_script(script_name, params)
             
             if not success:
-                click.echo(f"{ERROR}{result}{RESET}", err=True)
+                click.echo(f"{ERROR}Script execution failed{RESET}", err=True)
                 sys.exit(1)
                 
-            click.echo(f"\n{INFO}Prompt output:{RESET}")
-            click.echo(result)
-            click.echo(f"\n{SUCCESS}Prompt executed successfully!{RESET}")
+            click.echo(f"\n{SUCCESS}Script executed successfully!{RESET}")
             
         except ImportError as ie:
-            click.echo(f"{WARNING}Runtime functionality not available yet{RESET}")
+            click.echo(f"{WARNING}Script runner not available yet{RESET}")
             click.echo(f"{INFO}Import error: {ie}{RESET}")
-            click.echo(f"{INFO}Would run: {prompt_name} with params {params}{RESET}")
+            click.echo(f"{INFO}Would run script: {script_name} with params {params}{RESET}")
         except Exception as ee:
-            click.echo(f"{WARNING}Runtime error: {ee}{RESET}")
-            click.echo(f"{INFO}Would run: {prompt_name} with params {params}{RESET}")
+            click.echo(f"{ERROR}Script execution error: {ee}{RESET}", err=True)
+            sys.exit(1)
             
     except Exception as e:
-        click.echo(f"{ERROR}Error running prompt: {e}{RESET}", err=True)
+        click.echo(f"{ERROR}Error running script: {e}{RESET}", err=True)
         sys.exit(1)
 
 
-@cli.command(help="Preview a prompt with parameters substituted (without execution)")
-@click.argument('prompt_name', required=False)
+@cli.command(help="Preview a script's compiled prompt files")
+@click.argument('script_name', required=False)
 @click.option('--param', '-p', multiple=True, help="Parameter in format name=value")
 @click.pass_context
-def preview(ctx, prompt_name, param):
-    """Preview a prompt with parameters substituted."""
+def preview(ctx, script_name, param):
+    """Preview compiled prompt files for a script."""
     try:
-        # If no prompt name specified, use entrypoint
-        if not prompt_name:
-            prompt_name = _get_entrypoint_prompt()
-            if not prompt_name:
-                click.echo(f"{ERROR}No prompt specified and no entrypoint defined in awd.yml{RESET}", err=True)
+        # If no script name specified, use 'start' script
+        if not script_name:
+            script_name = _get_default_script()
+            if not script_name:
+                click.echo(f"{ERROR}No script specified and no 'start' script defined in awd.yml{RESET}", err=True)
                 sys.exit(1)
                 
-        click.echo(f"{INFO}Previewing prompt: {HIGHLIGHT}{prompt_name}{RESET}")
+        click.echo(f"{INFO}Previewing script: {HIGHLIGHT}{script_name}{RESET}")
         
         # Parse parameters
         params = {}
@@ -326,60 +293,76 @@ def preview(ctx, prompt_name, param):
                 params[param_name] = value
                 click.echo(f"  - {param_name}: {value}")
                 
-        # Import and use existing preview functionality
+        # Import and use script runner for preview
         try:
-            try:
-                from .workflow.runner import preview_workflow
-            except ImportError:
-                from awd_cli.workflow.runner import preview_workflow
+            from awd_cli.core.script_runner import ScriptRunner
             
-            success, result = preview_workflow(prompt_name, params)
+            script_runner = ScriptRunner()
             
-            if not success:
-                click.echo(f"{ERROR}{result}{RESET}", err=True)
+            # Get the script command
+            scripts = script_runner.list_scripts()
+            if script_name not in scripts:
+                click.echo(f"{ERROR}Script '{script_name}' not found{RESET}", err=True)
                 sys.exit(1)
                 
-            click.echo(f"\n{INFO}Processed Content:{RESET}")
-            click.echo("-" * 50)
-            click.echo(result)
-            click.echo("-" * 50)
-            click.echo(f"{SUCCESS}Preview complete! Use 'awd run {prompt_name}' to execute.{RESET}")
+            command = scripts[script_name]
+            click.echo(f"\n{INFO}Original command:{RESET}")
+            click.echo(f"  {command}")
+            
+            # Auto-compile prompts to show what would be executed
+            compiled_command = script_runner._auto_compile_prompts(command, params)
+            click.echo(f"\n{INFO}Compiled command:{RESET}")
+            click.echo(f"  {compiled_command}")
+            
+            # Show compiled files if any .prompt.md files were processed
+            import re
+            prompt_files = re.findall(r'(\S+\.prompt\.md)', command)
+            if prompt_files:
+                click.echo(f"\n{INFO}Compiled prompt files:{RESET}")
+                for prompt_file in prompt_files:
+                    output_name = Path(prompt_file).stem.replace('.prompt', '') + '.txt'
+                    compiled_path = Path('.awd/compiled') / output_name
+                    click.echo(f"  - {compiled_path}")
+                    
+            click.echo(f"\n{SUCCESS}Preview complete! Use 'awd run {script_name}' to execute.{RESET}")
             
         except ImportError:
-            click.echo(f"{WARNING}Preview functionality not available yet{RESET}")
-            click.echo(f"{INFO}Would preview: {prompt_name} with params {params}{RESET}")
+            click.echo(f"{WARNING}Script runner not available yet{RESET}")
             
     except Exception as e:
-        click.echo(f"{ERROR}Error previewing prompt: {e}{RESET}", err=True)
+        click.echo(f"{ERROR}Error previewing script: {e}{RESET}", err=True)
         sys.exit(1)
 
 
-@cli.command(help="List available prompts in the current project")
+@cli.command(help="List available scripts in the current project")
 @click.pass_context
 def list(ctx):
-    """List all available prompts in the project."""
+    """List all available scripts from awd.yml."""
     try:
-        click.echo(f"{INFO}Available prompts:{RESET}")
+        click.echo(f"{INFO}Available scripts:{RESET}")
         
-        prompts = _discover_prompts()
+        scripts = _list_available_scripts()
         
-        if not prompts:
-            click.echo(f"{WARNING}No prompts found.{RESET}")
-            click.echo(f"{INFO}💡 Create your first project: awd init my-project{RESET}")
+        if not scripts:
+            click.echo(f"{WARNING}No scripts found.{RESET}")
+            click.echo(f"{INFO}💡 Add scripts to your awd.yml file:{RESET}")
+            click.echo(f"scripts:")
+            click.echo(f"  start: \"codex run main.prompt.md\"")
+            click.echo(f"  fast: \"llm prompt main.prompt.md -m github/gpt-4o-mini\"")
             return
             
-        # Show entrypoint if defined
-        entrypoint = _get_entrypoint_prompt()
+        # Show default script if 'start' exists
+        default_script = 'start' if 'start' in scripts else None
         
-        for prompt in prompts:
-            prefix = "📍 " if prompt['name'] == entrypoint else "   "
-            click.echo(f"{prefix}{HIGHLIGHT}{prompt['name']}{RESET}: {prompt['description']}")
+        for name, command in scripts.items():
+            prefix = "📍 " if name == default_script else "   "
+            click.echo(f"{prefix}{HIGHLIGHT}{name}{RESET}: {command}")
             
-        if entrypoint:
-            click.echo(f"\n{INFO}📍 = entrypoint (default when running 'awd run'){RESET}")
+        if default_script:
+            click.echo(f"\n{INFO}📍 = default script (runs when no script name specified){RESET}")
             
     except Exception as e:
-        click.echo(f"{ERROR}Error listing prompts: {e}{RESET}", err=True)
+        click.echo(f"{ERROR}Error listing scripts: {e}{RESET}", err=True)
         sys.exit(1)
 
 
