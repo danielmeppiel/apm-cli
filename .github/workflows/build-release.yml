@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-13, macos-14]
+        os: [ubuntu-24.04, macos-13, macos-14]
     
     steps:
     - uses: actions/checkout@v4
@@ -72,7 +72,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             platform: linux
             arch: x86_64
             binary_name: awd-linux-x86_64
@@ -149,7 +149,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             binary_name: awd-linux-x86_64
           - os: macos-13  
             binary_name: awd-darwin-x86_64
