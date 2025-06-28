@@ -1,6 +1,6 @@
 # AWD Documentation
 
-Welcome to the Agentic Workflow Definitions (AWD) documentation. AWD is the NPM for AI-Native Development - build, package, share, and run agentic prompts and workflows across any LLM runtime.
+Welcome to the Agentic Workflow Definitions (AWD) documentation. AWD is the NPM for AI-Native Development - build, package, share, and run agentic apps across any LLM runtime.
 
 ## Quick Start
 - [CLI Reference](cli-reference.md) - Complete command documentation

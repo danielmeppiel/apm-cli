@@ -6,7 +6,7 @@ Prompts are the building blocks of AWD - focused, reusable AI instructions that 
 
 A prompt is a single-purpose AI instruction stored in a `.prompt.md` file. Prompts are:
 - **Focused**: Each prompt does one thing well
-- **Reusable**: Can be used across multiple workflows
+- **Reusable**: Can be used across multiple scripts
 - **Parameterized**: Accept inputs to customize behavior
 - **Testable**: Easy to run and validate independently
 
@@ -68,7 +68,7 @@ Provide a structured summary with:
 
 ## Input Parameters
 
-Reference workflow inputs using the `${input:name}` syntax:
+Reference script inputs using the `${input:name}` syntax:
 
 ```markdown
 ## Analysis Target
@@ -206,17 +206,68 @@ Verify the successful deployment of ${input:service_name} version ${input:deploy
 
 ## Running Prompts
 
-Prompts can be executed independently for testing:
+Prompts are executed through scripts defined in your `awd.yml`:
 
 ```bash
-# Run a prompt directly
-awd prompt run analyze-logs --service_name=api-gateway --time_window="1h"
+# Run prompts via scripts (actual implementation)
+awd run start --param service_name=api-gateway --param time_window="1h"
+awd run llm --param service_name=api-gateway --param time_window="1h"
+awd run debug --param service_name=api-gateway --param time_window="1h"
 
-# Test with mock data
-awd prompt test analyze-logs --mock-inputs
+# Preview compiled prompts before execution
+awd preview start --param service_name=api-gateway --param time_window="1h"
+```
 
-# Validate prompt syntax
-awd prompt validate ./prompts/analyze-logs.prompt.md
+### Example Project Structure
+
+```
+my-devops-project/
+├── awd.yml                              # Project configuration
+├── README.md                            # Project documentation
+├── analyze-logs.prompt.md               # Main log analysis prompt
+├── prompts/
+│   ├── code-review.prompt.md           # Code review prompt
+│   └── health-check.prompt.md          # Deployment health check
+└── .github/
+    └── workflows/
+        └── awd-ci.yml                  # CI using AWD scripts
+```
+
+### Corresponding awd.yml
+
+```yaml
+name: my-devops-project
+version: 1.0.0
+description: DevOps automation prompts for log analysis and system monitoring
+author: Platform Team
+
+scripts:
+  # Default script using Codex runtime
+  start: "codex analyze-logs.prompt.md"
+  
+  # LLM script with GitHub Models
+  llm: "llm analyze-logs.prompt.md -m github/gpt-4o-mini"
+  
+  # Debug script with environment variables
+  debug: "DEBUG=true VERBOSE=true codex analyze-logs.prompt.md"
+  
+  # Code review script
+  review: "codex prompts/code-review.prompt.md"
+  
+  # Health check script
+  health: "llm prompts/health-check.prompt.md -m github/gpt-4o"
+
+dependencies:
+  mcp:
+    - ghcr.io/github/github-mcp-server
+    - ghcr.io/kubernetes/k8s-mcp-server
+```
+
+This structure allows you to run any prompt with:
+```bash
+awd run start --param service_name=api-gateway --param time_window="1h"
+awd run review --param pull_request_url=https://github.com/org/repo/pull/123
+awd run health --param service_name=frontend --param deployment_version=v2.1.0
 ```
 
 ## Best Practices
@@ -241,8 +292,8 @@ input:
 ```
 
 ### 4. Version Control
-Keep prompts in version control alongside workflows. Use semantic versioning for breaking changes.
+Keep prompts in version control alongside scripts. Use semantic versioning for breaking changes.
 
 ## Next Steps
 
-- Learn about [Workflows](workflows.md) to orchestrate multiple prompts
+- Learn about [Scripts](cli-reference.md#scripts) to orchestrate prompt execution

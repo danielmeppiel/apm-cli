@@ -4,6 +4,13 @@
 
 **Think npm + Node.js, but for Natural Language (Markdown).**
 
+| Traditional Web Dev | AI-Native Development | Role |
+|---------------------|----------------------|------|
+| **npm** | **AWD Package Manager** | Dependency resolution, distribution |
+| **TypeScript Compiler** | **AWD Prompt Compiler** | Transform .prompt.md → runtime-ready format |
+| **Node.js** | **LLM Runtimes (codex/llm)** | Execute compiled artifacts |
+| **JavaScript** | **Natural Language** | What runtimes actually understand |
+
 ## Quick Start (30 seconds)
 
 > [!NOTE] 
@@ -13,7 +20,7 @@
 # 1. Install AWD CLI (zero dependencies)
 curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
 
-# 2. Setup AI runtime with GitHub Models
+# 2. Setup AI runtime with GitHub Models (OpenAI Codex here)
 awd runtime setup codex
 export GITHUB_TOKEN=your_token_here
 
@@ -23,7 +30,7 @@ awd init my-hello-world
 # 4. Install and run (like npm install && npm start)
 cd my-hello-world
 awd install
-awd run --param name="Developer"
+awd run start --param name="Developer"
 ```
 
 **That's it!** You're now running AI prompt applications against an LLM runtime.
@@ -79,27 +86,28 @@ Analyze logs for ${input:service_name} over the last ${input:time_window}.
 **Run anywhere:**
 
 ```bash
-# Run entrypoint prompt (no name needed)
-awd run --param service_name=api --param time_window=1h
+# Run start script
+awd run start --param service_name=api --param time_window=1h
 
-# Run specific prompts with different runtimes
-awd run analyze-logs --runtime=llm --llm=github/gpt-4o-mini
-awd run analyze-logs --runtime=llm --llm=ollama/llama3.2  
-awd run analyze-logs --runtime=codex
+# Run with different runtimes and models
+awd run start                                    # Uses codex (default) 
+awd run llm --param service_name=api            # Uses LLM 
+awd run debug --param service_name=api          # Uses codex with debug mode
 ```
 
 **Manage like npm packages:**
 
-```bash
+```yaml
 # Project configuration (awd.yml)
 name: my-logging-app
 version: 1.0.0
-entrypoint: analyze-logs.prompt.md
+scripts:
+  start: "codex analyze-logs.prompt.md"
+  llm: "llm analyze-logs.prompt.md -m github/gpt-4o-mini"
+  debug: "DEBUG=true codex analyze-logs.prompt.md"
 dependencies:
   mcp:
     - ghcr.io/github/github-mcp-server
-    - logs-analyzer-mcp-server
-```
 
 ## Beyond Simple Prompts: Composable Workflows
 
@@ -135,12 +143,11 @@ If approved:
 
 Run it as any other prompt:
 ```bash
-
 # Run complex agentic workflows  
-awd run incident-response --severity=HIGH --affected_service=api-gateway
+awd run start --param severity=HIGH --param affected_service=api-gateway
 
-# Preview without execution
-awd preview incident-response --severity=HIGH --affected_service=api-gateway
+# Preview compiled prompts for debugging
+awd preview start --param severity=HIGH --param affected_service=api-gateway
 ```
 
 ## Philosophy: The AWD Manifesto
@@ -163,13 +170,6 @@ Just as npm revolutionized JavaScript development by creating a package ecosyste
 
 **The AWD Solution**: Complete the tooling stack for AI-native development
 
-| Traditional Web Dev | AI-Native Development | Role |
-|---------------------|----------------------|------|
-| **npm** | **AWD-CLI** | Package manager, dependency resolution, distribution |
-| **Node.js** | **[llm](https://github.com/simonw/llm)/[codex](https://github.com/openai/codex)** | Runtime environment, execution engine |
-| **JavaScript** | **Natural Language Prompts** | Programming language |
-| **V8 Engine** | **LLM Models** | Core computation engine |
-
 **Key Benefits**:
 - 🏗️ **Infrastructure Layer** - AWD is the package manager, runtimes ([llm](https://github.com/simonw/llm), [codex](https://github.com/openai/codex)) are the execution engines
 - ✅ **Portable** - Same prompt runs on any LLM runtime (just like npm packages run on any Node.js version)
@@ -184,22 +184,28 @@ Just as npm enabled JavaScript's explosive growth, AWD enables the prompt-based 
 
 ```mermaid
 graph TD
-    A["📝 Prompts<br/>.prompt.md<br/>Natural Language Programs"] --> B["🔧 AWD<br/>Package Manager Layer"]
-    B --> D["⚡ LLM Runtime<br/>llm library<br/>OpenAI Codex<br/>Future runtimes"]
-    B --> E["📦 Registries<br/>AWD packages<br/>MCP servers"]
+    A["📝 Prompts<br/>.prompt.md<br/>Natural Language Programs"] --> B["🔧 AWD CLI"]
     
-    D -.-> F["🛠️ MCP Servers<br/>Tool Integration<br/>Managed by Runtime"]
-    D -.-> G["🧠 LLM Models<br/>Cloud: Anthropic, Azure, GitHub<br/>Local: Ollama"]
+    B --> D["📦 AWD Package Manager<br/>Dependencies<br/>Templates"]
+    B --> C["⚙️ AWD Prompt Compiler<br/>Script Resolution<br/>Prompt Compilation"]
+    B --> E["🏗️ AWD Runtime Manager<br/>Install & Configure<br/>Codex, LLM, etc."]
+    
+    C --> F["⚡ LLM Runtimes<br/>Codex (Rust)<br/>LLM (Python)"]
+    
+    F --> G["🛠️ MCP Servers<br/>Tool Integration"]
+    F --> H["🧠 LLM Models<br/>GitHub Models<br/>Ollama, etc."]
     
     style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
     style B fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
-    style D fill:#fff8e1,stroke:#f57c00,stroke-width:2px,color:#000
-    style E fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
-    style F fill:#e8f5e8,stroke:#388e3c,stroke-width:1px,color:#000
-    style G fill:#fff3e0,stroke:#ff9800,stroke-width:1px,color:#000
+    style C fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style D fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style E fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    style F fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    style G fill:#e8f5e8,stroke:#388e3c,stroke-width:1px,color:#000
+    style H fill:#fff3e0,stroke:#ff9800,stroke-width:1px,color:#000
 ```
 
-**Key Insight**: AWD handles packaging and distribution (like npm), while runtimes handle execution and tool integration (like Node.js). This separation enables innovation at each layer without tight coupling. share, and run agentic prompts and workflows across any LLM runtime. 
+**Key Insight**: AWD CLI provides three core components: Package Manager (dependencies), Prompt Compiler (script processing), and Runtime Manager (install/configure runtimes). LLM runtimes handle execution and call MCP servers for tool integration. 
 
 ## Installation
 
@@ -239,16 +245,16 @@ cd awd-cli && pip install -e .
 
 ```bash
 # Quick start commands
-awd runtime setup codex                      # Install Codex runtime
-awd init my-project                          # Initialize new AWD project
-awd install                                  # Install dependencies
-awd run --param key=value                    # Run entrypoint prompt
-awd run prompt-name --param key=value       # Run specific prompt
+awd runtime setup codex                           # Install Codex runtime
+awd init my-project                               # Initialize new AWD project
+awd install                                       # Install dependencies
+awd run start --param key=value                   # Run start script
+awd run llm --param key=value                     # Run llm script
 
-# Runtime selection
-awd run --runtime=codex                           # Use Codex (default when installed)
-awd run --runtime=llm --llm=github/gpt-4o-mini    # Use LLM with GitHub Models
-awd run --runtime=llm --llm=ollama/llama3.2       # Use LLM with local Ollama
+# Runtime selection and options
+awd run start                                     # Use default Codex runtime
+awd run llm --llm=github/gpt-4o-mini            # Use LLM with GitHub Models
+awd run debug --param key=value --verbose        # Debug with environment variables
 ```
 
 ## Community

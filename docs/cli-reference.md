@@ -1,6 +1,6 @@
-# AWD CLI Reference v0.0.4
+# AWD CLI Reference
 
-Complete command-line interface reference for Agentic Workflow Definitions (AWD) v0.0.4.
+Complete command-line interface reference for Agentic Workflow Definitions (AWD).
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ export GITHUB_TOKEN=your_github_token
 
 # 3. Create and run project  
 awd init my-project && cd my-project
-awd install && awd run --param name="Developer"
+awd install && awd run start --param name="Developer"
 ```
 
 ## Installation
@@ -98,14 +98,14 @@ awd install
 
 ### `awd run` - Execute prompts
 
-Execute a prompt with parameters and real-time output streaming.
+Execute a script defined in your awd.yml with parameters and real-time output streaming.
 
 ```bash
-awd run [PROMPT_NAME] [OPTIONS]
+awd run [SCRIPT_NAME] [OPTIONS]
 ```
 
 **Arguments:**
-- `PROMPT_NAME` - Optional name of prompt to run (uses entrypoint if not specified)
+- `SCRIPT_NAME` - Name of script to run from awd.yml scripts section
 
 **Options:**
 - `-p, --param TEXT` - Parameter in format `name=value` (can be used multiple times)
@@ -114,49 +114,48 @@ awd run [PROMPT_NAME] [OPTIONS]
 
 **Examples:**
 ```bash
-# Run entrypoint prompt (uses installed runtime automatically)
-awd run --param name="Developer"
+# Run start script (default script)
+awd run start --param name="Developer"
 
-# Run with Codex (recommended - pre-configured with GitHub Models)
-awd run hello-world --runtime=codex --param name="Alice"
+# Run with different scripts 
+awd run start --param name="Alice"
+awd run llm --param service=api
+awd run debug --param service=api --verbose
 
-# Run with LLM and specific model
-awd run my-prompt --runtime=llm --llm=github/gpt-4o-mini --param service=api
-
-# Run with OpenAI GPT-4 (requires llm keys set openai)
-awd run code-review --runtime=llm --llm=gpt-4o
+# Run LLM script with specific model
+awd run llm --llm=github/gpt-4o-mini --param service=api
 ```
 
 **Return Codes:**
 - `0` - Success
 - `1` - Execution failed or error occurred
 
-### `awd preview` - Preview prompts without execution
+### `awd preview` - Preview compiled scripts
 
 Show the processed prompt content with parameters substituted, without executing.
 
 ```bash
-awd preview [PROMPT_NAME] [OPTIONS]
+awd preview [SCRIPT_NAME] [OPTIONS]
 ```
 
 **Arguments:**
-- `PROMPT_NAME` - Optional name of prompt to preview (uses entrypoint if not specified)
+- `SCRIPT_NAME` - Name of script to preview from awd.yml scripts section
 
 **Options:**
 - `-p, --param TEXT` - Parameter in format `name=value`
 
 **Examples:**
 ```bash
-# Preview entrypoint prompt
-awd preview --param name="Developer"
+# Preview start script
+awd preview start --param name="Developer"
 
-# Preview specific prompt with parameters
-awd preview hello-world --param name="Alice"
+# Preview specific script with parameters
+awd preview llm --param name="Alice"
 ```
 
-### `awd list` - List available prompts
+### `awd list` - List available scripts
 
-Display all discovered `.prompt.md` files in the current project.
+Display all scripts defined in awd.yml.
 
 ```bash
 awd list
@@ -170,11 +169,10 @@ awd list
 
 **Output format:**
 ```
-📍 hello-world: A hello world prompt demonstrating AWD with GitHub integration
-   code-review: Security, quality & accessibility review
-   tests: Unit test gap analysis and implementation
-
-📍 = entrypoint (default when running 'awd run')
+Available scripts:
+  start: codex hello-world.prompt.md
+  llm: llm hello-world.prompt.md -m github/gpt-4o-mini  
+  debug: DEBUG=true codex hello-world.prompt.md
 ```
 
 ### `awd models` - List available models
@@ -315,7 +313,10 @@ name: my-project
 version: 1.0.0
 description: My AWD application
 author: Your Name
-entrypoint: hello-world.prompt.md
+scripts:
+  start: "codex hello-world.prompt.md"
+  llm: "llm hello-world.prompt.md -m github/gpt-4o-mini"
+  debug: "DEBUG=true codex hello-world.prompt.md"
 
 dependencies:
   mcp:
@@ -420,7 +421,7 @@ fi
 my-awd-project/
 ├── awd.yml                           # Project configuration
 ├── README.md                         # Project documentation  
-├── hello-world.prompt.md             # Entrypoint prompt
+├── hello-world.prompt.md             # Main prompt file
 ├── prompts/
 │   ├── code-review.prompt.md         # Code review prompt
 │   └── documentation.prompt.md       # Documentation prompt
