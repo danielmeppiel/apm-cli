@@ -24,7 +24,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-13, macos-14]
+        include:
+          - os: ubuntu-24.04
+            arch: x86_64
+            platform: linux
+          - os: macos-13
+            arch: x86_64  
+            platform: darwin
+          - os: macos-14
+            arch: arm64
+            platform: darwin
     
     steps:
     - uses: actions/checkout@v4
@@ -84,7 +93,6 @@ jobs:
             platform: darwin
             arch: arm64
             binary_name: awd-darwin-arm64
-            target_arch: arm64
     
     runs-on: ${{ matrix.os }}
     permissions:
@@ -150,10 +158,16 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
+            arch: x86_64
+            platform: linux
             binary_name: awd-linux-x86_64
-          - os: macos-13  
+          - os: macos-13
+            arch: x86_64
+            platform: darwin
             binary_name: awd-darwin-x86_64
           - os: macos-14
+            arch: arm64
+            platform: darwin
             binary_name: awd-darwin-arm64
     
     runs-on: ${{ matrix.os }}
