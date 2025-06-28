@@ -1,4 +1,4 @@
-"""Command-line interface for Agentic Workflow Definitions (AWD) v0.0.1."""
+"""Command-line interface for Agentic Workflow Definitions (AWD)."""
 
 import sys
 import os
@@ -6,6 +6,7 @@ import yaml
 import click
 from pathlib import Path
 from colorama import init, Fore, Style
+from .version import get_version
 
 # Initialize colorama
 init(autoreset=True)
@@ -56,7 +57,7 @@ def print_version(ctx, param, value):
     """Print version and exit."""
     if not value or ctx.resilient_parsing:
         return
-    click.echo(f"{TITLE}Agentic Workflow Definitions (AWD) CLI{RESET} version 0.0.1")
+    click.echo(f"{TITLE}Agentic Workflow Definitions (AWD) CLI{RESET} version {get_version()}")
     ctx.exit()
 
 @click.group(help=f"{TITLE}Agentic Workflow Definitions (AWD){RESET}: " 
@@ -433,7 +434,7 @@ def config(ctx, show):
                 click.echo(f"{INFO}Not in an AWD project directory{RESET}")
                 
             click.echo(f"\n{HIGHLIGHT}Global:{RESET}")
-            click.echo(f"  AWD CLI Version: 0.0.1")
+            click.echo(f"  AWD CLI Version: {get_version()}")
             
         else:
             click.echo(f"{INFO}Use --show to display configuration{RESET}")

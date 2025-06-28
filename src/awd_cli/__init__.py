@@ -1,3 +1,5 @@
 """AWD-CLI package."""
 
-__version__ = "0.0.3"
+from .version import get_version
+
+__version__ = get_version()
