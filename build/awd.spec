@@ -65,7 +65,6 @@ hiddenimports = [
     'pathlib',
     'frontmatter',
     'requests',
-    'pkg_resources',  # For accessing embedded scripts
 ]
 
 # Modules to exclude to reduce binary size

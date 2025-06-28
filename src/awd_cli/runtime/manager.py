@@ -10,7 +10,6 @@ import tempfile
 import shutil
 from pathlib import Path
 from typing import Dict, List, Optional
-import pkg_resources
 import click
 from colorama import Fore, Style
 
