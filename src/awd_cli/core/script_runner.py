@@ -1,0 +1,209 @@
+"""Script runner for AWD NPM-like script execution."""
+
+import os
+import re
+import subprocess
+import yaml
+from pathlib import Path
+from typing import Dict, Optional
+
+
+class ScriptRunner:
+    """Executes AWD scripts with auto-compilation of .prompt.md files."""
+    
+    def __init__(self, compiler=None):
+        """Initialize script runner with optional compiler."""
+        self.compiler = compiler or PromptCompiler()
+    
+    def run_script(self, script_name: str, params: Dict[str, str]) -> bool:
+        """Run a script from awd.yml with parameter substitution.
+        
+        Args:
+            script_name: Name of the script to run
+            params: Parameters for compilation and script execution
+            
+        Returns:
+            bool: True if script executed successfully
+        """
+        # Load awd.yml configuration
+        config = self._load_config()
+        if not config:
+            raise RuntimeError("No awd.yml found in current directory")
+        
+        scripts = config.get('scripts', {})
+        if script_name not in scripts:
+            available = ', '.join(scripts.keys()) if scripts else 'none'
+            raise RuntimeError(f"Script '{script_name}' not found. Available scripts: {available}")
+        
+        # Get the script command
+        command = scripts[script_name]
+        
+        # Auto-compile any .prompt.md files in the command
+        compiled_command = self._auto_compile_prompts(command, params)
+        
+        # Execute the final command
+        print(f"Executing: {compiled_command}")
+        try:
+            result = subprocess.run(compiled_command, shell=True, check=True)
+            return result.returncode == 0
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Script execution failed with exit code {e.returncode}")
+    
+    def list_scripts(self) -> Dict[str, str]:
+        """List all available scripts from awd.yml.
+        
+        Returns:
+            Dict mapping script names to their commands
+        """
+        config = self._load_config()
+        return config.get('scripts', {}) if config else {}
+    
+    def _load_config(self) -> Optional[Dict]:
+        """Load awd.yml from current directory."""
+        config_path = Path('awd.yml')
+        if not config_path.exists():
+            return None
+        
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f)
+    
+    def _auto_compile_prompts(self, command: str, params: Dict[str, str]) -> str:
+        """Auto-compile .prompt.md files and transform runtime commands.
+        
+        Args:
+            command: Original script command
+            params: Parameters for compilation
+            
+        Returns:
+            Properly formatted command for the target runtime
+        """
+        # Find all .prompt.md files in the command using regex
+        prompt_files = re.findall(r'(\S+\.prompt\.md)', command)
+        
+        compiled_command = command
+        for prompt_file in prompt_files:
+            # Compile the prompt file with current params
+            compiled_path = self.compiler.compile(prompt_file, params)
+            
+            # Read the compiled content
+            with open(compiled_path, 'r') as f:
+                compiled_content = f.read().strip()
+            
+            # Transform command based on runtime pattern
+            compiled_command = self._transform_runtime_command(
+                compiled_command, prompt_file, compiled_content, compiled_path
+            )
+        
+        return compiled_command
+    
+    def _transform_runtime_command(self, command: str, prompt_file: str, 
+                                 compiled_content: str, compiled_path: str) -> str:
+        """Transform runtime commands to their proper execution format.
+        
+        Args:
+            command: Original command
+            prompt_file: Original .prompt.md file path
+            compiled_content: Compiled prompt content as string
+            compiled_path: Path to compiled .txt file
+            
+        Returns:
+            Transformed command for proper runtime execution
+        """
+        # Handle "codex file.prompt.md" -> "codex exec 'compiled_content'"  
+        if re.search(r'codex\s+\S+\.prompt\.md', command):
+            pattern = r'codex\s+' + re.escape(prompt_file)
+            replacement = f"codex exec '{compiled_content}'"
+            return re.sub(pattern, replacement, command)
+        
+        # Handle "llm file.prompt.md [options]" -> "llm 'compiled_content' [options]"
+        elif re.search(r'llm\s+\S+\.prompt\.md', command):
+            # Extract any additional options after the file
+            match = re.search(r'llm\s+' + re.escape(prompt_file) + r'(.*)$', command)
+            options = match.group(1) if match else ""
+            return f"llm '{compiled_content}'{options}"
+        
+        # Handle environment variables prefix (e.g., "DEBUG=true codex file.prompt.md")
+        elif re.search(r'\w+=\w+\s+codex\s+\S+\.prompt\.md', command):
+            match = re.search(r'(\w+=\w+)\s+codex\s+' + re.escape(prompt_file), command)
+            if match:
+                env_var = match.group(1)
+                return f"{env_var} codex exec '{compiled_content}'"
+        
+        # Handle bare "file.prompt.md" -> "codex exec 'compiled_content'" (default to codex)
+        elif command.strip() == prompt_file:
+            return f"codex exec '{compiled_content}'"
+        
+        # Fallback: just replace file path with compiled path
+        # This handles any other patterns we might have missed
+        return command.replace(prompt_file, compiled_path)
+
+
+class PromptCompiler:
+    """Compiles .prompt.md files with parameter substitution."""
+    
+    def __init__(self):
+        """Initialize compiler."""
+        self.compiled_dir = Path('.awd/compiled')
+    
+    def compile(self, prompt_file: str, params: Dict[str, str]) -> str:
+        """Compile a .prompt.md file with parameter substitution.
+        
+        Args:
+            prompt_file: Path to the .prompt.md file
+            params: Parameters to substitute
+            
+        Returns:
+            Path to the compiled file
+        """
+        # Ensure compiled directory exists
+        self.compiled_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Read the prompt file
+        prompt_path = Path(prompt_file)
+        if not prompt_path.exists():
+            raise FileNotFoundError(f"Prompt file not found: {prompt_file}")
+        
+        with open(prompt_path, 'r') as f:
+            content = f.read()
+        
+        # Parse frontmatter and content
+        if content.startswith('---'):
+            # Split frontmatter and content
+            parts = content.split('---', 2)
+            if len(parts) >= 3:
+                frontmatter = parts[1].strip()
+                main_content = parts[2].strip()
+            else:
+                main_content = content
+        else:
+            main_content = content
+        
+        # Substitute parameters in content
+        compiled_content = self._substitute_parameters(main_content, params)
+        
+        # Generate output file path
+        output_name = prompt_path.stem.replace('.prompt', '') + '.txt'
+        output_path = self.compiled_dir / output_name
+        
+        # Write compiled content
+        with open(output_path, 'w') as f:
+            f.write(compiled_content)
+        
+        return str(output_path)
+    
+    def _substitute_parameters(self, content: str, params: Dict[str, str]) -> str:
+        """Substitute parameters in content.
+        
+        Args:
+            content: Content to process
+            params: Parameters to substitute
+            
+        Returns:
+            Content with parameters substituted
+        """
+        result = content
+        for key, value in params.items():
+            # Replace ${input:key} placeholders
+            placeholder = f"${{input:{key}}}"
+            result = result.replace(placeholder, str(value))
+        return result
