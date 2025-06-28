@@ -109,25 +109,67 @@ class ScriptRunner:
         Returns:
             Transformed command for proper runtime execution
         """
-        # Handle "codex file.prompt.md" -> "codex exec 'compiled_content'"  
-        if re.search(r'codex\s+\S+\.prompt\.md', command):
-            pattern = r'codex\s+' + re.escape(prompt_file)
-            replacement = f"codex exec '{compiled_content}'"
-            return re.sub(pattern, replacement, command)
+        # Handle environment variables prefix (e.g., "ENV1=val1 ENV2=val2 codex [args] file.prompt.md")
+        # More robust approach: split by ' codex ' to separate env vars from command
+        if ' codex ' in command and re.search(re.escape(prompt_file), command):
+            parts = command.split(' codex ', 1)
+            potential_env_part = parts[0]
+            codex_part = 'codex ' + parts[1]
+            
+            # Check if the first part looks like environment variables (has = signs)
+            if '=' in potential_env_part and not potential_env_part.startswith('codex'):
+                env_vars = potential_env_part
+                
+                # Extract arguments before and after the prompt file from codex part
+                codex_match = re.search(r'codex\s+(.*?)(' + re.escape(prompt_file) + r')(.*?)$', codex_part)
+                if codex_match:
+                    args_before_file = codex_match.group(1).strip()
+                    args_after_file = codex_match.group(3).strip()
+                    
+                    # Build the exec command
+                    if args_before_file:
+                        result = f"{env_vars} codex exec {args_before_file} '{compiled_content}'"
+                    else:
+                        result = f"{env_vars} codex exec '{compiled_content}'"
+                    
+                    if args_after_file:
+                        result += f" {args_after_file}"
+                    return result
+        
+        # Handle "codex [args] file.prompt.md [more_args]" -> "codex exec [args] 'compiled_content' [more_args]"  
+        elif re.search(r'codex\s+.*' + re.escape(prompt_file), command):
+            # Extract arguments before and after the prompt file
+            match = re.search(r'codex\s+(.*?)(' + re.escape(prompt_file) + r')(.*?)$', command)
+            if match:
+                args_before_file = match.group(1).strip()
+                args_after_file = match.group(3).strip()
+                
+                # Build the exec command with arguments
+                if args_before_file:
+                    result = f"codex exec {args_before_file} '{compiled_content}'"
+                else:
+                    result = f"codex exec '{compiled_content}'"
+                
+                if args_after_file:
+                    result += f" {args_after_file}"
+                return result
         
         # Handle "llm file.prompt.md [options]" -> "llm 'compiled_content' [options]"
-        elif re.search(r'llm\s+\S+\.prompt\.md', command):
+        elif re.search(r'llm\s+.*' + re.escape(prompt_file), command):
             # Extract any additional options after the file
-            match = re.search(r'llm\s+' + re.escape(prompt_file) + r'(.*)$', command)
-            options = match.group(1) if match else ""
-            return f"llm '{compiled_content}'{options}"
-        
-        # Handle environment variables prefix (e.g., "DEBUG=true codex file.prompt.md")
-        elif re.search(r'\w+=\w+\s+codex\s+\S+\.prompt\.md', command):
-            match = re.search(r'(\w+=\w+)\s+codex\s+' + re.escape(prompt_file), command)
+            match = re.search(r'llm\s+(.*?)(' + re.escape(prompt_file) + r')(.*?)$', command)
             if match:
-                env_var = match.group(1)
-                return f"{env_var} codex exec '{compiled_content}'"
+                args_before_file = match.group(1).strip()
+                args_after_file = match.group(3).strip()
+                
+                # For llm, we don't add exec, just replace the file with content
+                result = f"llm"
+                if args_before_file:
+                    result += f" {args_before_file}"
+                result += f" '{compiled_content}'"
+                if args_after_file:
+                    result += f" {args_after_file}"
+                return result
         
         # Handle bare "file.prompt.md" -> "codex exec 'compiled_content'" (default to codex)
         elif command.strip() == prompt_file:
