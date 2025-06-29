@@ -1,10 +1,10 @@
 # Runtime Integration Guide
 
-AWD manages LLM runtime installation and configuration automatically. This guide covers the supported runtimes and how to use them.
+AWD manages LLM runtime installation and configuration automatically. This guide covers the supported runtimes, how to use them, and how to extend AWD with additional runtimes.
 
 ## Overview
 
-AWD acts as a runtime package manager, downloading and configuring LLM runtimes from their official sources:
+AWD acts as a runtime package manager, downloading and configuring LLM runtimes from their official sources. Currently supports two runtimes:
 
 | Runtime | Description | Best For | Configuration |
 |---------|-------------|----------|---------------|
@@ -58,17 +58,24 @@ export GITHUB_TOKEN=your_github_token
 
 ### Usage
 
-```bash
-# Run with Codex (auto-selected when installed)
-awd run my-prompt
+AWD executes scripts defined in your `awd.yml`. When scripts reference `.prompt.md` files, AWD compiles them with parameter substitution. See [Prompts Guide](prompts.md) for details.
 
-# Explicit runtime selection
-awd run my-prompt --runtime=codex
+```bash
+# Run scripts (from awd.yml) with parameters
+awd run start --param service_name=api-gateway
+awd run debug --param service_name=api-gateway
+```
+
+**Script Configuration (awd.yml):**
+```yaml
+scripts:
+  start: "codex analyze-logs.prompt.md"
+  debug: "DEBUG=true codex analyze-logs.prompt.md"
 ```
 
 ## LLM Runtime
 
-AWD can also install the LLM library for advanced model support and manual configuration.
+AWD also supports the LLM library runtime with multiple model providers and manual configuration.
 
 ### Setup
 
@@ -95,36 +102,43 @@ llm keys set anthropic  # Anthropic API key
 
 ### Usage
 
+AWD executes scripts defined in your `awd.yml`. See [Prompts Guide](prompts.md) for details on prompt compilation.
+
 ```bash
-# Run with LLM runtime
-awd run my-prompt --runtime=llm --llm=github/gpt-4o-mini
-awd run my-prompt --runtime=llm --llm=gpt-4o
-awd run my-prompt --runtime=llm --llm=claude-3.5-sonnet
+# Run scripts that use LLM runtime
+awd run llm-script --param service_name=api-gateway
+awd run analysis --param time_window="24h"
+```
+
+**Script Configuration (awd.yml):**
+```yaml
+scripts:
+  llm-script: "llm analyze-logs.prompt.md -m github/gpt-4o-mini"
+  analysis: "llm performance-analysis.prompt.md -m gpt-4o"
 ```
 
 ## Examples by Use Case
 
 ### Basic Usage
 ```bash
-# Default: Uses Codex if installed, otherwise LLM
-awd run my-prompt --param key=value
-
-# Explicit runtime selection
-awd run my-prompt --runtime=codex
-awd run my-prompt --runtime=llm --llm=github/gpt-4o-mini
+# Run scripts defined in awd.yml
+awd run start --param service_name=api-gateway
+awd run llm --param service_name=api-gateway
+awd run debug --param service_name=api-gateway
 ```
 
 ### Code Analysis
 ```bash
-# Codex excels at code understanding
-awd run code-review --runtime=codex --param pull_request=123
+# Scripts that use Codex for code understanding
+awd run code-review --param pull_request=123
+awd run analyze-code --param file_path="src/main.py"
 ```
 
 ### Documentation Tasks
 ```bash
-# Use GitHub Models for free text processing
-awd run document --runtime=llm --llm=github/gpt-4o-mini \
-  --param project_name=my-project
+# Scripts that use LLM for text processing
+awd run document --param project_name=my-project
+awd run summarize --param report_type="weekly"
 ```
 
 ## Troubleshooting
@@ -151,3 +165,41 @@ export GITHUB_TOKEN=your_github_token
 # Or reinstall runtime
 awd runtime setup codex
 ```
+
+## Extending AWD with New Runtimes
+
+AWD's runtime system is designed to be extensible. To add support for a new runtime:
+
+### Architecture
+
+AWD's runtime system consists of three main components:
+
+1. **Runtime Adapter** (`src/awd_cli/runtime/`) - Python interface for executing prompts
+2. **Setup Script** (`scripts/runtime/`) - Shell script for installation and configuration  
+3. **Runtime Manager** (`src/awd_cli/runtime/manager.py`) - Orchestrates installation and discovery
+
+### Adding a New Runtime
+
+1. **Create Runtime Adapter** - Extend `RuntimeAdapter` in `src/awd_cli/runtime/your_runtime.py`
+2. **Create Setup Script** - Add installation script in `scripts/runtime/setup-your-runtime.sh`
+3. **Register Runtime** - Add entry to `supported_runtimes` in `RuntimeManager`
+4. **Update CLI** - Add runtime to command choices in `cli.py`
+5. **Update Factory** - Add runtime to `RuntimeFactory`
+
+### Best Practices
+
+- Follow the `RuntimeAdapter` interface
+- Use `setup-common.sh` utilities for platform detection and PATH management
+- Handle errors gracefully with clear messages
+- Test installation works after setup completes
+- Support vanilla mode (no AWD-specific configuration)
+
+### Contributing
+
+To contribute a new runtime to AWD:
+
+1. Fork the repository and follow the extension guide above
+2. Add tests and update documentation
+3. Submit a pull request
+
+The AWD team welcomes contributions for popular LLM runtimes!
