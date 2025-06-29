@@ -60,20 +60,38 @@ awd [OPTIONS] COMMAND [ARGS]...
 Initialize a new AWD project with sample prompt and configuration (like `npm init`).
 
 ```bash
-awd init [PROJECT_NAME]
+awd init [PROJECT_NAME] [OPTIONS]
 ```
 
 **Arguments:**
-- `PROJECT_NAME` - Optional name for new project directory
+- `PROJECT_NAME` - Optional name for new project directory. Use `.` to explicitly initialize in current directory
+
+**Options:**
+- `-f, --force` - Overwrite existing files without confirmation
+- `-y, --yes` - Skip interactive questionnaire and use defaults
 
 **Examples:**
 ```bash
-# Initialize in current directory
+# Initialize in current directory (interactive)
 awd init
+
+# Initialize in current directory explicitly  
+awd init .
 
 # Create new project directory
 awd init my-hello-world
+
+# Force overwrite existing project
+awd init --force
+
+# Use defaults without prompts
+awd init my-project --yes
 ```
+
+**Behavior:**
+- **Interactive mode**: Prompts for project details unless `--yes` specified
+- **Existing projects**: Detects existing `awd.yml` and preserves configuration unless `--force` used
+- **Strictly additive**: Like npm, preserves existing fields and values where possible
 
 **Creates:**
 - `awd.yml` - Project configuration with MCP dependencies
@@ -226,20 +244,41 @@ awd runtime COMMAND [OPTIONS]
 Download and configure an AI runtime from official sources.
 
 ```bash
-awd runtime setup RUNTIME_NAME
+awd runtime setup RUNTIME_NAME [OPTIONS]
 ```
 
 **Arguments:**
 - `RUNTIME_NAME` - Runtime to install: `codex` or `llm`
 
+**Options:**
+- `--vanilla` - Install runtime without AWD configuration (uses runtime's native defaults)
+
 **Examples:**
 ```bash
-# Install Codex CLI with GitHub Models (recommended)
+# Install Codex with AWD defaults (GitHub Models, free)
 awd runtime setup codex
 
-# Install LLM library in managed environment
+# Install LLM with AWD defaults  
 awd runtime setup llm
+
+# Install Codex without AWD configuration (vanilla)
+awd runtime setup codex --vanilla
+
+# Install LLM without AWD configuration (vanilla)
+awd runtime setup llm --vanilla
 ```
+
+**Default Behavior:**
+- Installs runtime binary from official sources
+- Configures with GitHub Models (free) as AWD default
+- Creates configuration file at `~/.codex/config.toml` or similar
+- Provides clear logging about what's being configured
+
+**Vanilla Behavior (`--vanilla` flag):**
+- Installs runtime binary only
+- No AWD-specific configuration applied
+- Uses runtime's native defaults (e.g., OpenAI for Codex)
+- No configuration files created by AWD
 
 #### `awd runtime list` - Show installed runtimes
 
