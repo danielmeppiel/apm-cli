@@ -81,7 +81,13 @@ ensure_path_updated() {
     local runtime_dir="$HOME/.awd/runtimes"
     local shell_rc=""
     
-    # Detect shell and appropriate RC file
+    # First, update the current session PATH immediately
+    if [[ ":$PATH:" != *":$runtime_dir:"* ]]; then
+        export PATH="$runtime_dir:$PATH"
+        log_info "Added $runtime_dir to current session PATH"
+    fi
+    
+    # Detect shell and appropriate RC file for persistent PATH updates
     case "$SHELL" in
         */zsh)
             shell_rc="$HOME/.zshrc"
@@ -94,20 +100,23 @@ ensure_path_updated() {
             ;;
         *)
             log_warning "Unknown shell: $SHELL. You may need to manually add $runtime_dir to your PATH"
+            log_success "Runtime binaries are available in current session"
             return
             ;;
     esac
     
-    # Check if PATH already contains the runtime directory
-    if [[ ":$PATH:" != *":$runtime_dir:"* ]]; then
+    # Check if shell RC already contains the runtime directory
+    if [[ -f "$shell_rc" ]] && grep -q "\.awd/runtimes" "$shell_rc"; then
+        log_info "PATH already configured in $shell_rc"
+    else
         log_info "Adding $runtime_dir to PATH in $shell_rc"
         echo "" >> "$shell_rc"
         echo "# Added by AWD runtime setup" >> "$shell_rc"
         echo "export PATH=\"\$HOME/.awd/runtimes:\$PATH\"" >> "$shell_rc"
-        log_success "PATH updated. Please restart your shell or run: source $shell_rc"
-    else
-        log_info "PATH already contains AWD runtime directory"
+        log_info "PATH updated in $shell_rc for future sessions"
     fi
+    
+    log_success "Runtime binaries are now available!"
 }
 
 # Download file with progress
