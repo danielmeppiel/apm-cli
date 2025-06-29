@@ -55,7 +55,7 @@ awd [OPTIONS] COMMAND [ARGS]...
 
 ## Core Commands
 
-### `awd init` - Initialize new AWD project
+### `awd init` - 🚀 Initialize new AWD project
 
 Initialize a new AWD project with sample prompt and configuration (like `npm init`).
 
@@ -98,7 +98,7 @@ awd init my-project --yes
 - `hello-world.prompt.md` - Sample prompt with GitHub integration
 - `README.md` - Project documentation
 
-### `awd install` - Install dependencies
+### `awd install` - 📦 Install dependencies
 
 Install MCP server dependencies from `awd.yml` (like `npm install`).
 
@@ -114,7 +114,7 @@ awd install
 
 **Requirements:** Must be run in a directory with `awd.yml` file.
 
-### `awd run` - Execute prompts
+### `awd run` - 🚀 Execute prompts
 
 Execute a script defined in your awd.yml with parameters and real-time output streaming.
 
@@ -127,8 +127,6 @@ awd run [SCRIPT_NAME] [OPTIONS]
 
 **Options:**
 - `-p, --param TEXT` - Parameter in format `name=value` (can be used multiple times)
-- `--runtime TEXT` - Runtime to use (`codex`, `llm`) - default: auto-detect installed
-- `--llm TEXT` - LLM model to use (for llm runtime)
 
 **Examples:**
 ```bash
@@ -138,17 +136,17 @@ awd run start --param name="Developer"
 # Run with different scripts 
 awd run start --param name="Alice"
 awd run llm --param service=api
-awd run debug --param service=api --verbose
+awd run debug --param service=api
 
-# Run LLM script with specific model
-awd run llm --llm=github/gpt-4o-mini --param service=api
+# Run specific scripts with parameters
+awd run llm --param service=api --param environment=prod
 ```
 
 **Return Codes:**
 - `0` - Success
 - `1` - Execution failed or error occurred
 
-### `awd preview` - Preview compiled scripts
+### `awd preview` - 👀 Preview compiled scripts
 
 Show the processed prompt content with parameters substituted, without executing.
 
@@ -171,7 +169,7 @@ awd preview start --param name="Developer"
 awd preview llm --param name="Alice"
 ```
 
-### `awd list` - List available scripts
+### `awd list` - 📋 List available scripts
 
 Display all scripts defined in awd.yml.
 
@@ -193,26 +191,7 @@ Available scripts:
   debug: DEBUG=true codex hello-world.prompt.md
 ```
 
-### `awd models` - List available models
-
-Display all available LLM models across different providers.
-
-```bash
-awd models
-```
-
-**Examples:**
-```bash
-# List all available models
-awd models
-```
-
-**Output:** Shows models grouped by provider:
-- GitHub Models: `github/gpt-4o-mini`, `github/gpt-4o`, etc.
-- OpenAI: `gpt-4o`, `gpt-4o-mini`, `o1`, etc.
-- Local models (if Ollama configured)
-
-### `awd config` - Configure AWD CLI
+### `awd config` - ⚙️ Configure AWD CLI
 
 Display AWD CLI configuration information.
 
@@ -231,7 +210,7 @@ awd config --show
 
 ## Runtime Management
 
-### `awd runtime` - Manage AI runtimes
+### `awd runtime` - 🤖 Manage AI runtimes
 
 AWD manages AI runtime installation and configuration automatically.
 
@@ -239,7 +218,7 @@ AWD manages AI runtime installation and configuration automatically.
 awd runtime COMMAND [OPTIONS]
 ```
 
-#### `awd runtime setup` - Install AI runtime
+#### `awd runtime setup` - ⚙️ Install AI runtime
 
 Download and configure an AI runtime from official sources.
 
@@ -280,7 +259,7 @@ awd runtime setup llm --vanilla
 - Uses runtime's native defaults (e.g., OpenAI for Codex)
 - No configuration files created by AWD
 
-#### `awd runtime list` - Show installed runtimes
+#### `awd runtime list` - 📋 Show installed runtimes
 
 List all available runtimes and their installation status.
 
@@ -294,7 +273,7 @@ awd runtime list
 - Installation path and version
 - Configuration details
 
-#### `awd runtime remove` - Uninstall runtime
+#### `awd runtime remove` - 🗑️ Uninstall runtime
 
 Remove an installed runtime and its configuration.
 
@@ -304,6 +283,19 @@ awd runtime remove RUNTIME_NAME
 
 **Arguments:**
 - `RUNTIME_NAME` - Runtime to remove: `codex` or `llm`
+
+#### `awd runtime status` - 📊 Show runtime status
+
+Display which runtime AWD will use for execution and runtime preference order.
+
+```bash
+awd runtime status
+```
+
+**Output includes:**
+- Runtime preference order (codex → llm)
+- Currently active runtime
+- Next steps if no runtime is available
 
 #### `awd runtime status` - Show runtime status
 
@@ -398,10 +390,10 @@ cd my-hello-world
 awd install
 
 # 4. Run the hello world prompt
-awd run --param name="Developer"
+awd run start --param name="Developer"
 
 # 5. Preview before execution
-awd preview --param name="Developer"
+awd preview start --param name="Developer"
 
 # 6. List available prompts
 awd list
@@ -432,7 +424,7 @@ awd list
     
 - name: Run code review
   run: |
-    awd run code-review --runtime=codex \
+    awd run code-review \
       --param pr_number=${{ github.event.number }}
 ```
 
@@ -447,7 +439,7 @@ cd my-awd-project
 awd install
 
 # Run documentation analysis
-if awd run document --runtime=codex --param project_name=$(basename $PWD); then
+if awd run document --param project_name=$(basename $PWD); then
     echo "Documentation analysis completed"
 else
     echo "Documentation analysis failed" 
