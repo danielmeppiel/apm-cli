@@ -165,6 +165,11 @@ setup_runtimes() {
         exit 1
     fi
     
+    # Add runtime paths to current session PATH
+    log_info "Adding runtime paths to current session..."
+    RUNTIME_PATH="$HOME/.awd/runtimes"
+    export PATH="$RUNTIME_PATH:$PATH"
+    
     # Verify runtimes are available
     log_info "Verifying runtime installations..."
     
@@ -174,6 +179,9 @@ setup_runtimes() {
         log_success "Codex runtime ready: $codex_version"
     else
         log_error "Codex not found in PATH after setup"
+        echo "PATH: $PATH"
+        echo "Looking for codex in: $RUNTIME_PATH"
+        ls -la "$RUNTIME_PATH" || echo "Runtime directory not found"
         exit 1
     fi
     
