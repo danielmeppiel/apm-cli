@@ -505,39 +505,53 @@ def preview(ctx, script_name, param):
                 _rich_panel(command, title="📄 Original command", style="blue")
                 
                 # Auto-compile prompts to show what would be executed
-                compiled_command = script_runner._auto_compile_prompts(command, params)
-                _rich_panel(compiled_command, title="⚡ Compiled command", style="green")
+                compiled_command, compiled_prompt_files = script_runner._auto_compile_prompts(command, params)
+                
+                if compiled_prompt_files:
+                    _rich_panel(compiled_command, title="⚡ Compiled command", style="green")
+                else:
+                    _rich_panel(compiled_command, title="⚡ Command (no prompt compilation)", style="yellow")
+                    _rich_warning(f"No .prompt.md files found in command. AWD only compiles files ending with '.prompt.md'")
                 
                 # Show compiled files if any .prompt.md files were processed
-                import re
-                prompt_files = re.findall(r'(\S+\.prompt\.md)', command)
-                if prompt_files:
+                if compiled_prompt_files:
                     file_list = []
-                    for prompt_file in prompt_files:
+                    for prompt_file in compiled_prompt_files:
                         output_name = Path(prompt_file).stem.replace('.prompt', '') + '.txt'
                         compiled_path = Path('.awd/compiled') / output_name
                         file_list.append(str(compiled_path))
                     
                     files_content = "\n".join([f"📄 {file}" for file in file_list])
                     _rich_panel(files_content, title="📁 Compiled prompt files", style="cyan")
+                else:
+                    _rich_panel(
+                        "No .prompt.md files were compiled.\n\n" +
+                        "AWD only compiles files ending with '.prompt.md' extension.\n" +
+                        "Other files are executed as-is by the runtime.", 
+                        title="ℹ️  Compilation Info", 
+                        style="cyan"
+                    )
                 
             except (ImportError, NameError):
                 # Fallback display
                 _rich_info("Original command:")
                 click.echo(f"  {command}")
                 
-                compiled_command = script_runner._auto_compile_prompts(command, params)
-                _rich_info("Compiled command:")
-                click.echo(f"  {compiled_command}")
+                compiled_command, compiled_prompt_files = script_runner._auto_compile_prompts(command, params)
                 
-                import re
-                prompt_files = re.findall(r'(\S+\.prompt\.md)', command)
-                if prompt_files:
+                if compiled_prompt_files:
+                    _rich_info("Compiled command:")
+                    click.echo(f"  {compiled_command}")
+                    
                     _rich_info("Compiled prompt files:")
-                    for prompt_file in prompt_files:
+                    for prompt_file in compiled_prompt_files:
                         output_name = Path(prompt_file).stem.replace('.prompt', '') + '.txt'
                         compiled_path = Path('.awd/compiled') / output_name
                         click.echo(f"  - {compiled_path}")
+                else:
+                    _rich_warning("Command (no prompt compilation):")
+                    click.echo(f"  {compiled_command}")
+                    _rich_info("AWD only compiles files ending with '.prompt.md' extension.")
                     
             console.print() if 'console' in globals() else click.echo()
             _rich_success(f"Preview complete! Use 'awd run {script_name}' to execute.", symbol="sparkles")
