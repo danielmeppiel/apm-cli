@@ -92,7 +92,7 @@ class RuntimeManager:
                 click.echo(f"{Fore.RED}❌ Failed to execute setup script: {e}{Style.RESET_ALL}", err=True)
                 return False
     
-    def setup_runtime(self, runtime_name: str, version: Optional[str] = None) -> bool:
+    def setup_runtime(self, runtime_name: str, version: Optional[str] = None, vanilla: bool = False) -> bool:
         """Set up a specific runtime."""
         if runtime_name not in self.supported_runtimes:
             click.echo(f"{Fore.RED}❌ Unsupported runtime: {runtime_name}{Style.RESET_ALL}", err=True)
@@ -105,6 +105,11 @@ class RuntimeManager:
         
         click.echo(f"{Fore.BLUE}🔧 Setting up {runtime_name} runtime: {description}{Style.RESET_ALL}")
         
+        if vanilla:
+            click.echo(f"{Fore.YELLOW}⚠️  Installing in vanilla mode - no AWD configuration will be applied{Style.RESET_ALL}")
+        else:
+            click.echo(f"{Fore.BLUE}ℹ️  Installing with AWD defaults (GitHub Models for free access){Style.RESET_ALL}")
+        
         try:
             # Get scripts
             script_content = self.get_embedded_script(script_name)
@@ -114,6 +119,8 @@ class RuntimeManager:
             script_args = []
             if version:
                 script_args.append(version)
+            if vanilla:
+                script_args.append("--vanilla")
             
             # Run setup script
             success = self.run_embedded_script(script_content, common_content, script_args)

@@ -10,7 +10,25 @@ source "$SCRIPT_DIR/setup-common.sh"
 
 # Configuration
 CODEX_REPO="openai/codex"
-CODEX_VERSION="${1:-latest}"  # Allow version override from command line
+CODEX_VERSION="latest"  # Default version
+VANILLA_MODE=false
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --vanilla)
+            VANILLA_MODE=true
+            shift
+            ;;
+        *)
+            # If it's not --vanilla and not empty, treat it as version
+            if [[ -n "$1" && "$1" != "--vanilla" ]]; then
+                CODEX_VERSION="$1"
+            fi
+            shift
+            ;;
+    esac
+done
 
 setup_codex() {
     log_info "Setting up Codex runtime..."
@@ -89,15 +107,17 @@ setup_codex() {
     # Verify binary
     verify_binary "$codex_binary" "Codex"
     
-    # Create Codex config directory
-    if [[ ! -d "$codex_config_dir" ]]; then
-        log_info "Creating Codex config directory: $codex_config_dir"
-        mkdir -p "$codex_config_dir"
-    fi
-    
-    # Create Codex configuration for GitHub Models
-    log_info "Creating Codex configuration for GitHub Models..."
-    cat > "$codex_config" << 'EOF'
+    # Create configuration if not in vanilla mode
+    if [[ "$VANILLA_MODE" == "false" ]]; then
+        # Create Codex config directory
+        if [[ ! -d "$codex_config_dir" ]]; then
+            log_info "Creating Codex config directory: $codex_config_dir"
+            mkdir -p "$codex_config_dir"
+        fi
+        
+        # Create Codex configuration for GitHub Models
+        log_info "Creating Codex configuration for GitHub Models (AWD default)..."
+        cat > "$codex_config" << 'EOF'
 model_provider = "github-models"
 model = "gpt-4o-mini"
 
@@ -107,8 +127,12 @@ base_url = "https://models.inference.ai.azure.com"
 env_key = "GITHUB_TOKEN"
 wire_api = "chat"
 EOF
-    
-    log_success "Codex configuration created at $codex_config"
+        
+        log_success "Codex configuration created at $codex_config"
+        log_info "AWD configured Codex with GitHub Models as default provider"
+    else
+        log_info "Vanilla mode: Skipping AWD configuration - Codex will use its native defaults"
+    fi
     
     # Update PATH
     ensure_path_updated
@@ -125,9 +149,15 @@ EOF
     # Show next steps
     echo ""
     log_info "Next steps:"
-    echo "1. Set your GitHub token: export GITHUB_TOKEN=your_token_here"
-    echo "2. Test with: codex --help"
-    echo "3. Or use via AWD: awd run your-prompt"
+    if [[ "$VANILLA_MODE" == "false" ]]; then
+        echo "1. Set your GitHub token: export GITHUB_TOKEN=your_token_here"
+        echo "2. Then run with AWD: awd run start"
+        echo ""
+        log_info "GitHub Models provides free access to OpenAI models with your GitHub token"
+    else
+        echo "1. Configure Codex with your preferred provider (see: codex --help)"
+        echo "2. Then run with AWD: awd run start"
+    fi
 }
 
 # Run setup if script is executed directly

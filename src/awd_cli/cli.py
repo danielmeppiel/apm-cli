@@ -83,38 +83,65 @@ def cli(ctx):
 
 @cli.command(help="Initialize a new AWD project")
 @click.argument('project_name', required=False)
+@click.option('--force', '-f', is_flag=True, help="Overwrite existing files without confirmation")
+@click.option('--yes', '-y', is_flag=True, help="Skip interactive questionnaire and use defaults")
 @click.pass_context
-def init(ctx, project_name):
+def init(ctx, project_name, force, yes):
     """Initialize a new AWD project (like npm init)."""
     try:
-        # Determine project directory
+        # Handle explicit current directory
+        if project_name == '.':
+            project_name = None
+            
+        # Determine project directory and name
         if project_name:
             project_dir = Path(project_name)
             project_dir.mkdir(exist_ok=True)
             os.chdir(project_dir)
             click.echo(f"{INFO}Created project directory: {project_name}{RESET}")
+            final_project_name = project_name
         else:
             project_dir = Path.cwd()
-            project_name = project_dir.name
+            final_project_name = project_dir.name
             
-        click.echo(f"{SUCCESS}Initializing AWD project: {HIGHLIGHT}{project_name}{RESET}")
-        
-        # Load templates and create files
-        awd_yml_content = _load_template_file('hello-world', 'awd.yml', 
-                                              project_name=project_name)
-        with open('awd.yml', 'w') as f:
-            f.write(awd_yml_content)
-        
-        # Create hello-world.prompt.md from template
-        prompt_content = _load_template_file('hello-world', 'hello-world.prompt.md')
-        with open('hello-world.prompt.md', 'w') as f:
-            f.write(prompt_content)
+        # Check for existing AWD project
+        awd_yml_exists = Path('awd.yml').exists()
+        existing_files = []
+        if awd_yml_exists:
+            existing_files.append('awd.yml')
+        if Path('hello-world.prompt.md').exists():
+            existing_files.append('hello-world.prompt.md')
+        if Path('README.md').exists():
+            existing_files.append('README.md')
             
-        # Create README.md from template
-        readme_content = _load_template_file('hello-world', 'README.md',
-                                             project_name=project_name)
-        with open('README.md', 'w') as f:
-            f.write(readme_content)
+        # Handle existing project
+        if existing_files and not force:
+            click.echo(f"{WARNING}Existing AWD project detected:{RESET}")
+            for file in existing_files:
+                click.echo(f"  - {file}")
+            click.echo()
+            
+            if not yes:
+                if not click.confirm(f"Continue and overwrite existing files?"):
+                    click.echo(f"{INFO}Initialization cancelled.{RESET}")
+                    return
+            else:
+                click.echo(f"{INFO}--yes specified, continuing with overwrite...{RESET}")
+        
+        # Get project configuration (interactive mode or defaults)
+        if not yes and not awd_yml_exists:
+            config = _interactive_project_setup(final_project_name)
+        else:
+            # Use defaults or preserve existing config
+            if awd_yml_exists and not force:
+                config = _merge_existing_config(final_project_name)
+            else:
+                config = _get_default_config(final_project_name)
+        
+        click.echo(f"{SUCCESS}Initializing AWD project: {HIGHLIGHT}{config['name']}{RESET}")
+        
+        # Create files from config
+        _create_project_files(config)
             
         click.echo(f"{INFO}Created files:{RESET}")
         click.echo(f"  - awd.yml")
@@ -453,13 +480,14 @@ def runtime():
 @runtime.command(help="Set up a runtime")
 @click.argument('runtime_name', type=click.Choice(['codex', 'llm']))
 @click.option('--version', help="Specific version to install")
-def setup(runtime_name, version):
+@click.option('--vanilla', is_flag=True, help="Install runtime without AWD configuration (uses runtime's native defaults)")
+def setup(runtime_name, version, vanilla):
     """Set up an AI runtime with AWD-managed installation."""
     try:
         from awd_cli.runtime.manager import RuntimeManager
         
         manager = RuntimeManager()
-        success = manager.setup_runtime(runtime_name, version)
+        success = manager.setup_runtime(runtime_name, version, vanilla)
         
         if not success:
             sys.exit(1)
@@ -544,6 +572,96 @@ def status():
     except Exception as e:
         click.echo(f"{ERROR}Error checking runtime status: {e}{RESET}", err=True)
         sys.exit(1)
+
+
+def _interactive_project_setup(default_name):
+    """Interactive setup for new AWD projects."""
+    click.echo(f"\n{INFO}Setting up your AWD project...{RESET}")
+    click.echo(f"{INFO}Press ^C at any time to quit.{RESET}")
+    
+    # Project name
+    name = click.prompt(f"Project name", default=default_name).strip()
+    
+    # Project version  
+    version = click.prompt(f"Version", default="1.0.0").strip()
+    
+    # Project description
+    description = click.prompt(f"Description", default=f"A {name} AWD application").strip()
+    
+    # Author
+    author = click.prompt(f"Author", default="Your Name").strip()
+    
+    # Confirm
+    click.echo(f"\n{INFO}About to create:{RESET}")
+    click.echo(f"  name: {name}")
+    click.echo(f"  version: {version}")
+    click.echo(f"  description: {description}")
+    click.echo(f"  author: {author}")
+    
+    if not click.confirm(f"\nIs this OK?", default=True):
+        click.echo(f"{INFO}Aborted.{RESET}")
+        sys.exit(0)
+    
+    return {
+        'name': name,
+        'version': version,
+        'description': description,
+        'author': author
+    }
+
+
+def _merge_existing_config(default_name):
+    """Merge existing awd.yml with defaults for missing fields."""
+    try:
+        with open('awd.yml', 'r') as f:
+            existing_config = yaml.safe_load(f) or {}
+    except Exception:
+        existing_config = {}
+    
+    # Preserve existing values, fill in missing ones
+    config = {
+        'name': existing_config.get('name', default_name),
+        'version': existing_config.get('version', '1.0.0'),
+        'description': existing_config.get('description', f"A {default_name} AWD application"),
+        'author': existing_config.get('author', 'Your Name')
+    }
+    
+    click.echo(f"{INFO}Preserving existing configuration where possible{RESET}")
+    return config
+
+
+def _get_default_config(project_name):
+    """Get default configuration for new projects."""
+    return {
+        'name': project_name,
+        'version': '1.0.0',
+        'description': f"A {project_name} AWD application",
+        'author': 'Your Name'
+    }
+
+
+def _create_project_files(config):
+    """Create project files from configuration."""
+    # Create awd.yml
+    awd_yml_content = _load_template_file('hello-world', 'awd.yml', 
+                                          project_name=config['name'],
+                                          version=config.get('version', '1.0.0'),
+                                          description=config.get('description', f"A {config['name']} AWD application"),
+                                          author=config.get('author', 'Your Name'))
+    with open('awd.yml', 'w') as f:
+        f.write(awd_yml_content)
+    
+    # Create hello-world.prompt.md from template
+    prompt_content = _load_template_file('hello-world', 'hello-world.prompt.md',
+                                         project_name=config['name'])
+    with open('hello-world.prompt.md', 'w') as f:
+        f.write(prompt_content)
+        
+    # Create README.md from template
+    readme_content = _load_template_file('hello-world', 'README.md',
+                                         project_name=config['name'])
+    with open('README.md', 'w') as f:
+        f.write(readme_content)
 
 
 def main():
