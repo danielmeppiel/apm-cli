@@ -6,6 +6,14 @@ import yaml
 import click
 from pathlib import Path
 from colorama import init, Fore, Style
+from rich.console import Console
+from rich.theme import Theme
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.prompt import Prompt, Confirm
+from rich import print as rich_print
 
 # Handle version import for both package and PyInstaller contexts
 try:
@@ -19,10 +27,43 @@ except ImportError:
         def get_version():
             return "unknown"
 
-# Initialize colorama
+# Initialize colorama for fallback
 init(autoreset=True)
 
-# CLI styling constants
+# Rich console with custom theme
+custom_theme = Theme({
+    "info": "cyan",
+    "warning": "yellow",
+    "error": "bold red",
+    "success": "bold green",
+    "highlight": "bold magenta",
+    "muted": "dim white",
+    "accent": "bold blue",
+    "title": "bold cyan"
+})
+
+console = Console(theme=custom_theme)
+
+# Modern status symbols
+STATUS_SYMBOLS = {
+    "success": "✨",
+    "installed": "🎯", 
+    "running": "🚀",
+    "building": "⚡",
+    "warning": "⚠️ ",
+    "error": "❌",
+    "info": "💡",
+    "default": "📍",
+    "file": "📄",
+    "folder": "📁",
+    "rocket": "🚀",
+    "sparkles": "✨",
+    "gear": "⚙️ ",
+    "check": "✅",
+    "cross": "❌"
+}
+
+# Legacy colorama constants for compatibility
 TITLE = f"{Fore.CYAN}{Style.BRIGHT}"
 SUCCESS = f"{Fore.GREEN}{Style.BRIGHT}"
 ERROR = f"{Fore.RED}{Style.BRIGHT}"
@@ -44,6 +85,70 @@ def _get_template_dir():
         # Go up to the src directory, then up to the repo root, then to templates
         template_dir = cli_dir.parent.parent / 'templates'
         return template_dir
+
+
+def _rich_echo(message, style="info", symbol=None, fallback_color=INFO):
+    """Print message with Rich styling, fallback to colorama."""
+    try:
+        if symbol:
+            message = f"{STATUS_SYMBOLS.get(symbol, '')} {message}"
+        console.print(message, style=style)
+    except (ImportError, NameError):
+        # Fallback to colorama
+        if symbol:
+            message = f"{STATUS_SYMBOLS.get(symbol, '')} {message}"
+        click.echo(f"{fallback_color}{message}{RESET}")
+
+
+def _rich_success(message, symbol="success"):
+    """Print success message with Rich styling."""
+    _rich_echo(message, style="success", symbol=symbol, fallback_color=SUCCESS)
+
+
+def _rich_error(message, symbol="error"):
+    """Print error message with Rich styling."""
+    _rich_echo(message, style="error", symbol=symbol, fallback_color=ERROR)
+
+
+def _rich_info(message, symbol="info"):
+    """Print info message with Rich styling."""
+    _rich_echo(message, style="info", symbol=symbol, fallback_color=INFO)
+
+
+def _rich_warning(message, symbol="warning"):
+    """Print warning message with Rich styling."""
+    _rich_echo(message, style="warning", symbol=symbol, fallback_color=WARNING)
+
+
+def _rich_panel(content, title=None, style="cyan"):
+    """Display content in a Rich panel with fallback."""
+    try:
+        if title:
+            console.print(Panel(content, title=title, border_style=style))
+        else:
+            console.print(Panel(content, border_style=style))
+    except (ImportError, NameError):
+        # Fallback to simple output
+        if title:
+            click.echo(f"\n{TITLE}{title}{RESET}")
+        click.echo(content)
+        click.echo()
+
+
+def _create_files_table(files):
+    """Create a table of created files with Rich styling."""
+    try:
+        table = Table(show_header=False, box=None, padding=(0, 1))
+        table.add_column("Icon", style="cyan")
+        table.add_column("File", style="white")
+        
+        for file in files:
+            table.add_row(STATUS_SYMBOLS["file"], file)
+        
+        return table
+    except (ImportError, NameError):
+        # Fallback to simple list
+        return "\n".join([f"  - {file}" for file in files])
 
 
 def _load_template_file(template_name, filename, **variables):
@@ -68,11 +173,23 @@ def print_version(ctx, param, value):
     """Print version and exit."""
     if not value or ctx.resilient_parsing:
         return
-    click.echo(f"{TITLE}Agentic Workflow Definitions (AWD) CLI{RESET} version {get_version()}")
+    
+    try:
+        version_text = Text()
+        version_text.append("Agentic Workflow Definitions (AWD) CLI", style="bold cyan")
+        version_text.append(f" version {get_version()}", style="white")
+        console.print(Panel(
+            version_text,
+            border_style="cyan",
+            padding=(0, 1)
+        ))
+    except ImportError:
+        # Fallback to colorama if Rich is not available
+        click.echo(f"{TITLE}Agentic Workflow Definitions (AWD) CLI{RESET} version {get_version()}")
+    
     ctx.exit()
 
-@click.group(help=f"{TITLE}Agentic Workflow Definitions (AWD){RESET}: " 
-             f"The NPM for AI-Native Development")
+@click.group(help="✨ Agentic Workflow Definitions (AWD): The NPM for AI-Native Development")
 @click.option('--version', is_flag=True, callback=print_version,
               expose_value=False, is_eager=True, help="Show version and exit.")
 @click.pass_context
@@ -81,67 +198,115 @@ def cli(ctx):
     ctx.ensure_object(dict)
 
 
-@cli.command(help="Initialize a new AWD project")
+@cli.command(help="🚀 Initialize a new AWD project")
 @click.argument('project_name', required=False)
+@click.option('--force', '-f', is_flag=True, help="Overwrite existing files without confirmation")
+@click.option('--yes', '-y', is_flag=True, help="Skip interactive questionnaire and use defaults")
 @click.pass_context
-def init(ctx, project_name):
+def init(ctx, project_name, force, yes):
     """Initialize a new AWD project (like npm init)."""
     try:
-        # Determine project directory
+        # Handle explicit current directory
+        if project_name == '.':
+            project_name = None
+            
+        # Determine project directory and name
         if project_name:
             project_dir = Path(project_name)
             project_dir.mkdir(exist_ok=True)
             os.chdir(project_dir)
-            click.echo(f"{INFO}Created project directory: {project_name}{RESET}")
+            _rich_info(f"Created project directory: {project_name}", symbol="folder")
+            final_project_name = project_name
         else:
             project_dir = Path.cwd()
-            project_name = project_dir.name
+            final_project_name = project_dir.name
             
-        click.echo(f"{SUCCESS}Initializing AWD project: {HIGHLIGHT}{project_name}{RESET}")
+        # Check for existing AWD project
+        awd_yml_exists = Path('awd.yml').exists()
+        existing_files = []
+        if awd_yml_exists:
+            existing_files.append('awd.yml')
+        if Path('hello-world.prompt.md').exists():
+            existing_files.append('hello-world.prompt.md')
+        if Path('README.md').exists():
+            existing_files.append('README.md')
+            
+        # Handle existing project
+        if existing_files and not force:
+            _rich_warning("Existing AWD project detected:")
+            for file in existing_files:
+                _rich_echo(f"  - {file}", style="muted")
+            console.print() if 'console' in globals() else click.echo()
+            
+            if not yes:
+                try:
+                    confirm = Confirm.ask("Continue and overwrite existing files?")
+                except (ImportError, NameError):
+                    confirm = click.confirm("Continue and overwrite existing files?")
+                
+                if not confirm:
+                    _rich_info("Initialization cancelled.")
+                    return
+            else:
+                _rich_info("--yes specified, continuing with overwrite...")
         
-        # Load templates and create files
-        awd_yml_content = _load_template_file('hello-world', 'awd.yml', 
-                                              project_name=project_name)
-        with open('awd.yml', 'w') as f:
-            f.write(awd_yml_content)
+        # Get project configuration (interactive mode or defaults)
+        if not yes and not awd_yml_exists:
+            config = _interactive_project_setup(final_project_name)
+        else:
+            # Use defaults or preserve existing config
+            if awd_yml_exists and not force:
+                config = _merge_existing_config(final_project_name)
+            else:
+                config = _get_default_config(final_project_name)
         
-        # Create hello-world.prompt.md from template
-        prompt_content = _load_template_file('hello-world', 'hello-world.prompt.md')
-        with open('hello-world.prompt.md', 'w') as f:
-            f.write(prompt_content)
+        _rich_success(f"Initializing AWD project: {config['name']}", symbol="rocket")
+        
+        # Create files from config
+        _create_project_files(config)
+        
+        # Show created files in a nice format
+        files = ["awd.yml", "hello-world.prompt.md", "README.md"]
+        try:
+            _rich_info("Created files:")
+            console.print(_create_files_table(files))
+        except (ImportError, NameError):
+            _rich_info("Created files:")
+            click.echo(_create_files_table(files))
             
-        # Create README.md from template
-        readme_content = _load_template_file('hello-world', 'README.md',
-                                             project_name=project_name)
-        with open('README.md', 'w') as f:
-            f.write(readme_content)
-            
-        click.echo(f"{INFO}Created files:{RESET}")
-        click.echo(f"  - awd.yml")
-        click.echo(f"  - hello-world.prompt.md")
-        click.echo(f"  - README.md")
-        click.echo(f"\n{SUCCESS}AWD project initialized successfully!{RESET}")
-        click.echo(f"{INFO}Next steps:{RESET}")
-        click.echo(f"  1. {HIGHLIGHT}awd install{RESET} - Install dependencies")
-        click.echo(f"  2. {HIGHLIGHT}awd run start --param name=\"Your Name\"{RESET} - Run the start script")
-        click.echo(f"  3. {HIGHLIGHT}awd list{RESET} - See all available scripts")
+        console.print() if 'console' in globals() else click.echo()
+        _rich_success("AWD project initialized successfully!", symbol="sparkles")
+        
+        # Next steps with better formatting
+        next_steps = [
+            f"1. {STATUS_SYMBOLS['gear']} awd install - Install dependencies",
+            f"2. {STATUS_SYMBOLS['running']} awd run start --param name=\"Your Name\" - Run the start script", 
+            f"3. {STATUS_SYMBOLS['info']} awd list - See all available scripts"
+        ]
+        
+        try:
+            _rich_panel("\n".join(next_steps), title="Next Steps", style="green")
+        except (ImportError, NameError):
+            _rich_info("Next steps:")
+            for step in next_steps:
+                click.echo(f"  {step}")
         
     except Exception as e:
-        click.echo(f"{ERROR}Error initializing project: {e}{RESET}", err=True)
+        _rich_error(f"Error initializing project: {e}")
         sys.exit(1)
 
 
-@cli.command(help="Install MCP dependencies from awd.yml")
+@cli.command(help="📦 Install MCP dependencies from awd.yml")
 @click.pass_context
 def install(ctx):
     """Install MCP dependencies from awd.yml (like npm install)."""
     try:
         # Check if awd.yml exists
         if not Path('awd.yml').exists():
-            click.echo(f"{ERROR}No awd.yml found. Run 'awd init' first.{RESET}", err=True)
+            _rich_error("No awd.yml found. Run 'awd init' first.")
             sys.exit(1)
             
-        click.echo(f"{INFO}Installing dependencies from awd.yml...{RESET}")
+        _rich_info("Installing dependencies from awd.yml...", symbol="gear")
         
         # Read awd.yml
         with open('awd.yml', 'r') as f:
@@ -151,12 +316,24 @@ def install(ctx):
         mcp_deps = config.get('dependencies', {}).get('mcp', [])
         
         if not mcp_deps:
-            click.echo(f"{WARNING}No MCP dependencies found in awd.yml{RESET}")
+            _rich_warning("No MCP dependencies found in awd.yml")
             return
             
-        click.echo(f"{INFO}Found {len(mcp_deps)} MCP dependencies:{RESET}")
-        for dep in mcp_deps:
-            click.echo(f"  - {dep}")
+        _rich_info(f"Found {len(mcp_deps)} MCP dependencies:")
+        
+        # Show dependencies in a nice list
+        try:
+            dep_table = Table(show_header=False, box=None, padding=(0, 1))
+            dep_table.add_column("Icon", style="cyan")
+            dep_table.add_column("Dependency", style="white")
+            
+            for dep in mcp_deps:
+                dep_table.add_row(STATUS_SYMBOLS["gear"], dep)
+            
+            console.print(dep_table)
+        except (ImportError, NameError):
+            for dep in mcp_deps:
+                click.echo(f"  - {dep}")
             
         # Import and use existing MCP installation functionality
         try:
@@ -170,24 +347,26 @@ def install(ctx):
             package_manager = PackageManagerFactory.create_package_manager()
             
             for dep in mcp_deps:
-                click.echo(f"{INFO}Installing {dep}...{RESET}")
+                _rich_info(f"Installing {dep}...", symbol="building")
                 try:
                     result = install_package('vscode', dep)  # Default to vscode client
                     if result and result.get('success'):
-                        click.echo(f"{SUCCESS}✓ {dep} installed{RESET}")
+                        _rich_success(f"{dep} installed", symbol="check")
                     else:
-                        click.echo(f"{WARNING}⚠ {dep} installation may have issues{RESET}")
+                        _rich_warning(f"{dep} installation may have issues")
                 except Exception as install_error:
-                    click.echo(f"{WARNING}⚠ Failed to install {dep}: {install_error}{RESET}")
+                    _rich_warning(f"Failed to install {dep}: {install_error}")
                     
         except ImportError:
-            click.echo(f"{WARNING}MCP installation functionality not available yet{RESET}")
-            click.echo(f"{INFO}Dependencies listed in awd.yml: {', '.join(mcp_deps)}{RESET}")
+            _rich_warning("MCP installation functionality not available yet")
+            dep_list = ', '.join(mcp_deps)
+            _rich_info(f"Dependencies listed in awd.yml: {dep_list}")
             
-        click.echo(f"\n{SUCCESS}Dependencies installation complete!{RESET}")
+        console.print() if 'console' in globals() else click.echo()
+        _rich_success("Dependencies installation complete!", symbol="sparkles")
         
     except Exception as e:
-        click.echo(f"{ERROR}Error installing dependencies: {e}{RESET}", err=True)
+        _rich_error(f"Error installing dependencies: {e}")
         sys.exit(1)
 
 
@@ -215,7 +394,7 @@ def _list_available_scripts():
     return {}
 
 
-@cli.command(help="Run a script with parameters")
+@cli.command(help="🚀 Run a script with parameters")
 @click.argument('script_name', required=False)
 @click.option('--param', '-p', multiple=True, help="Parameter in format name=value")
 @click.pass_context
@@ -226,14 +405,27 @@ def run(ctx, script_name, param):
         if not script_name:
             script_name = _get_default_script()
             if not script_name:
-                click.echo(f"{ERROR}No script specified and no 'start' script defined in awd.yml{RESET}", err=True)
-                click.echo(f"{INFO}Available scripts:{RESET}")
+                _rich_error("No script specified and no 'start' script defined in awd.yml")
+                _rich_info("Available scripts:")
                 scripts = _list_available_scripts()
-                for name, command in scripts.items():
-                    click.echo(f"  - {HIGHLIGHT}{name}{RESET}: {command}")
+                
+                try:
+                    # Show available scripts in a table
+                    table = Table(show_header=False, box=None, padding=(0, 1))
+                    table.add_column("Icon", style="cyan")
+                    table.add_column("Script", style="highlight")
+                    table.add_column("Command", style="white")
+                    
+                    for name, command in scripts.items():
+                        table.add_row("  ", name, command)
+                    
+                    console.print(table)
+                except (ImportError, NameError):
+                    for name, command in scripts.items():
+                        click.echo(f"  - {HIGHLIGHT}{name}{RESET}: {command}")
                 sys.exit(1)
                 
-        click.echo(f"{INFO}Running script: {HIGHLIGHT}{script_name}{RESET}")
+        _rich_info(f"Running script: {script_name}", symbol="running")
         
         # Parse parameters
         params = {}
@@ -241,7 +433,7 @@ def run(ctx, script_name, param):
             if '=' in p:
                 param_name, value = p.split('=', 1)
                 params[param_name] = value
-                click.echo(f"  - {param_name}: {value}")
+                _rich_echo(f"  - {param_name}: {value}", style="muted")
                 
         # Import and use script runner
         try:
@@ -251,25 +443,26 @@ def run(ctx, script_name, param):
             success = script_runner.run_script(script_name, params)
             
             if not success:
-                click.echo(f"{ERROR}Script execution failed{RESET}", err=True)
+                _rich_error("Script execution failed")
                 sys.exit(1)
                 
-            click.echo(f"\n{SUCCESS}Script executed successfully!{RESET}")
+            console.print() if 'console' in globals() else click.echo()
+            _rich_success("Script executed successfully!", symbol="sparkles")
             
         except ImportError as ie:
-            click.echo(f"{WARNING}Script runner not available yet{RESET}")
-            click.echo(f"{INFO}Import error: {ie}{RESET}")
-            click.echo(f"{INFO}Would run script: {script_name} with params {params}{RESET}")
+            _rich_warning("Script runner not available yet")
+            _rich_info(f"Import error: {ie}")
+            _rich_info(f"Would run script: {script_name} with params {params}")
         except Exception as ee:
-            click.echo(f"{ERROR}Script execution error: {ee}{RESET}", err=True)
+            _rich_error(f"Script execution error: {ee}")
             sys.exit(1)
             
     except Exception as e:
-        click.echo(f"{ERROR}Error running script: {e}{RESET}", err=True)
+        _rich_error(f"Error running script: {e}")
         sys.exit(1)
 
 
-@cli.command(help="Preview a script's compiled prompt files")
+@cli.command(help="👀 Preview a script's compiled prompt files")
 @click.argument('script_name', required=False)
 @click.option('--param', '-p', multiple=True, help="Parameter in format name=value")
 @click.pass_context
@@ -280,10 +473,10 @@ def preview(ctx, script_name, param):
         if not script_name:
             script_name = _get_default_script()
             if not script_name:
-                click.echo(f"{ERROR}No script specified and no 'start' script defined in awd.yml{RESET}", err=True)
+                _rich_error("No script specified and no 'start' script defined in awd.yml")
                 sys.exit(1)
                 
-        click.echo(f"{INFO}Previewing script: {HIGHLIGHT}{script_name}{RESET}")
+        _rich_info(f"Previewing script: {script_name}", symbol="info")
         
         # Parse parameters
         params = {}
@@ -291,7 +484,7 @@ def preview(ctx, script_name, param):
             if '=' in p:
                 param_name, value = p.split('=', 1)
                 params[param_name] = value
-                click.echo(f"  - {param_name}: {value}")
+                _rich_echo(f"  - {param_name}: {value}", style="muted")
                 
         # Import and use script runner for preview
         try:
@@ -302,174 +495,203 @@ def preview(ctx, script_name, param):
             # Get the script command
             scripts = script_runner.list_scripts()
             if script_name not in scripts:
-                click.echo(f"{ERROR}Script '{script_name}' not found{RESET}", err=True)
+                _rich_error(f"Script '{script_name}' not found")
                 sys.exit(1)
                 
             command = scripts[script_name]
-            click.echo(f"\n{INFO}Original command:{RESET}")
-            click.echo(f"  {command}")
             
-            # Auto-compile prompts to show what would be executed
-            compiled_command = script_runner._auto_compile_prompts(command, params)
-            click.echo(f"\n{INFO}Compiled command:{RESET}")
-            click.echo(f"  {compiled_command}")
-            
-            # Show compiled files if any .prompt.md files were processed
-            import re
-            prompt_files = re.findall(r'(\S+\.prompt\.md)', command)
-            if prompt_files:
-                click.echo(f"\n{INFO}Compiled prompt files:{RESET}")
-                for prompt_file in prompt_files:
-                    output_name = Path(prompt_file).stem.replace('.prompt', '') + '.txt'
-                    compiled_path = Path('.awd/compiled') / output_name
-                    click.echo(f"  - {compiled_path}")
+            try:
+                # Show original and compiled commands in panels
+                _rich_panel(command, title="📄 Original command", style="blue")
+                
+                # Auto-compile prompts to show what would be executed
+                compiled_command = script_runner._auto_compile_prompts(command, params)
+                _rich_panel(compiled_command, title="⚡ Compiled command", style="green")
+                
+                # Show compiled files if any .prompt.md files were processed
+                import re
+                prompt_files = re.findall(r'(\S+\.prompt\.md)', command)
+                if prompt_files:
+                    file_list = []
+                    for prompt_file in prompt_files:
+                        output_name = Path(prompt_file).stem.replace('.prompt', '') + '.txt'
+                        compiled_path = Path('.awd/compiled') / output_name
+                        file_list.append(str(compiled_path))
                     
-            click.echo(f"\n{SUCCESS}Preview complete! Use 'awd run {script_name}' to execute.{RESET}")
+                    files_content = "\n".join([f"📄 {file}" for file in file_list])
+                    _rich_panel(files_content, title="📁 Compiled prompt files", style="cyan")
+                
+            except (ImportError, NameError):
+                # Fallback display
+                _rich_info("Original command:")
+                click.echo(f"  {command}")
+                
+                compiled_command = script_runner._auto_compile_prompts(command, params)
+                _rich_info("Compiled command:")
+                click.echo(f"  {compiled_command}")
+                
+                import re
+                prompt_files = re.findall(r'(\S+\.prompt\.md)', command)
+                if prompt_files:
+                    _rich_info("Compiled prompt files:")
+                    for prompt_file in prompt_files:
+                        output_name = Path(prompt_file).stem.replace('.prompt', '') + '.txt'
+                        compiled_path = Path('.awd/compiled') / output_name
+                        click.echo(f"  - {compiled_path}")
+                    
+            console.print() if 'console' in globals() else click.echo()
+            _rich_success(f"Preview complete! Use 'awd run {script_name}' to execute.", symbol="sparkles")
             
         except ImportError:
-            click.echo(f"{WARNING}Script runner not available yet{RESET}")
+            _rich_warning("Script runner not available yet")
             
     except Exception as e:
-        click.echo(f"{ERROR}Error previewing script: {e}{RESET}", err=True)
+        _rich_error(f"Error previewing script: {e}")
         sys.exit(1)
 
 
-@cli.command(help="List available scripts in the current project")
+@cli.command(help="📋 List available scripts in the current project")
 @click.pass_context
 def list(ctx):
     """List all available scripts from awd.yml."""
     try:
-        click.echo(f"{INFO}Available scripts:{RESET}")
-        
         scripts = _list_available_scripts()
         
         if not scripts:
-            click.echo(f"{WARNING}No scripts found.{RESET}")
-            click.echo(f"{INFO}💡 Add scripts to your awd.yml file:{RESET}")
-            click.echo(f"scripts:")
-            click.echo(f"  start: \"codex run main.prompt.md\"")
-            click.echo(f"  fast: \"llm prompt main.prompt.md -m github/gpt-4o-mini\"")
-            return
+            _rich_warning("No scripts found.")
             
+            # Show helpful example in a panel
+            example_content = """scripts:
+  start: "codex run main.prompt.md"
+  fast: "llm prompt main.prompt.md -m github/gpt-4o-mini" """
+            
+            try:
+                _rich_panel(example_content, title=f"{STATUS_SYMBOLS['info']} Add scripts to your awd.yml file", style="blue")
+            except (ImportError, NameError):
+                _rich_info("💡 Add scripts to your awd.yml file:")
+                click.echo("scripts:")
+                click.echo("  start: \"codex run main.prompt.md\"")
+                click.echo("  fast: \"llm prompt main.prompt.md -m github/gpt-4o-mini\"")
+            return
+        
         # Show default script if 'start' exists
         default_script = 'start' if 'start' in scripts else None
         
-        for name, command in scripts.items():
-            prefix = "📍 " if name == default_script else "   "
-            click.echo(f"{prefix}{HIGHLIGHT}{name}{RESET}: {command}")
+        try:
+            # Create a nice table for scripts
+            table = Table(title="📋 Available Scripts", show_header=True, header_style="bold cyan")
+            table.add_column("", style="cyan", width=3)
+            table.add_column("Script", style="bold white", min_width=12)
+            table.add_column("Command", style="white")
             
-        if default_script:
-            click.echo(f"\n{INFO}📍 = default script (runs when no script name specified){RESET}")
+            for name, command in scripts.items():
+                icon = STATUS_SYMBOLS["default"] if name == default_script else "  "
+                table.add_row(icon, name, command)
+            
+            console.print(table)
+            
+            if default_script:
+                console.print(f"\n[muted]{STATUS_SYMBOLS['info']} {STATUS_SYMBOLS['default']} = default script (runs when no script name specified)[/muted]")
+                
+        except (ImportError, NameError):
+            # Fallback to simple output
+            _rich_info("Available scripts:")
+            for name, command in scripts.items():
+                prefix = "📍 " if name == default_script else "   "
+                click.echo(f"{prefix}{HIGHLIGHT}{name}{RESET}: {command}")
+                
+            if default_script:
+                _rich_info("📍 = default script (runs when no script name specified)")
             
     except Exception as e:
-        click.echo(f"{ERROR}Error listing scripts: {e}{RESET}", err=True)
+        _rich_error(f"Error listing scripts: {e}")
         sys.exit(1)
 
 
-@cli.command(help="List available LLM models")
-@click.pass_context
-def models(ctx):
-    """List available LLM runtime models."""
-    try:
-        click.echo(f"{TITLE}Available LLM Runtime Models:{RESET}")
-        
-        # Try to import and use existing functionality
-        try:
-            from awd_cli.runtime.llm_runtime import LLMRuntime
-            
-            runtime = LLMRuntime()
-            models = runtime.list_available_models()
-            
-            if "error" in models:
-                click.echo(f"{ERROR}{models['error']}{RESET}")
-                return
-                
-            if not models:
-                click.echo(f"{WARNING}No models available. Install llm plugins first.{RESET}")
-                click.echo(f"{INFO}Example: pip install llm-ollama{RESET}")
-                return
-                
-            # Group by provider if possible
-            providers = {}
-            for model_id, info in models.items():
-                provider = info.get('provider', 'unknown')
-                if provider not in providers:
-                    providers[provider] = []
-                providers[provider].append(model_id)
-            
-            for provider, model_list in providers.items():
-                click.echo(f"\n{HIGHLIGHT}{provider.title()}:{RESET}")
-                for model in sorted(model_list):
-                    click.echo(f"  - {model}")
-                    
-        except ImportError:
-            click.echo(f"{WARNING}LLM runtime not available{RESET}")
-            click.echo(f"{INFO}Install with: pip install llm{RESET}")
-            click.echo(f"\n{INFO}Common models:{RESET}")
-            click.echo(f"  - github/gpt-4o-mini (free with GitHub PAT)")
-            click.echo(f"  - gpt-4o-mini (OpenAI)")
-            click.echo(f"  - claude-3-haiku (Anthropic)")
-            
-    except Exception as e:
-        click.echo(f"{ERROR}Error listing models: {e}{RESET}", err=True)
-
-
-@cli.command(help="Configure AWD CLI")
+@cli.command(help="⚙️  Configure AWD CLI")
 @click.option('--show', is_flag=True, help="Show current configuration")
 @click.pass_context
 def config(ctx, show):
     """Configure AWD CLI settings."""
     try:
         if show:
-            click.echo(f"{TITLE}Current AWD Configuration:{RESET}")
-            
-            # Show awd.yml if in project
-            if Path('awd.yml').exists():
-                config = _load_awd_config()
-                click.echo(f"\n{HIGHLIGHT}Project (awd.yml):{RESET}")
-                click.echo(f"  Name: {config.get('name', 'Unknown')}")
-                click.echo(f"  Version: {config.get('version', 'Unknown')}")
-                click.echo(f"  Entrypoint: {config.get('entrypoint', 'None')}")
-                click.echo(f"  MCP Dependencies: {len(config.get('dependencies', {}).get('mcp', []))}")
-            else:
-                click.echo(f"{INFO}Not in an AWD project directory{RESET}")
+            try:
+                # Create configuration display
+                config_table = Table(title="⚙️  Current AWD Configuration", show_header=True, header_style="bold cyan")
+                config_table.add_column("Category", style="bold yellow", min_width=12)
+                config_table.add_column("Setting", style="white", min_width=15)
+                config_table.add_column("Value", style="cyan")
                 
-            click.echo(f"\n{HIGHLIGHT}Global:{RESET}")
-            click.echo(f"  AWD CLI Version: {get_version()}")
+                # Show awd.yml if in project
+                if Path('awd.yml').exists():
+                    config = _load_awd_config()
+                    config_table.add_row("Project", "Name", config.get('name', 'Unknown'))
+                    config_table.add_row("", "Version", config.get('version', 'Unknown'))
+                    config_table.add_row("", "Entrypoint", config.get('entrypoint', 'None'))
+                    config_table.add_row("", "MCP Dependencies", str(len(config.get('dependencies', {}).get('mcp', []))))
+                else:
+                    config_table.add_row("Project", "Status", "Not in an AWD project directory")
+                
+                config_table.add_row("Global", "AWD CLI Version", get_version())
+                
+                console.print(config_table)
+                
+            except (ImportError, NameError):
+                # Fallback display
+                _rich_info("Current AWD Configuration:")
+                
+                if Path('awd.yml').exists():
+                    config = _load_awd_config()
+                    click.echo(f"\n{HIGHLIGHT}Project (awd.yml):{RESET}")
+                    click.echo(f"  Name: {config.get('name', 'Unknown')}")
+                    click.echo(f"  Version: {config.get('version', 'Unknown')}")
+                    click.echo(f"  Entrypoint: {config.get('entrypoint', 'None')}")
+                    click.echo(f"  MCP Dependencies: {len(config.get('dependencies', {}).get('mcp', []))}")
+                else:
+                    _rich_info("Not in an AWD project directory")
+                    
+                click.echo(f"\n{HIGHLIGHT}Global:{RESET}")
+                click.echo(f"  AWD CLI Version: {get_version()}")
             
         else:
-            click.echo(f"{INFO}Use --show to display configuration{RESET}")
+            _rich_info("Use --show to display configuration")
             
     except Exception as e:
-        click.echo(f"{ERROR}Error showing configuration: {e}{RESET}", err=True)
+        _rich_error(f"Error showing configuration: {e}")
+        sys.exit(1)
 
 
-@cli.group(help="Manage AI runtimes")
+@cli.group(help="🤖 Manage AI runtimes")
 def runtime():
     """Manage AI runtime installations and configurations."""
     pass
 
 
-@runtime.command(help="Set up a runtime")
+@runtime.command(help="⚙️  Set up a runtime")
 @click.argument('runtime_name', type=click.Choice(['codex', 'llm']))
 @click.option('--version', help="Specific version to install")
-def setup(runtime_name, version):
+@click.option('--vanilla', is_flag=True, help="Install runtime without AWD configuration (uses runtime's native defaults)")
+def setup(runtime_name, version, vanilla):
     """Set up an AI runtime with AWD-managed installation."""
     try:
+        _rich_info(f"Setting up {runtime_name} runtime...", symbol="gear")
+        
         from awd_cli.runtime.manager import RuntimeManager
         
         manager = RuntimeManager()
-        success = manager.setup_runtime(runtime_name, version)
+        success = manager.setup_runtime(runtime_name, version, vanilla)
         
         if not success:
             sys.exit(1)
+        else:
+            _rich_success(f"{runtime_name} runtime setup complete!", symbol="sparkles")
             
     except Exception as e:
-        click.echo(f"{ERROR}Error setting up runtime: {e}{RESET}", err=True)
+        _rich_error(f"Error setting up runtime: {e}")
         sys.exit(1)
 
 
-@runtime.command(help="List available and installed runtimes")
+@runtime.command(help="📋 List available and installed runtimes")
 def list():
     """List all available runtimes and their installation status."""
     try:
@@ -478,35 +700,67 @@ def list():
         manager = RuntimeManager()
         runtimes = manager.list_runtimes()
         
-        click.echo(f"{TITLE}Available Runtimes:{RESET}")
-        click.echo()
-        
-        for name, info in runtimes.items():
-            status_icon = "✅" if info["installed"] else "❌"
-            status_text = "Installed" if info["installed"] else "Not installed"
+        try:
+            # Create a nice table for runtimes
+            table = Table(title="🤖 Available Runtimes", show_header=True, header_style="bold cyan")
+            table.add_column("Status", style="green", width=8)
+            table.add_column("Runtime", style="bold white", min_width=10)
+            table.add_column("Description", style="white")
+            table.add_column("Details", style="muted")
             
-            click.echo(f"{status_icon} {HIGHLIGHT}{name}{RESET}")
-            click.echo(f"   Description: {info['description']}")
-            click.echo(f"   Status: {status_text}")
+            for name, info in runtimes.items():
+                status_icon = STATUS_SYMBOLS["check"] if info["installed"] else STATUS_SYMBOLS["cross"]
+                status_text = "Installed" if info["installed"] else "Not installed"
+                
+                details = ""
+                if info["installed"]:
+                    details_list = [f"Path: {info['path']}"]
+                    if "version" in info:
+                        details_list.append(f"Version: {info['version']}")
+                    details = "\n".join(details_list)
+                
+                table.add_row(
+                    f"{status_icon} {status_text}",
+                    name,
+                    info['description'],
+                    details
+                )
             
-            if info["installed"]:
-                click.echo(f"   Path: {info['path']}")
-                if "version" in info:
-                    click.echo(f"   Version: {info['version']}")
+            console.print(table)
             
+        except (ImportError, NameError):
+            # Fallback to simple output
+            _rich_info("Available Runtimes:")
             click.echo()
             
+            for name, info in runtimes.items():
+                status_icon = "✅" if info["installed"] else "❌"
+                status_text = "Installed" if info["installed"] else "Not installed"
+                
+                click.echo(f"{status_icon} {HIGHLIGHT}{name}{RESET}")
+                click.echo(f"   Description: {info['description']}")
+                click.echo(f"   Status: {status_text}")
+                
+                if info["installed"]:
+                    click.echo(f"   Path: {info['path']}")
+                    if "version" in info:
+                        click.echo(f"   Version: {info['version']}")
+                
+                click.echo()
+            
     except Exception as e:
-        click.echo(f"{ERROR}Error listing runtimes: {e}{RESET}", err=True)
+        _rich_error(f"Error listing runtimes: {e}")
         sys.exit(1)
 
 
-@runtime.command(help="Remove an installed runtime")
+@runtime.command(help="🗑️  Remove an installed runtime")
 @click.argument('runtime_name', type=click.Choice(['codex', 'llm']))
 @click.confirmation_option(prompt='Are you sure you want to remove this runtime?')
 def remove(runtime_name):
     """Remove an installed runtime from AWD management."""
     try:
+        _rich_info(f"Removing {runtime_name} runtime...", symbol="gear")
+        
         from awd_cli.runtime.manager import RuntimeManager
         
         manager = RuntimeManager()
@@ -514,13 +768,15 @@ def remove(runtime_name):
         
         if not success:
             sys.exit(1)
+        else:
+            _rich_success(f"{runtime_name} runtime removed successfully!", symbol="sparkles")
             
     except Exception as e:
-        click.echo(f"{ERROR}Error removing runtime: {e}{RESET}", err=True)
+        _rich_error(f"Error removing runtime: {e}")
         sys.exit(1)
 
 
-@runtime.command(help="Check which runtime will be used")
+@runtime.command(help="📊 Check which runtime will be used")
 def status():
     """Show which runtime AWD will use for execution."""
     try:
@@ -530,20 +786,139 @@ def status():
         available_runtime = manager.get_available_runtime()
         preference = manager.get_runtime_preference()
         
-        click.echo(f"{TITLE}Runtime Status:{RESET}")
-        click.echo()
-        
-        click.echo(f"Preference order: {' → '.join(preference)}")
-        
-        if available_runtime:
-            click.echo(f"{SUCCESS}Active runtime: {available_runtime}{RESET}")
-        else:
-            click.echo(f"{ERROR}No runtimes available{RESET}")
-            click.echo(f"{INFO}Run 'awd runtime setup codex' to install the primary runtime{RESET}")
+        try:
+            # Create a nice status display
+            status_content = f"""Preference order: {' → '.join(preference)}
+
+Active runtime: {available_runtime if available_runtime else 'None available'}"""
+            
+            if not available_runtime:
+                status_content += f"\n\n{STATUS_SYMBOLS['info']} Run 'awd runtime setup codex' to install the primary runtime"
+            
+            _rich_panel(status_content, title="📊 Runtime Status", style="cyan")
+            
+        except (ImportError, NameError):
+            # Fallback display
+            _rich_info("Runtime Status:")
+            click.echo()
+            
+            click.echo(f"Preference order: {' → '.join(preference)}")
+            
+            if available_runtime:
+                _rich_success(f"Active runtime: {available_runtime}")
+            else:
+                _rich_error("No runtimes available")
+                _rich_info("Run 'awd runtime setup codex' to install the primary runtime")
             
     except Exception as e:
-        click.echo(f"{ERROR}Error checking runtime status: {e}{RESET}", err=True)
+        _rich_error(f"Error checking runtime status: {e}")
         sys.exit(1)
+
+
+def _interactive_project_setup(default_name):
+    """Interactive setup for new AWD projects."""
+    try:
+        # Rich interactive prompts
+        console.print("\n[info]Setting up your AWD project...[/info]")
+        console.print("[muted]Press ^C at any time to quit.[/muted]\n")
+        
+        name = Prompt.ask("Project name", default=default_name).strip()
+        version = Prompt.ask("Version", default="1.0.0").strip()
+        description = Prompt.ask("Description", default=f"A {name} AWD application").strip()
+        author = Prompt.ask("Author", default="Your Name").strip()
+        
+        # Show summary in a nice panel
+        summary_content = f"""name: {name}
+version: {version}
+description: {description}
+author: {author}"""
+        
+        console.print(Panel(summary_content, title="About to create", border_style="cyan"))
+        
+        if not Confirm.ask("\nIs this OK?", default=True):
+            console.print("[info]Aborted.[/info]")
+            sys.exit(0)
+        
+    except (ImportError, NameError):
+        # Fallback to click prompts
+        _rich_info("Setting up your AWD project...")
+        _rich_info("Press ^C at any time to quit.")
+        
+        name = click.prompt("Project name", default=default_name).strip()
+        version = click.prompt("Version", default="1.0.0").strip()
+        description = click.prompt("Description", default=f"A {name} AWD application").strip()
+        author = click.prompt("Author", default="Your Name").strip()
+        
+        click.echo(f"\n{INFO}About to create:{RESET}")
+        click.echo(f"  name: {name}")
+        click.echo(f"  version: {version}")
+        click.echo(f"  description: {description}")
+        click.echo(f"  author: {author}")
+        
+        if not click.confirm("\nIs this OK?", default=True):
+            _rich_info("Aborted.")
+            sys.exit(0)
+    
+    return {
+        'name': name,
+        'version': version,
+        'description': description,
+        'author': author
+    }
+
+
+def _merge_existing_config(default_name):
+    """Merge existing awd.yml with defaults for missing fields."""
+    try:
+        with open('awd.yml', 'r') as f:
+            existing_config = yaml.safe_load(f) or {}
+    except Exception:
+        existing_config = {}
+    
+    # Preserve existing values, fill in missing ones
+    config = {
+        'name': existing_config.get('name', default_name),
+        'version': existing_config.get('version', '1.0.0'),
+        'description': existing_config.get('description', f"A {default_name} AWD application"),
+        'author': existing_config.get('author', 'Your Name')
+    }
+    
+    _rich_info("Preserving existing configuration where possible")
+    return config
+
+
+def _get_default_config(project_name):
+    """Get default configuration for new projects."""
+    return {
+        'name': project_name,
+        'version': '1.0.0',
+        'description': f"A {project_name} AWD application",
+        'author': 'Your Name'
+    }
+
+
+def _create_project_files(config):
+    """Create project files from configuration."""
+    # Create awd.yml
+    awd_yml_content = _load_template_file('hello-world', 'awd.yml', 
+                                          project_name=config['name'],
+                                          version=config.get('version', '1.0.0'),
+                                          description=config.get('description', f"A {config['name']} AWD application"),
+                                          author=config.get('author', 'Your Name'))
+    with open('awd.yml', 'w') as f:
+        f.write(awd_yml_content)
+    
+    # Create hello-world.prompt.md from template
+    prompt_content = _load_template_file('hello-world', 'hello-world.prompt.md',
+                                         project_name=config['name'])
+    with open('hello-world.prompt.md', 'w') as f:
+        f.write(prompt_content)
+        
+    # Create README.md from template
+    readme_content = _load_template_file('hello-world', 'README.md',
+                                         project_name=config['name'])
+    with open('README.md', 'w') as f:
+        f.write(readme_content)
 
 
 def main():

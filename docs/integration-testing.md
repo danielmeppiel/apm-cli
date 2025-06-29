@@ -26,7 +26,7 @@ AWD uses a tiered approach to integration testing:
   - Dependency installation (`awd install`)
   - Real API calls to GitHub Models
   - Both Codex and LLM runtime execution
-- **Duration**: ~10-15 minutes per platform  
+- **Duration**: ~10-15 minutes per platform (with 20-minute timeout)  
 - **Trigger**: Only on version tags (releases)
 
 ## Running Tests Locally
@@ -47,15 +47,25 @@ pytest tests/integration/test_runtime_smoke.py::TestRuntimeSmoke::test_codex_run
 # Set up environment
 export GITHUB_TOKEN=your_github_token_here
 
-# Run the complete CI/CD simulation script
-./scripts/test-e2e-ci-local.sh
+# Run the unified E2E script (works for both CI and local)
+./scripts/test-e2e.sh
 ```
 
-This script (`scripts/test-e2e-ci-local.sh`) mirrors the exact CI/CD process:
+This script (`scripts/test-e2e.sh`) is a unified script that automatically adapts to your environment:
+
+**Local mode** (no existing binary):
 1. **Builds binary** with PyInstaller (like CI build job)
 2. **Sets up symlink and PATH** (like CI artifacts download)
-3. **Installs test dependencies** (like CI test setup)
-4. **Runs E2E tests** with the built binary (like CI e2e-tests job)
+3. **Installs runtimes** (codex/llm setup)
+4. **Installs test dependencies** (like CI test setup)
+5. **Runs E2E tests** with the built binary (like CI e2e-tests job)
+
+**CI mode** (binary exists in `./dist/`):
+1. **Uses existing binary** from CI build artifacts
+2. **Sets up symlink and PATH** (standard CI process)
+3. **Installs runtimes** (codex/llm setup)
+4. **Installs test dependencies** (like CI test setup)  
+5. **Runs E2E tests** with pre-built binary
 
 #### Option 2: Direct pytest execution
 ```bash
@@ -78,15 +88,20 @@ pytest tests/integration/test_golden_scenario_e2e.py::TestGoldenScenarioE2E::tes
 ### GitHub Actions Workflow
 
 **On every push/PR:**
-1. Unit tests
-2. **Smoke tests** (runtime installation verification)
+1. Unit tests + **Smoke tests** (runtime installation verification)
 
 **On version tag releases:**
-1. Unit tests  
-2. Smoke tests
-3. Build binaries
-4. **E2E golden scenario tests** (using built binaries)
-5. Publish to PyPI (only if E2E tests pass)
+1. Unit tests + Smoke tests
+2. Build binaries (cross-platform)
+3. **E2E golden scenario tests** (using built binaries)
+4. Create GitHub Release
+5. Publish to PyPI 
+6. Update Homebrew Formula
+
+**Manual workflow dispatch:**
+- Test builds (uploads as workflow artifacts)
+- Allows testing the full build pipeline without creating a release
+- Useful for validating changes before tagging
 
 ### GitHub Actions Authentication
 
@@ -102,12 +117,28 @@ E2E tests require proper GitHub Models API access:
 
 Both runtimes authenticate against GitHub Models but expect different environment variable names.
 
+### Release Pipeline Sequencing
+
+The workflow ensures quality gates at each step:
+
+1. **test** job - Unit tests + smoke tests (all platforms)
+2. **build** job - Binary compilation (depends on test success)
+3. **e2e-tests** job - Golden scenario validation (depends on build success)
+4. **create-release** job - GitHub release creation (depends on e2e-tests success)
+5. **publish-pypi** job - PyPI package publication (depends on release creation)
+6. **update-homebrew** job - Homebrew formula update (depends on PyPI publication)
+
+Each stage must succeed before proceeding to the next, ensuring only fully validated releases reach users.
+
 ### Test Matrix
 
 All integration tests run on:
-- **Linux**: ubuntu-22.04 (x86_64)
+- **Linux**: ubuntu-24.04 (x86_64)
 - **macOS Intel**: macos-13 (x86_64) 
 - **macOS Apple Silicon**: macos-14 (arm64)
+
+**Python Version**: 3.13 (standardized across all environments)
+**Package Manager**: uv (for fast dependency management and virtual environments)
 
 ## What the Tests Verify
 
@@ -129,6 +160,8 @@ All integration tests run on:
 - ✅ Real API calls to GitHub Models work
 - ✅ Parameter substitution works correctly
 - ✅ MCP integration functions (GitHub tools)
+- ✅ Binary artifacts work across platforms
+- ✅ Release pipeline integrity (GitHub Release → PyPI → Homebrew)
 
 ## Benefits
 
@@ -139,15 +172,19 @@ All integration tests run on:
 ### **Cost Efficiency**
 - Smoke tests use no API credits
 - E2E tests only run on releases (minimizing API usage)
+- Manual workflow dispatch for test builds without publishing
 
 ### **Platform Coverage**
 - Tests run on all supported platforms
 - Catches platform-specific runtime issues
 
 ### **Release Confidence**
-- E2E tests must pass before PyPI publish
+- E2E tests must pass before any publishing steps
+- Multi-stage release pipeline ensures quality gates
 - Guarantees shipped releases work end-to-end
 - Users can trust the README golden scenario
+- Cross-platform binary verification
+- Automatic Homebrew formula updates
 
 ## Debugging Test Failures
 
@@ -157,7 +194,7 @@ All integration tests run on:
 - Check network connectivity for downloads
 
 ### E2E Test Failures  
-- **Use the CI simulation script first**: Run `./scripts/test-e2e-ci-local.sh` to reproduce the exact CI environment
+- **Use the unified E2E script first**: Run `./scripts/test-e2e.sh` to reproduce the exact CI environment locally
 - Verify `GITHUB_TOKEN` has required permissions (`models:read`)
 - Ensure both `GITHUB_TOKEN` and `GITHUB_MODELS_KEY` environment variables are set
 - Check GitHub Models API availability

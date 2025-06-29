@@ -1,6 +1,26 @@
 # Prompts Guide
 
-Prompts are the building blocks of AWD - focused, reusable AI instructions that accomplish specific tasks. Think of them as functions in traditional programming: they take inputs, perform a specific operation, and produce outputs.
+Prompts are the building blocks of AWD - focused, reusable AI instructions that accomplish specific tasks. They are executed through scripts defined in your `awd.yml` configuration.
+
+## How Prompts Work in AWD
+
+AWD uses a script-based architecture:
+
+1. **Scripts** are defined in `awd.yml` and specify which runtime and prompt to use
+2. **Prompts** (`.prompt.md` files) contain the AI instructions with parameter placeholders
+3. **Compilation** happens when scripts reference `.prompt.md` files - AWD compiles them with parameter substitution
+4. **Execution** runs the compiled prompt through the specified runtime
+
+```bash
+# Script execution flow
+awd run start --param key=value
+  ↓
+Script: "codex my-prompt.prompt.md"
+  ↓
+AWD compiles my-prompt.prompt.md with parameters
+  ↓
+Codex executes the compiled prompt
+```
 
 ## What are Prompts?
 
@@ -206,16 +226,24 @@ Verify the successful deployment of ${input:service_name} version ${input:deploy
 
 ## Running Prompts
 
-Prompts are executed through scripts defined in your `awd.yml`:
+Prompts are executed through scripts defined in your `awd.yml`. When a script references a `.prompt.md` file, AWD compiles it with parameter substitution before execution:
 
 ```bash
-# Run prompts via scripts (actual implementation)
+# Run scripts that reference .prompt.md files
 awd run start --param service_name=api-gateway --param time_window="1h"
 awd run llm --param service_name=api-gateway --param time_window="1h"
 awd run debug --param service_name=api-gateway --param time_window="1h"
 
 # Preview compiled prompts before execution
 awd preview start --param service_name=api-gateway --param time_window="1h"
+```
+
+**Script Configuration (awd.yml):**
+```yaml
+scripts:
+  start: "codex analyze-logs.prompt.md"
+  llm: "llm analyze-logs.prompt.md -m github/gpt-4o-mini"
+  debug: "DEBUG=true codex analyze-logs.prompt.md"
 ```
 
 ### Example Project Structure
@@ -263,7 +291,7 @@ dependencies:
     - ghcr.io/kubernetes/k8s-mcp-server
 ```
 
-This structure allows you to run any prompt with:
+This structure allows you to run any prompt via scripts:
 ```bash
 awd run start --param service_name=api-gateway --param time_window="1h"
 awd run review --param pull_request_url=https://github.com/org/repo/pull/123
@@ -296,4 +324,6 @@ Keep prompts in version control alongside scripts. Use semantic versioning for b
 
 ## Next Steps
 
-- Learn about [Scripts](cli-reference.md#scripts) to orchestrate prompt execution
+- Learn about [Runtime Integration](runtime-integration.md) to setup and use different AI runtimes
+- See [CLI Reference](cli-reference.md) for complete script execution commands
+- Check [Development Guide](development.md) for local development setup
