@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project initialization workflow with better error handling and user prompts
 - Documentation clarity and accuracy across development guides
 
+### Fixed
+- E2E tests now use `--yes` flag to prevent EOF errors in non-interactive environments
+
 ## [0.0.6] - 2025-06-29
 
 ### Added
