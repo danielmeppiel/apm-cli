@@ -167,7 +167,7 @@ class TestGoldenScenarioE2E:
             project_dir = Path(project_workspace) / "my-hello-world"
             
             print("\n=== Initializing AWD project ===")
-            result = run_command(f"{awd_binary} init my-hello-world", cwd=project_workspace, show_output=True)
+            result = run_command(f"{awd_binary} init my-hello-world --yes", cwd=project_workspace, show_output=True)
             assert result.returncode == 0, f"Project init failed: {result.stderr}"
             assert project_dir.exists(), "Project directory not created"
             
@@ -279,7 +279,7 @@ class TestGoldenScenarioE2E:
             project_dir = Path(project_workspace) / "my-hello-world-llm"
             
             print("\\n=== Initializing LLM test project ===")
-            result = run_command(f"{awd_binary} init my-hello-world-llm", cwd=project_workspace)
+            result = run_command(f"{awd_binary} init my-hello-world-llm --yes", cwd=project_workspace)
             assert result.returncode == 0, f"Project init failed: {result.stderr}"
             
             # Step 3: Install dependencies
