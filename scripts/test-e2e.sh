@@ -1,8 +1,13 @@
 #!/bin/bash
-# Local simulation of CI/CD E2E testing process
-# This mirrors the exact steps from build-release.yml e2e-tests job
+# Unified E2E testing script for both CI and local environments
+# - CI mode: Uses pre-built artifacts from build job, sets up runtimes, runs E2E tests
+# - Local mode: Builds binary, sets up runtimes, runs E2E tests
+# This ensures consistent testing workflow between CI/CD and local development
 
 set -euo pipefail
+
+# Global variables
+USE_EXISTING_BINARY=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -77,9 +82,27 @@ detect_platform() {
     log_info "Detected platform: $BINARY_NAME"
 }
 
-# Build binary (like CI build job does)
+# Detect environment and check if we should build or use existing binary
+detect_environment() {
+    log_info "Detecting environment..."
+    
+    # Check if we're in CI with pre-built artifacts (binary exists in ./dist/)
+    if [[ -f "./dist/$BINARY_NAME" ]]; then
+        USE_EXISTING_BINARY=true
+        log_info "Found existing binary: ./dist/$BINARY_NAME (CI mode)"
+    else
+        USE_EXISTING_BINARY=false
+        log_info "No existing binary found, will build locally"
+    fi
+}
+# Build binary (like CI build job does) - only if needed
 build_binary() {
-    log_info "=== Building AWD binary (mirroring CI build process) ==="
+    if [[ "$USE_EXISTING_BINARY" == "true" ]]; then
+        log_info "=== Skipping binary build (using existing CI artifact) ==="
+        return 0
+    fi
+    
+    log_info "=== Building AWD binary (local mode) ==="
     
     # Install Python dependencies (like CI does)
     log_info "Installing Python dependencies..."
@@ -122,6 +145,48 @@ setup_binary_for_testing() {
     
     local version=$(awd --version)
     log_success "AWD binary ready for testing: $version"
+}
+
+# Set up runtimes (codex/llm) - THE MISSING PIECE!
+setup_runtimes() {
+    log_info "=== Setting up runtimes for E2E tests ==="
+    
+    # Set up codex runtime
+    log_info "Setting up Codex runtime..."
+    if ! ./awd runtime setup codex; then
+        log_error "Failed to set up Codex runtime"
+        exit 1
+    fi
+    
+    # Set up LLM runtime  
+    log_info "Setting up LLM runtime..."
+    if ! ./awd runtime setup llm; then
+        log_error "Failed to set up LLM runtime"
+        exit 1
+    fi
+    
+    # Verify runtimes are available
+    log_info "Verifying runtime installations..."
+    
+    # Check codex
+    if command -v codex >/dev/null 2>&1; then
+        local codex_version=$(codex --version 2>&1 || echo "unknown")
+        log_success "Codex runtime ready: $codex_version"
+    else
+        log_error "Codex not found in PATH after setup"
+        exit 1
+    fi
+    
+    # Check LLM wrapper
+    local llm_path="$HOME/.awd/runtimes/llm"
+    if [[ -x "$llm_path" ]]; then
+        log_success "LLM runtime ready at: $llm_path"
+    else
+        log_error "LLM runtime not found at: $llm_path"
+        exit 1
+    fi
+    
+    log_success "All runtimes configured successfully"
 }
 
 # Install test dependencies (like CI does)
@@ -175,28 +240,35 @@ run_e2e_tests() {
 
 # Main execution
 main() {
-    echo "AWD CLI E2E Testing - CI Process Simulation"
-    echo "==========================================="
+    echo "AWD CLI E2E Testing - Unified CI/Local Script"
+    echo "============================================="
     echo ""
-    echo "This script mirrors the exact CI/CD process from build-release.yml"
+    echo "This script adapts to CI (using artifacts) or local (building) environments"
     echo ""
     
     check_prerequisites
     detect_platform
+    detect_environment
     build_binary
     setup_binary_for_testing
+    setup_runtimes  # THE MISSING PIECE!
     install_test_dependencies
     run_e2e_tests
     
     log_success "All E2E tests completed successfully!"
     echo ""
-    echo "✅ This validates the same process that runs in CI/CD:"
-    echo "  1. Build binary with PyInstaller"
-    echo "  2. Set up symlink and PATH (like CI artifacts)"
-    echo "  3. Install test dependencies"
-    echo "  4. Run pytest E2E tests with real API calls"
+    if [[ "$USE_EXISTING_BINARY" == "true" ]]; then
+        echo "✅ CI mode: Used pre-built artifacts and validated E2E workflow"
+    else
+        echo "✅ Local mode: Built binary and validated full CI/CD process"
+    fi
     echo ""
-    log_success "CI/CD E2E process validated locally!"
+    echo "E2E validation complete:"
+    echo "  1. Binary setup ✅"
+    echo "  2. Runtime installation (codex/llm) ✅"
+    echo "  3. E2E tests with real API calls ✅"
+    echo ""
+    log_success "Ready for production deployment!"
 }
 
 # Cleanup on exit
