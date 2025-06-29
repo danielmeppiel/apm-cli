@@ -10,9 +10,8 @@ Welcome to the Agentic Workflow Definitions (AWD) documentation. AWD is the NPM 
 - [Prompts Guide](prompts.md) - Creating reusable AI instructions
 
 ## Development
-- [Development Guide](development.md) - Local development setup
-- [Integration Testing](integration-testing.md) - Testing strategy and execution
 - [Development Status](development-status.md) - Feature status and testing coverage
+- [Integration Testing](integration-testing.md) - Testing strategy and execution
 - [Contributing](../CONTRIBUTING.md) - How to contribute to AWD
 
 ## Work in Progress
