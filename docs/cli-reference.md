@@ -212,11 +212,15 @@ awd config --show
 
 ### `awd runtime` - 🤖 Manage AI runtimes
 
-AWD manages AI runtime installation and configuration automatically.
+AWD manages AI runtime installation and configuration automatically. Currently supports two runtimes: `codex` and `llm`.
 
 ```bash
 awd runtime COMMAND [OPTIONS]
 ```
+
+**Supported Runtimes:**
+- **`codex`** - OpenAI Codex CLI with GitHub Models support (recommended)
+- **`llm`** - Simon Willison's LLM library with multiple providers
 
 #### `awd runtime setup` - ⚙️ Install AI runtime
 
@@ -307,34 +311,6 @@ awd runtime status RUNTIME_NAME
 
 **Arguments:**
 - `RUNTIME_NAME` - Runtime to check: `codex` or `llm`
-
-## Prerequisites by Runtime
-
-### LLM Runtime
-The `llm` library is included as a dependency. You only need to configure API keys:
-
-```bash
-# GitHub Models (free tier, recommended)
-llm keys set github
-# Enter your GitHub Personal Access Token
-
-# OpenAI (paid)
-llm keys set openai
-# Enter your OpenAI API key
-
-# Anthropic (paid)
-llm keys set anthropic
-# Enter your Anthropic API key
-```
-
-### Codex Runtime
-```bash
-# Install Codex CLI
-npm install -g @openai/codex@native
-
-# Set API key
-export OPENAI_API_KEY=your_openai_api_key
-```
 
 ## File Formats
 
