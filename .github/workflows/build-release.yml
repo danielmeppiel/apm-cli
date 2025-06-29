@@ -205,8 +205,9 @@ jobs:
           GITHUB_MODELS_KEY: ${{ secrets.GITHUB_TOKEN }}  # LLM library expects GITHUB_MODELS_KEY
         run: |
           source .venv/bin/activate
-          pytest tests/integration/test_golden_scenario_e2e.py -v -s --tb=short
-        timeout-minutes: 15
+          chmod +x scripts/test-e2e.sh
+          ./scripts/test-e2e.sh
+        timeout-minutes: 20
 
   # Create GitHub release (only after E2E tests pass)
   create-release:
