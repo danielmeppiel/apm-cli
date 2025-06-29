@@ -108,6 +108,7 @@ scripts:
 dependencies:
   mcp:
     - ghcr.io/github/github-mcp-server
+```
 
 ## Beyond Simple Prompts: Composable Workflows
 

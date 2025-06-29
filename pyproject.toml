@@ -27,6 +27,8 @@ dependencies = [
     "llm>=0.17.0",
     "llm-github-models>=0.1.0",
     "tomli>=1.2.0; python_version<'3.11'",
+    "rich>=13.0.0",
+    "rich-click>=1.7.0",
 ]
 
 [project.optional-dependencies]

@@ -1,7 +1,7 @@
 name: {{project_name}}
-version: 1.0.0
-description: A {{project_name}} AWD application
-author: Your Name
+version: {{version}}
+description: {{description}}
+author: {{author}}
 
 scripts:
   start: "codex --skip-git-repo-check hello-world.prompt.md"

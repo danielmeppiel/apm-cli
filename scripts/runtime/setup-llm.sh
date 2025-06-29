@@ -8,6 +8,23 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/setup-common.sh"
 
+# Configuration
+VANILLA_MODE=false
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --vanilla)
+            VANILLA_MODE=true
+            shift
+            ;;
+        *)
+            # For LLM, we don't currently support version selection
+            shift
+            ;;
+    esac
+done
+
 setup_llm() {
     log_info "Setting up LLM runtime..."
     
@@ -32,6 +49,15 @@ setup_llm() {
     log_info "Installing LLM library..."
     "$llm_venv/bin/pip" install --upgrade pip
     "$llm_venv/bin/pip" install llm
+    
+    # Install GitHub Models plugin in non-vanilla mode
+    if [[ "$VANILLA_MODE" == "false" ]]; then
+        log_info "Installing GitHub Models plugin for AWD defaults..."
+        "$llm_venv/bin/pip" install llm-github-models
+        log_success "GitHub Models plugin installed"
+    else
+        log_info "Vanilla mode: Skipping GitHub Models plugin installation"
+    fi
     
     # Create wrapper script
     log_info "Creating LLM wrapper script..."
@@ -61,10 +87,17 @@ EOF
     # Show next steps
     echo ""
     log_info "Next steps:"
-    echo "1. Configure LLM providers: llm keys set <provider>"
-    echo "2. For GitHub Models: llm keys set github"
-    echo "3. Test with: llm --help"
-    echo "4. Or use via AWD: awd run your-prompt --runtime=llm"
+    if [[ "$VANILLA_MODE" == "false" ]]; then
+        echo "1. Set your GitHub token: export GITHUB_TOKEN=your_token_here"
+        echo "2. Then run with AWD: awd run start --runtime=llm"
+        echo ""
+        log_info "GitHub Models provides free access to OpenAI models with your GitHub token"
+    else
+        echo "1. Configure LLM providers: llm keys set <provider>"
+        echo "2. For OpenAI: llm keys set openai"
+        echo "3. For Anthropic: llm keys set anthropic"
+        echo "4. Then run with AWD: awd run start --runtime=llm"
+    fi
 }
 
 # Run setup if script is executed directly
