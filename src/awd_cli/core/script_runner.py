@@ -39,7 +39,7 @@ class ScriptRunner:
         command = scripts[script_name]
         
         # Auto-compile any .prompt.md files in the command
-        compiled_command = self._auto_compile_prompts(command, params)
+        compiled_command, compiled_prompt_files = self._auto_compile_prompts(command, params)
         
         # Execute the final command
         print(f"Executing: {compiled_command}")
@@ -67,7 +67,7 @@ class ScriptRunner:
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
     
-    def _auto_compile_prompts(self, command: str, params: Dict[str, str]) -> str:
+    def _auto_compile_prompts(self, command: str, params: Dict[str, str]) -> tuple[str, list[str]]:
         """Auto-compile .prompt.md files and transform runtime commands.
         
         Args:
@@ -75,15 +75,17 @@ class ScriptRunner:
             params: Parameters for compilation
             
         Returns:
-            Properly formatted command for the target runtime
+            Tuple of (compiled_command, list_of_compiled_prompt_files)
         """
         # Find all .prompt.md files in the command using regex
         prompt_files = re.findall(r'(\S+\.prompt\.md)', command)
+        compiled_prompt_files = []
         
         compiled_command = command
         for prompt_file in prompt_files:
             # Compile the prompt file with current params
             compiled_path = self.compiler.compile(prompt_file, params)
+            compiled_prompt_files.append(prompt_file)
             
             # Read the compiled content
             with open(compiled_path, 'r') as f:
@@ -94,7 +96,7 @@ class ScriptRunner:
                 compiled_command, prompt_file, compiled_content, compiled_path
             )
         
-        return compiled_command
+        return compiled_command, compiled_prompt_files
     
     def _transform_runtime_command(self, command: str, prompt_file: str, 
                                  compiled_content: str, compiled_path: str) -> str:
