@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.9] - 2025-06-30
+
+### Fixed
+- **Critical homebrew installation fix** - Fixed missing executable permissions in homebrew binary packages
+- **Enhanced workflow robustness** - Improved CI/CD pipeline to explicitly preserve executable permissions in tar.gz archives
+- **Release process improvements** - Better SHA256 checksum handling from GitHub releases instead of build artifacts
+
+### Changed
+- Updated release workflow to prevent executable permission issues in future releases
+- Improved binary packaging process for more reliable homebrew distributions
+
+## [0.0.8] - 2025-06-30
+
+### Performance
+- **🚀 47x startup improvement** - Binary startup time improved from 4.0s to 0.086s through lazy imports optimization
+- **Lazy imports implementation** - Rich and YAML libraries now load on-demand for massive performance boost
+- **Binary optimization** - Enhanced PyInstaller configuration for better runtime performance
+
+### Fixed
+- **Runtime PATH updates** - Runtime binaries (like codex) now immediately available after setup without shell restart
+- **Build system improvements** - Enhanced build scripts for directory-based deployment and proper checksum generation
+- **Test robustness** - Fixed integration test directory handling and unit test stability (all 126 tests now pass consistently)
+
+### Improved
+- **UX messaging** - Clearer prompt compilation info panels with less intimidating messaging
+- **Script execution** - Better error handling and compilation feedback in script runner
+- **Developer experience** - No longer requires restarting shell after runtime setup
+
+### Technical
+- Enhanced PyInstaller spec configuration for onedir mode support
+- Improved error handling order in script execution
+- Better temp directory handling in tests
+
 ## [0.0.7] - 2025-06-29
 
 ### Added
@@ -117,6 +150,8 @@ awd install
 awd run --param name="Developer"
 ```
 
+[0.0.9]: https://github.com/danielmeppiel/awd-cli/releases/tag/v0.0.9
+[0.0.8]: https://github.com/danielmeppiel/awd-cli/releases/tag/v0.0.8
 [0.0.7]: https://github.com/danielmeppiel/awd-cli/releases/tag/v0.0.7
 [0.0.6]: https://github.com/danielmeppiel/awd-cli/releases/tag/v0.0.6
 [0.0.5]: https://github.com/danielmeppiel/awd-cli/releases/tag/v0.0.5
