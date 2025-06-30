@@ -72,9 +72,8 @@ if [ ! -f "dist/awd/awd" ]; then
     exit 1
 fi
 
-# For onedir mode, we rename the entire directory and create a symlink for the binary
-mv dist/awd "dist/$BINARY_NAME"
-ln -sf "$BINARY_NAME/awd" "dist/awd-binary"
+# Rename the directory to have the platform-specific name
+mv "dist/awd" "dist/$BINARY_NAME"
 
 # Make binary executable
 chmod +x "dist/$BINARY_NAME/awd"
@@ -90,21 +89,16 @@ fi
 
 # Show binary info
 echo -e "${GREEN}✓ Build complete!${NC}"
-echo -e "${BLUE}Binary directory: ./dist/$BINARY_NAME/${NC}"
-echo -e "${BLUE}Executable: ./dist/$BINARY_NAME/awd${NC}"
+echo -e "${BLUE}Binary: ./dist/$BINARY_NAME/awd${NC}"
 echo -e "${BLUE}Size: $(du -h "dist/$BINARY_NAME" | tail -1 | cut -f1)${NC}"
 
-# Optional: Create checksum
+# Create checksum for the binary directory (as expected by CI workflow)
 if command -v sha256sum &> /dev/null; then
-    tar -czf "dist/$BINARY_NAME.tar.gz" -C dist "$BINARY_NAME"
-    sha256sum "dist/$BINARY_NAME.tar.gz" > "dist/$BINARY_NAME.tar.gz.sha256"
-    echo -e "${BLUE}Archive: ./dist/$BINARY_NAME.tar.gz${NC}"
-    echo -e "${BLUE}Checksum: ./dist/$BINARY_NAME.tar.gz.sha256${NC}"
+    sha256sum "dist/$BINARY_NAME/awd" > "dist/$BINARY_NAME.sha256"
+    echo -e "${BLUE}Checksum: ./dist/$BINARY_NAME.sha256${NC}"
 elif command -v shasum &> /dev/null; then
-    tar -czf "dist/$BINARY_NAME.tar.gz" -C dist "$BINARY_NAME"
-    shasum -a 256 "dist/$BINARY_NAME.tar.gz" > "dist/$BINARY_NAME.tar.gz.sha256"
-    echo -e "${BLUE}Archive: ./dist/$BINARY_NAME.tar.gz${NC}"
-    echo -e "${BLUE}Checksum: ./dist/$BINARY_NAME.tar.gz.sha256${NC}"
+    shasum -a 256 "dist/$BINARY_NAME/awd" > "dist/$BINARY_NAME.sha256"
+    echo -e "${BLUE}Checksum: ./dist/$BINARY_NAME.sha256${NC}"
 fi
 
 echo -e "${GREEN}Ready for release!${NC}"
