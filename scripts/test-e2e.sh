@@ -87,9 +87,10 @@ detect_environment() {
     log_info "Detecting environment..."
     
     # Check if we're in CI with pre-built artifacts (binary exists in ./dist/)
-    if [[ -f "./dist/$BINARY_NAME" ]]; then
+    # The binary is located at ./dist/$BINARY_NAME/awd (directory structure)
+    if [[ -d "./dist/$BINARY_NAME" ]] && [[ -f "./dist/$BINARY_NAME/awd" ]]; then
         USE_EXISTING_BINARY=true
-        log_info "Found existing binary: ./dist/$BINARY_NAME (CI mode)"
+        log_info "Found existing binary: ./dist/$BINARY_NAME/awd (CI mode)"
     else
         USE_EXISTING_BINARY=false
         log_info "No existing binary found, will build locally"
@@ -116,23 +117,27 @@ build_binary() {
     ./scripts/build-binary.sh
     
     # Verify binary was created
-    if [[ ! -f "./dist/$BINARY_NAME" ]]; then
-        log_error "Binary not found: ./dist/$BINARY_NAME"
+    # The build script creates ./dist/$BINARY_NAME/awd (directory structure)
+    if [[ ! -f "./dist/$BINARY_NAME/awd" ]]; then
+        log_error "Binary not found: ./dist/$BINARY_NAME/awd"
         exit 1
     fi
     
-    log_success "Binary built: ./dist/$BINARY_NAME"
+    log_success "Binary built: ./dist/$BINARY_NAME/awd"
 }
 
 # Set up binary for testing (exactly like CI does)
 setup_binary_for_testing() {
     log_info "=== Setting up binary for testing (mirroring CI process) ==="
     
+    # The binary is located at ./dist/$BINARY_NAME/awd (directory structure)
+    BINARY_PATH="./dist/$BINARY_NAME/awd"
+    
     # Make binary executable (like CI does)
-    chmod +x "./dist/$BINARY_NAME"
+    chmod +x "$BINARY_PATH"
     
     # Create AWD symlink for testing (exactly like CI does)
-    ln -sf "$(pwd)/dist/$BINARY_NAME" "$(pwd)/awd"
+    ln -sf "$(pwd)/dist/$BINARY_NAME/awd" "$(pwd)/awd"
     
     # Add current directory to PATH (like CI does)
     export PATH="$(pwd):$PATH"

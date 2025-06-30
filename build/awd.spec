@@ -137,12 +137,12 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
-# Switch to --onedir for faster extraction (major performance improvement)
+# Switch to --onedir for directory-based deployment (faster startup with --onedir)
 exe = EXE(
     pyz,
     a.scripts,
-    [],  # Remove a.binaries, a.zipfiles, a.datas for --onedir mode
-    exclude_binaries=True,  # Enable --onedir mode
+    [],            # Empty for --onedir mode
+    exclude_binaries=True,  # Exclude binaries for --onedir mode
     name='awd',
     debug=False,
     bootloader_ignore_signals=False,
@@ -158,14 +158,13 @@ exe = EXE(
     entitlements_file=None,
 )
 
-# Create COLLECT for --onedir distribution
 coll = COLLECT(
     exe,
     a.binaries,
     a.zipfiles,
     a.datas,
-    strip=True,  # Strip debug symbols from all binaries
-    upx=is_upx_available(),  # Apply UPX to all files if available
+    strip=True,
+    upx=is_upx_available(),
     upx_exclude=[],
-    name='awd',
+    name='awd'
 )
