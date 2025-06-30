@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Homebrew installation on macOS** - Fixed "bundle format is ambiguous" error by preserving PyInstaller signatures
+- **macOS quarantine handling** - Remove quarantine attributes while maintaining existing code signatures  
+- **Framework compatibility** - Avoid interfering with PyInstaller's embedded Python.framework structure
+
+### Changed
+- Enhanced Homebrew formula with minimal intervention approach that preserves security
+- Updated formula template to maintain PyInstaller code signatures for future releases
+
 ## [0.0.9] - 2025-06-30
 
 ### Fixed
