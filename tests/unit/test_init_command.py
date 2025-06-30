@@ -17,11 +17,22 @@ class TestInitCommand:
     def setup_method(self):
         """Set up test fixtures."""
         self.runner = CliRunner()
-        self.original_dir = os.getcwd()
+        # Use a safe fallback directory if current directory is not accessible
+        try:
+            self.original_dir = os.getcwd()
+        except FileNotFoundError:
+            # If current directory doesn't exist, use the repo root
+            self.original_dir = str(Path(__file__).parent.parent.parent)
+            os.chdir(self.original_dir)
         
     def teardown_method(self):
         """Clean up after tests."""
-        os.chdir(self.original_dir)
+        try:
+            os.chdir(self.original_dir)
+        except (FileNotFoundError, OSError):
+            # If original directory doesn't exist anymore, go to repo root
+            repo_root = Path(__file__).parent.parent.parent
+            os.chdir(str(repo_root))
         
     def test_init_current_directory(self):
         """Test initialization in current directory."""
