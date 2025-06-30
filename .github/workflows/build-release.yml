@@ -233,6 +233,9 @@ jobs:
           # Create tar.gz archives from directory structure for release and Homebrew
           cd dist
           for binary in awd-linux-x86_64 awd-darwin-x86_64 awd-darwin-arm64; do
+            # Ensure the binary is executable before archiving
+            chmod +x "${binary}/awd"
+            # Create tar.gz with preserved permissions
             tar -czf "${binary}.tar.gz" "$binary"
             if command -v sha256sum &> /dev/null; then
               sha256sum "${binary}.tar.gz" > "${binary}.tar.gz.sha256"
@@ -298,19 +301,26 @@ jobs:
     if: github.ref_type == 'tag' && success() # Only run on tags AND if all previous jobs succeeded
     
     steps:
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./dist/
-          merge-multiple: true
-      
-      - name: Extract SHA256 checksums
+      - name: Extract SHA256 checksums from GitHub release
         id: checksums
         run: |
-          # Use the checksums from the tar.gz archives (for Homebrew compatibility)
-          DARWIN_ARM64_SHA=$(cat ./dist/awd-darwin-arm64.tar.gz.sha256 | cut -d' ' -f1)
-          DARWIN_X86_64_SHA=$(cat ./dist/awd-darwin-x86_64.tar.gz.sha256 | cut -d' ' -f1)
-          LINUX_X86_64_SHA=$(cat ./dist/awd-linux-x86_64.tar.gz.sha256 | cut -d' ' -f1)
+          # Download the SHA256 checksum files from the GitHub release
+          RELEASE_TAG="${{ github.ref_name }}"
+          
+          echo "Downloading checksums for release $RELEASE_TAG"
+          
+          # Download checksum files directly from the release
+          curl -L -o awd-darwin-arm64.tar.gz.sha256 \
+            "https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG/awd-darwin-arm64.tar.gz.sha256"
+          curl -L -o awd-darwin-x86_64.tar.gz.sha256 \
+            "https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG/awd-darwin-x86_64.tar.gz.sha256"
+          curl -L -o awd-linux-x86_64.tar.gz.sha256 \
+            "https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG/awd-linux-x86_64.tar.gz.sha256"
+          
+          # Extract SHA256 checksums
+          DARWIN_ARM64_SHA=$(cat awd-darwin-arm64.tar.gz.sha256 | cut -d' ' -f1)
+          DARWIN_X86_64_SHA=$(cat awd-darwin-x86_64.tar.gz.sha256 | cut -d' ' -f1)
+          LINUX_X86_64_SHA=$(cat awd-linux-x86_64.tar.gz.sha256 | cut -d' ' -f1)
           
           echo "darwin-arm64-sha=$DARWIN_ARM64_SHA" >> $GITHUB_OUTPUT
           echo "darwin-x86_64-sha=$DARWIN_X86_64_SHA" >> $GITHUB_OUTPUT
