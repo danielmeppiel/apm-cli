@@ -66,21 +66,22 @@ fi
 echo -e "${YELLOW}Building binary with PyInstaller...${NC}"
 pyinstaller build/awd.spec
 
-# Check if build was successful
-if [ ! -f "dist/awd" ]; then
+# Check if build was successful (onedir mode creates dist/awd/awd)
+if [ ! -f "dist/awd/awd" ]; then
     echo -e "${RED}Build failed - binary not found${NC}"
     exit 1
 fi
 
-# Rename binary to platform-specific name
+# For onedir mode, we rename the entire directory and create a symlink for the binary
 mv dist/awd "dist/$BINARY_NAME"
+ln -sf "$BINARY_NAME/awd" "dist/awd-binary"
 
 # Make binary executable
-chmod +x "dist/$BINARY_NAME"
+chmod +x "dist/$BINARY_NAME/awd"
 
 # Test the binary
 echo -e "${YELLOW}Testing binary...${NC}"
-if "./dist/$BINARY_NAME" --version; then
+if "./dist/$BINARY_NAME/awd" --version; then
     echo -e "${GREEN}✓ Binary test successful${NC}"
 else
     echo -e "${RED}✗ Binary test failed${NC}"
@@ -89,16 +90,21 @@ fi
 
 # Show binary info
 echo -e "${GREEN}✓ Build complete!${NC}"
-echo -e "${BLUE}Binary: ./dist/$BINARY_NAME${NC}"
-echo -e "${BLUE}Size: $(du -h "dist/$BINARY_NAME" | cut -f1)${NC}"
+echo -e "${BLUE}Binary directory: ./dist/$BINARY_NAME/${NC}"
+echo -e "${BLUE}Executable: ./dist/$BINARY_NAME/awd${NC}"
+echo -e "${BLUE}Size: $(du -h "dist/$BINARY_NAME" | tail -1 | cut -f1)${NC}"
 
 # Optional: Create checksum
 if command -v sha256sum &> /dev/null; then
-    sha256sum "dist/$BINARY_NAME" > "dist/$BINARY_NAME.sha256"
-    echo -e "${BLUE}Checksum: ./dist/$BINARY_NAME.sha256${NC}"
+    tar -czf "dist/$BINARY_NAME.tar.gz" -C dist "$BINARY_NAME"
+    sha256sum "dist/$BINARY_NAME.tar.gz" > "dist/$BINARY_NAME.tar.gz.sha256"
+    echo -e "${BLUE}Archive: ./dist/$BINARY_NAME.tar.gz${NC}"
+    echo -e "${BLUE}Checksum: ./dist/$BINARY_NAME.tar.gz.sha256${NC}"
 elif command -v shasum &> /dev/null; then
-    shasum -a 256 "dist/$BINARY_NAME" > "dist/$BINARY_NAME.sha256"
-    echo -e "${BLUE}Checksum: ./dist/$BINARY_NAME.sha256${NC}"
+    tar -czf "dist/$BINARY_NAME.tar.gz" -C dist "$BINARY_NAME"
+    shasum -a 256 "dist/$BINARY_NAME.tar.gz" > "dist/$BINARY_NAME.tar.gz.sha256"
+    echo -e "${BLUE}Archive: ./dist/$BINARY_NAME.tar.gz${NC}"
+    echo -e "${BLUE}Checksum: ./dist/$BINARY_NAME.tar.gz.sha256${NC}"
 fi
 
 echo -e "${GREEN}Ready for release!${NC}"

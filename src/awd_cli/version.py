@@ -2,38 +2,26 @@
 
 import sys
 from pathlib import Path
-import re
 
-# Try different TOML libraries based on availability
-try:
-    import tomllib  # Python 3.11+
-    def _load_toml(path):
-        with open(path, 'rb') as f:
-            return tomllib.load(f)
-except ImportError:
-    try:
-        import tomli
-        def _load_toml(path):
-            with open(path, 'rb') as f:
-                return tomli.load(f)
-    except ImportError:
-        try:
-            import toml
-            def _load_toml(path):
-                with open(path, 'r') as f:
-                    return toml.load(f)
-        except ImportError:
-            def _load_toml(path):
-                raise ImportError("No TOML library available")
+# Build-time version constant (will be injected during build)
+# This avoids TOML parsing overhead during runtime
+__BUILD_VERSION__ = None
 
 
 def get_version() -> str:
     """
-    Get the current version from pyproject.toml.
+    Get the current version efficiently.
+    
+    First tries build-time constant, then falls back to pyproject.toml parsing.
     
     Returns:
         str: Version string
     """
+    # Use build-time constant if available (fastest path)
+    if __BUILD_VERSION__:
+        return __BUILD_VERSION__
+    
+    # Fallback to reading from pyproject.toml (for development)
     try:
         # Handle PyInstaller bundle vs development
         if getattr(sys, 'frozen', False):
@@ -44,11 +32,18 @@ def get_version() -> str:
             pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
             
         if pyproject_path.exists():
-            data = _load_toml(pyproject_path)
-            version = data.get('project', {}).get('version', 'unknown')
-            # Validate version format (basic semver)
-            if re.match(r'^\d+\.\d+\.\d+(-.*)?$', version):
-                return version
+            # Simple regex parsing instead of full TOML library
+            with open(pyproject_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+            # Look for version = "x.y.z" pattern
+            import re
+            match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
+            if match:
+                version = match.group(1)
+                # Basic validation
+                if re.match(r'^\d+\.\d+\.\d+(-.*)?$', version):
+                    return version
     except Exception:
         pass
     

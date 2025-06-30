@@ -82,6 +82,40 @@ excludes = [
     'PyQt6',
     'PySide2',
     'PySide6',
+    # Additional exclusions for smaller binary
+    'unittest',
+    'doctest',
+    'pdb',
+    'bdb',
+    'encodings.idna',
+    'encodings.ascii',
+    'encodings.latin_1',
+    'test',
+    'tests',
+    'distutils',
+    'lib2to3',
+    'asyncio',
+    'multiprocessing',
+    'xml.etree',
+    'xml.parsers',
+    'html',
+    'http.cookiejar',
+    'http.cookies',
+    'urllib.robotparser',
+    'email',
+    'calendar',
+    'decimal',
+    'fractions',
+    'statistics',
+    'wave',
+    'audioop',
+    'chunk',
+    'colorsys',
+    'imghdr',
+    'sndhdr',
+    'sunau',
+    'tty',
+    'pty',
 ]
 
 a = Analysis(
@@ -98,21 +132,21 @@ a = Analysis(
     win_private_assemblies=False,
     cipher=None,
     noarchive=False,
+    optimize=2,  # Python optimization level for smaller, faster binaries
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
+# Switch to --onedir for faster extraction (major performance improvement)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
+    [],  # Remove a.binaries, a.zipfiles, a.datas for --onedir mode
+    exclude_binaries=True,  # Enable --onedir mode
     name='awd',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=True,  # Strip debug symbols for smaller size
     upx=is_upx_available(),  # Enable UPX compression only if available
     upx_exclude=[],
     runtime_tmpdir=None,
@@ -122,4 +156,16 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+
+# Create COLLECT for --onedir distribution
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=True,  # Strip debug symbols from all binaries
+    upx=is_upx_available(),  # Apply UPX to all files if available
+    upx_exclude=[],
+    name='awd',
 )
