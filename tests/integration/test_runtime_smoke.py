@@ -33,16 +33,21 @@ def temp_awd_home():
             del os.environ['HOME']
 
 
-def run_command(cmd, check=True, capture_output=True, timeout=60):
+def run_command(cmd, check=True, capture_output=True, timeout=60, cwd=None):
     """Run a shell command with proper error handling."""
     try:
+        # Set working directory to a stable location to avoid getcwd issues
+        if cwd is None:
+            cwd = Path(__file__).parent.parent.parent
+        
         result = subprocess.run(
             cmd, 
             shell=True, 
             check=check, 
             capture_output=capture_output, 
             text=True,
-            timeout=timeout
+            timeout=timeout,
+            cwd=str(cwd)
         )
         return result
     except subprocess.TimeoutExpired:
@@ -62,8 +67,8 @@ class TestRuntimeSmoke:
         
         assert setup_script.exists(), f"Codex setup script not found: {setup_script}"
         
-        # Run the setup script
-        result = run_command(f"bash '{setup_script}'", timeout=120)
+        # Run the setup script from the project root with stable working directory
+        result = run_command(f"bash '{setup_script}'", timeout=120, cwd=project_root)
         
         # Verify the script completed successfully
         assert result.returncode == 0, f"Codex setup failed: {result.stderr}"
@@ -93,8 +98,8 @@ class TestRuntimeSmoke:
         
         assert setup_script.exists(), f"LLM setup script not found: {setup_script}"
         
-        # Run the setup script
-        result = run_command(f"bash '{setup_script}'", timeout=120)
+        # Run the setup script from the project root with stable working directory
+        result = run_command(f"bash '{setup_script}'", timeout=120, cwd=project_root)
         
         # Verify the script completed successfully
         assert result.returncode == 0, f"LLM setup failed: {result.stderr}"

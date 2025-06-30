@@ -197,13 +197,13 @@ class PromptCompiler:
         Returns:
             Path to the compiled file
         """
-        # Ensure compiled directory exists
-        self.compiled_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Read the prompt file
+        # Read the prompt file first (this will fail fast if file doesn't exist)
         prompt_path = Path(prompt_file)
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt file not found: {prompt_file}")
+        
+        # Now ensure compiled directory exists
+        self.compiled_dir.mkdir(parents=True, exist_ok=True)
         
         with open(prompt_path, 'r') as f:
             content = f.read()
