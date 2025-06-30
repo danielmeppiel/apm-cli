@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.10] - 2025-06-30
+
+### Security
+- **Critical security fix** - Completely removed sensitive files from git history that were accidentally committed
+- **Repository cleanup** - Deleted all previous release tags to ensure no access to compromised commits
+- **History rewrite** - Used git-filter-repo to permanently remove confidential information from repository
+
 ### Fixed
 - **Homebrew installation on macOS** - Fixed "bundle format is ambiguous" error by preserving PyInstaller signatures
 - **macOS quarantine handling** - Remove quarantine attributes while maintaining existing code signatures  
@@ -15,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Enhanced Homebrew formula with minimal intervention approach that preserves security
 - Updated formula template to maintain PyInstaller code signatures for future releases
+- **Breaking**: All previous version tags (v0.0.1-v0.0.9) have been removed due to security concerns
 
 ## [0.0.9] - 2025-06-30
 
