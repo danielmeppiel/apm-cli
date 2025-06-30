@@ -2,18 +2,9 @@
 
 import sys
 import os
-import yaml
 import click
 from pathlib import Path
 from colorama import init, Fore, Style
-from rich.console import Console
-from rich.theme import Theme
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.prompt import Prompt, Confirm
-from rich import print as rich_print
 
 # Handle version import for both package and PyInstaller contexts
 try:
@@ -29,20 +20,6 @@ except ImportError:
 
 # Initialize colorama for fallback
 init(autoreset=True)
-
-# Rich console with custom theme
-custom_theme = Theme({
-    "info": "cyan",
-    "warning": "yellow",
-    "error": "bold red",
-    "success": "bold green",
-    "highlight": "bold magenta",
-    "muted": "dim white",
-    "accent": "bold blue",
-    "title": "bold cyan"
-})
-
-console = Console(theme=custom_theme)
 
 # Modern status symbols
 STATUS_SYMBOLS = {
@@ -87,17 +64,86 @@ def _get_template_dir():
         return template_dir
 
 
+# Lazy loading for Rich components to improve startup performance
+_console = None
+
+def _get_console():
+    """Get Rich console instance with lazy loading."""
+    global _console
+    if _console is None:
+        try:
+            from rich.console import Console
+            from rich.theme import Theme
+            
+            custom_theme = Theme({
+                "info": "cyan",
+                "warning": "yellow", 
+                "error": "bold red",
+                "success": "bold green",
+                "highlight": "bold magenta",
+                "muted": "dim white",
+                "accent": "bold blue",
+                "title": "bold cyan"
+            })
+            
+            _console = Console(theme=custom_theme)
+        except ImportError:
+            _console = None
+    return _console
+
+
+def _rich_blank_line():
+    """Print a blank line with Rich if available, otherwise use click."""
+    console = _get_console()
+    if console:
+        console.print()
+    else:
+        click.echo()
+
+
+def _lazy_yaml():
+    """Lazy import for yaml module to improve startup performance."""
+    try:
+        import yaml
+        return yaml
+    except ImportError:
+        raise ImportError("PyYAML is required but not installed")
+
+
+def _lazy_prompt():
+    """Lazy import for Rich Prompt to improve startup performance."""
+    try:
+        from rich.prompt import Prompt
+        return Prompt
+    except ImportError:
+        return None
+
+
+def _lazy_confirm():
+    """Lazy import for Rich Confirm to improve startup performance."""
+    try:
+        from rich.prompt import Confirm
+        return Confirm
+    except ImportError:
+        return None
+
+
 def _rich_echo(message, style="info", symbol=None, fallback_color=INFO):
     """Print message with Rich styling, fallback to colorama."""
-    try:
-        if symbol:
-            message = f"{STATUS_SYMBOLS.get(symbol, '')} {message}"
-        console.print(message, style=style)
-    except (ImportError, NameError):
-        # Fallback to colorama
-        if symbol:
-            message = f"{STATUS_SYMBOLS.get(symbol, '')} {message}"
-        click.echo(f"{fallback_color}{message}{RESET}")
+    console = _get_console()
+    if console:
+        try:
+            if symbol:
+                message = f"{STATUS_SYMBOLS.get(symbol, '')} {message}"
+            console.print(message, style=style)
+            return
+        except Exception:
+            pass
+    
+    # Fallback to colorama
+    if symbol:
+        message = f"{STATUS_SYMBOLS.get(symbol, '')} {message}"
+    click.echo(f"{fallback_color}{message}{RESET}")
 
 
 def _rich_success(message, symbol="success"):
@@ -122,33 +168,44 @@ def _rich_warning(message, symbol="warning"):
 
 def _rich_panel(content, title=None, style="cyan"):
     """Display content in a Rich panel with fallback."""
-    try:
-        if title:
-            console.print(Panel(content, title=title, border_style=style))
-        else:
-            console.print(Panel(content, border_style=style))
-    except (ImportError, NameError):
-        # Fallback to simple output
-        if title:
-            click.echo(f"\n{TITLE}{title}{RESET}")
-        click.echo(content)
-        click.echo()
+    console = _get_console()
+    if console:
+        try:
+            from rich.panel import Panel
+            if title:
+                console.print(Panel(content, title=title, border_style=style))
+            else:
+                console.print(Panel(content, border_style=style))
+            return
+        except Exception:
+            pass
+    
+    # Fallback to simple output
+    if title:
+        click.echo(f"\n{TITLE}{title}{RESET}")
+    click.echo(content)
+    click.echo()
 
 
 def _create_files_table(files):
     """Create a table of created files with Rich styling."""
-    try:
-        table = Table(show_header=False, box=None, padding=(0, 1))
-        table.add_column("Icon", style="cyan")
-        table.add_column("File", style="white")
-        
-        for file in files:
-            table.add_row(STATUS_SYMBOLS["file"], file)
-        
-        return table
-    except (ImportError, NameError):
-        # Fallback to simple list
-        return "\n".join([f"  - {file}" for file in files])
+    console = _get_console()
+    if console:
+        try:
+            from rich.table import Table
+            table = Table(show_header=False, box=None, padding=(0, 1))
+            table.add_column("Icon", style="cyan")
+            table.add_column("File", style="white")
+            
+            for file in files:
+                table.add_row(STATUS_SYMBOLS["file"], file)
+            
+            return table
+        except Exception:
+            pass
+    
+    # Fallback to simple list
+    return "\n".join([f"  - {file}" for file in files])
 
 
 def _load_template_file(template_name, filename, **variables):
@@ -174,16 +231,22 @@ def print_version(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
     
-    try:
-        version_text = Text()
-        version_text.append("Agentic Workflow Definitions (AWD) CLI", style="bold cyan")
-        version_text.append(f" version {get_version()}", style="white")
-        console.print(Panel(
-            version_text,
-            border_style="cyan",
-            padding=(0, 1)
-        ))
-    except ImportError:
+    console = _get_console()
+    if console:
+        try:
+            from rich.text import Text
+            from rich.panel import Panel
+            version_text = Text()
+            version_text.append("Agentic Workflow Definitions (AWD) CLI", style="bold cyan")
+            version_text.append(f" version {get_version()}", style="white")
+            console.print(Panel(
+                version_text,
+                border_style="cyan",
+                padding=(0, 1)
+            ))
+        except Exception:
+            click.echo(f"{TITLE}Agentic Workflow Definitions (AWD) CLI{RESET} version {get_version()}")
+    else:
         # Fallback to colorama if Rich is not available
         click.echo(f"{TITLE}Agentic Workflow Definitions (AWD) CLI{RESET} version {get_version()}")
     
@@ -236,12 +299,16 @@ def init(ctx, project_name, force, yes):
             _rich_warning("Existing AWD project detected:")
             for file in existing_files:
                 _rich_echo(f"  - {file}", style="muted")
-            console.print() if 'console' in globals() else click.echo()
+            _rich_blank_line()
             
             if not yes:
-                try:
-                    confirm = Confirm.ask("Continue and overwrite existing files?")
-                except (ImportError, NameError):
+                Confirm = _lazy_confirm()
+                if Confirm:
+                    try:
+                        confirm = Confirm.ask("Continue and overwrite existing files?")
+                    except Exception:
+                        confirm = click.confirm("Continue and overwrite existing files?")
+                else:
                     confirm = click.confirm("Continue and overwrite existing files?")
                 
                 if not confirm:
@@ -267,14 +334,17 @@ def init(ctx, project_name, force, yes):
         
         # Show created files in a nice format
         files = ["awd.yml", "hello-world.prompt.md", "README.md"]
-        try:
-            _rich_info("Created files:")
-            console.print(_create_files_table(files))
-        except (ImportError, NameError):
-            _rich_info("Created files:")
+        console = _get_console()
+        _rich_info("Created files:")
+        if console:
+            try:
+                console.print(_create_files_table(files))
+            except Exception:
+                click.echo(_create_files_table(files))
+        else:
             click.echo(_create_files_table(files))
             
-        console.print() if 'console' in globals() else click.echo()
+        _rich_blank_line()
         _rich_success("AWD project initialized successfully!", symbol="sparkles")
         
         # Next steps with better formatting
@@ -310,6 +380,7 @@ def install(ctx):
         
         # Read awd.yml
         with open('awd.yml', 'r') as f:
+            yaml = _lazy_yaml()
             config = yaml.safe_load(f)
             
         # Get MCP dependencies
@@ -322,16 +393,22 @@ def install(ctx):
         _rich_info(f"Found {len(mcp_deps)} MCP dependencies:")
         
         # Show dependencies in a nice list
-        try:
-            dep_table = Table(show_header=False, box=None, padding=(0, 1))
-            dep_table.add_column("Icon", style="cyan")
-            dep_table.add_column("Dependency", style="white")
-            
-            for dep in mcp_deps:
-                dep_table.add_row(STATUS_SYMBOLS["gear"], dep)
-            
-            console.print(dep_table)
-        except (ImportError, NameError):
+        console = _get_console()
+        if console:
+            try:
+                from rich.table import Table
+                dep_table = Table(show_header=False, box=None, padding=(0, 1))
+                dep_table.add_column("Icon", style="cyan")
+                dep_table.add_column("Dependency", style="white")
+                
+                for dep in mcp_deps:
+                    dep_table.add_row(STATUS_SYMBOLS["gear"], dep)
+                
+                console.print(dep_table)
+            except Exception:
+                for dep in mcp_deps:
+                    click.echo(f"  - {dep}")
+        else:
             for dep in mcp_deps:
                 click.echo(f"  - {dep}")
             
@@ -362,7 +439,7 @@ def install(ctx):
             dep_list = ', '.join(mcp_deps)
             _rich_info(f"Dependencies listed in awd.yml: {dep_list}")
             
-        console.print() if 'console' in globals() else click.echo()
+        _rich_blank_line()
         _rich_success("Dependencies installation complete!", symbol="sparkles")
         
     except Exception as e:
@@ -374,6 +451,7 @@ def _load_awd_config():
     """Load configuration from awd.yml."""
     if Path('awd.yml').exists():
         with open('awd.yml', 'r') as f:
+            yaml = _lazy_yaml()
             return yaml.safe_load(f)
     return None
 
@@ -409,18 +487,24 @@ def run(ctx, script_name, param):
                 _rich_info("Available scripts:")
                 scripts = _list_available_scripts()
                 
-                try:
-                    # Show available scripts in a table
-                    table = Table(show_header=False, box=None, padding=(0, 1))
-                    table.add_column("Icon", style="cyan")
-                    table.add_column("Script", style="highlight")
-                    table.add_column("Command", style="white")
-                    
-                    for name, command in scripts.items():
-                        table.add_row("  ", name, command)
-                    
-                    console.print(table)
-                except (ImportError, NameError):
+                console = _get_console()
+                if console:
+                    try:
+                        from rich.table import Table
+                        # Show available scripts in a table
+                        table = Table(show_header=False, box=None, padding=(0, 1))
+                        table.add_column("Icon", style="cyan")
+                        table.add_column("Script", style="highlight")
+                        table.add_column("Command", style="white")
+                        
+                        for name, command in scripts.items():
+                            table.add_row("  ", name, command)
+                        
+                        console.print(table)
+                    except Exception:
+                        for name, command in scripts.items():
+                            click.echo(f"  - {HIGHLIGHT}{name}{RESET}: {command}")
+                else:
                     for name, command in scripts.items():
                         click.echo(f"  - {HIGHLIGHT}{name}{RESET}: {command}")
                 sys.exit(1)
@@ -446,7 +530,7 @@ def run(ctx, script_name, param):
                 _rich_error("Script execution failed")
                 sys.exit(1)
                 
-            console.print() if 'console' in globals() else click.echo()
+            _rich_blank_line()
             _rich_success("Script executed successfully!", symbol="sparkles")
             
         except ImportError as ie:
@@ -553,7 +637,7 @@ def preview(ctx, script_name, param):
                     click.echo(f"  {compiled_command}")
                     _rich_info("AWD only compiles files ending with '.prompt.md' extension.")
                     
-            console.print() if 'console' in globals() else click.echo()
+            _rich_blank_line()
             _rich_success(f"Preview complete! Use 'awd run {script_name}' to execute.", symbol="sparkles")
             
         except ImportError:
@@ -591,23 +675,41 @@ def list(ctx):
         # Show default script if 'start' exists
         default_script = 'start' if 'start' in scripts else None
         
-        try:
-            # Create a nice table for scripts
-            table = Table(title="📋 Available Scripts", show_header=True, header_style="bold cyan")
-            table.add_column("", style="cyan", width=3)
-            table.add_column("Script", style="bold white", min_width=12)
-            table.add_column("Command", style="white")
-            
+        console = _get_console()
+        if console:
+            try:
+                from rich.table import Table
+                # Create a nice table for scripts
+                table = Table(title="📋 Available Scripts", show_header=True, header_style="bold cyan")
+                table.add_column("", style="cyan", width=3)
+                table.add_column("Script", style="bold white", min_width=12)
+                table.add_column("Command", style="white")
+                
+                for name, command in scripts.items():
+                    icon = STATUS_SYMBOLS["default"] if name == default_script else "  "
+                    table.add_row(icon, name, command)
+                
+                console.print(table)
+                
+                if default_script:
+                    console.print(f"\n[muted]{STATUS_SYMBOLS['info']} {STATUS_SYMBOLS['default']} = default script (runs when no script name specified)[/muted]")
+                    
+            except Exception:
+                # Fallback to simple output
+                _rich_info("Available scripts:")
+                for name, command in scripts.items():
+                    icon = STATUS_SYMBOLS["default"] if name == default_script else "  "
+                    click.echo(f"  {icon} {HIGHLIGHT}{name}{RESET}: {command}")
+                if default_script:
+                    click.echo(f"\n{STATUS_SYMBOLS['info']} {STATUS_SYMBOLS['default']} = default script")
+        else:
+            # Fallback to simple output
+            _rich_info("Available scripts:")
             for name, command in scripts.items():
                 icon = STATUS_SYMBOLS["default"] if name == default_script else "  "
-                table.add_row(icon, name, command)
-            
-            console.print(table)
-            
+                click.echo(f"  {icon} {HIGHLIGHT}{name}{RESET}: {command}")
             if default_script:
-                console.print(f"\n[muted]{STATUS_SYMBOLS['info']} {STATUS_SYMBOLS['default']} = default script (runs when no script name specified)[/muted]")
-                
-        except (ImportError, NameError):
+                click.echo(f"\n{STATUS_SYMBOLS['info']} {STATUS_SYMBOLS['default']} = default script")
             # Fallback to simple output
             _rich_info("Available scripts:")
             for name, command in scripts.items():
@@ -885,6 +987,7 @@ def _merge_existing_config(default_name):
     """Merge existing awd.yml with defaults for missing fields."""
     try:
         with open('awd.yml', 'r') as f:
+            yaml = _lazy_yaml()
             existing_config = yaml.safe_load(f) or {}
     except Exception:
         existing_config = {}
