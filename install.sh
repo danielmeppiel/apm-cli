@@ -47,11 +47,13 @@ esac
 case $OS in
     Darwin)
         PLATFORM="darwin"
-        DOWNLOAD_BINARY="awd-darwin-$ARCH"
+        DOWNLOAD_BINARY="awd-darwin-$ARCH.tar.gz"
+        EXTRACTED_DIR="awd-darwin-$ARCH"
         ;;
     Linux)
         PLATFORM="linux"
-        DOWNLOAD_BINARY="awd-linux-$ARCH"
+        DOWNLOAD_BINARY="awd-linux-$ARCH.tar.gz"
+        EXTRACTED_DIR="awd-linux-$ARCH"
         ;;
     *)
         echo -e "${RED}Error: Unsupported operating system: $OS${NC}"
@@ -96,7 +98,7 @@ trap "rm -rf $TMP_DIR" EXIT
 
 # Download binary
 echo -e "${YELLOW}Downloading AWD CLI...${NC}"
-if curl -L --fail --silent --show-error "$DOWNLOAD_URL" -o "$TMP_DIR/$BINARY_NAME"; then
+if curl -L --fail --silent --show-error "$DOWNLOAD_URL" -o "$TMP_DIR/$DOWNLOAD_BINARY"; then
     echo -e "${GREEN}✓ Download successful${NC}"
 else
     echo -e "${RED}Error: Failed to download AWD CLI${NC}"
@@ -112,12 +114,21 @@ else
     exit 1
 fi
 
+# Extract binary from tar.gz
+echo -e "${YELLOW}Extracting binary...${NC}"
+if tar -xzf "$TMP_DIR/$DOWNLOAD_BINARY" -C "$TMP_DIR"; then
+    echo -e "${GREEN}✓ Extraction successful${NC}"
+else
+    echo -e "${RED}Error: Failed to extract binary from archive${NC}"
+    exit 1
+fi
+
 # Make binary executable
-chmod +x "$TMP_DIR/$BINARY_NAME"
+chmod +x "$TMP_DIR/$EXTRACTED_DIR/$BINARY_NAME"
 
 # Test the binary
 echo -e "${YELLOW}Testing binary...${NC}"
-if "$TMP_DIR/$BINARY_NAME" --version >/dev/null 2>&1; then
+if "$TMP_DIR/$EXTRACTED_DIR/$BINARY_NAME" --version >/dev/null 2>&1; then
     echo -e "${GREEN}✓ Binary test successful${NC}"
 else
     echo -e "${RED}Error: Downloaded binary failed to run${NC}"
@@ -127,9 +138,9 @@ fi
 # Install binary
 echo -e "${YELLOW}Installing AWD CLI to $INSTALL_DIR...${NC}"
 if [ -w "$INSTALL_DIR" ]; then
-    cp "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+    cp "$TMP_DIR/$EXTRACTED_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 else
-    sudo cp "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+    sudo cp "$TMP_DIR/$EXTRACTED_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 fi
 
 # Verify installation
