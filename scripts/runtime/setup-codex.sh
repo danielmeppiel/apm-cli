@@ -77,8 +77,15 @@ setup_codex() {
         
         # Try to get the latest release tag using curl
         if command -v curl >/dev/null 2>&1; then
-            log_info "Using unauthenticated GitHub API request (60 requests/hour limit)"
-            latest_tag=$(curl -s "$latest_release_url" | grep '"tag_name":' | sed -E 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/')
+            # Use authenticated request if GITHUB_TOKEN is available
+            if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+                log_info "Using authenticated GitHub API request"
+                local auth_header="Authorization: Bearer ${GITHUB_TOKEN}"
+                latest_tag=$(curl -s -H "$auth_header" "$latest_release_url" | grep '"tag_name":' | sed -E 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/')
+            else
+                log_info "Using unauthenticated GitHub API request (60 requests/hour limit)"
+                latest_tag=$(curl -s "$latest_release_url" | grep '"tag_name":' | sed -E 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/')
+            fi
         else
             log_error "curl is required to fetch latest release information"
             exit 1
