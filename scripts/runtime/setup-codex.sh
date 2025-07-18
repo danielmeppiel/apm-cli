@@ -243,7 +243,12 @@ EOF
     log_info "Next steps:"
     if [[ "$VANILLA_MODE" == "false" ]]; then
         # Show MCP integration status and appropriate next steps
-        if [[ -n "${GITHUB_TOKEN:-}" ]] && check_docker_available; then
+        local docker_available=false
+        if check_docker_available; then
+            docker_available=true
+        fi
+        
+        if [[ -n "${GITHUB_TOKEN:-}" ]] && [[ "$docker_available" == "true" ]]; then
             echo "🚀 Ready to use AWD with GitHub integration!"
             echo "   - Run: awd run start --param name=YourName"
             echo ""
