@@ -1,12 +1,28 @@
 #!/bin/bash
 # Setup script for Codex runtime
 # Downloads Codex binary from GitHub releases and configures with GitHub Models
+# Automatically sets up GitHub MCP Server integration when GITHUB_TOKEN is available
 
 set -euo pipefail
 
 # Get the directory of this script for sourcing common utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/setup-common.sh"
+
+# Check if Docker is available for MCP server integration
+check_docker_available() {
+    if command -v docker >/dev/null 2>&1; then
+        if docker info >/dev/null 2>&1; then
+            return 0
+        else
+            log_warning "Docker is installed but not running"
+            return 1
+        fi
+    else
+        log_warning "Docker is not installed"
+        return 1
+    fi
+}
 
 # Configuration
 CODEX_REPO="openai/codex"
@@ -143,9 +159,43 @@ setup_codex() {
             mkdir -p "$codex_config_dir"
         fi
         
-        # Create Codex configuration for GitHub Models
-        log_info "Creating Codex configuration for GitHub Models (AWD default)..."
-        cat > "$codex_config" << 'EOF'
+        # Create Codex configuration for GitHub Models with MCP integration
+        log_info "Creating Codex configuration for GitHub Models with MCP (AWD default)..."
+        
+        # Check if GitHub token is available for MCP server setup
+        if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+            log_info "GITHUB_TOKEN found - checking Docker availability for MCP integration..."
+            
+            if check_docker_available; then
+                log_info "Docker is available - configuring GitHub MCP server integration..."
+                cat > "$codex_config" << EOF
+model_provider = "github-models"
+model = "gpt-4o-mini"
+
+[model_providers.github-models]
+name = "GitHub Models"
+base_url = "https://models.inference.ai.azure.com"
+env_key = "GITHUB_TOKEN"
+wire_api = "chat"
+
+# MCP Server Configuration
+[mcp_servers.github]
+command = "docker"
+args = [
+  "run",
+  "-i", 
+  "--rm",
+  "-e",
+  "GITHUB_PERSONAL_ACCESS_TOKEN",
+  "-e",
+  "GITHUB_TOOLSETS=context",
+  "ghcr.io/github/github-mcp-server"
+]
+env = { "GITHUB_PERSONAL_ACCESS_TOKEN" = "${GITHUB_TOKEN}" }
+EOF
+            else
+                log_warning "Docker not available - creating basic configuration without MCP integration"
+                cat > "$codex_config" << 'EOF'
 model_provider = "github-models"
 model = "gpt-4o-mini"
 
@@ -155,6 +205,20 @@ base_url = "https://models.inference.ai.azure.com"
 env_key = "GITHUB_TOKEN"
 wire_api = "chat"
 EOF
+            fi
+        else
+            log_warning "GITHUB_TOKEN not found - creating basic configuration without MCP integration"
+            cat > "$codex_config" << 'EOF'
+model_provider = "github-models"
+model = "gpt-4o-mini"
+
+[model_providers.github-models]
+name = "GitHub Models"
+base_url = "https://models.inference.ai.azure.com"
+env_key = "GITHUB_TOKEN"
+wire_api = "chat"
+EOF
+        fi
         
         log_success "Codex configuration created at $codex_config"
         log_info "AWD configured Codex with GitHub Models as default provider"
@@ -178,10 +242,32 @@ EOF
     echo ""
     log_info "Next steps:"
     if [[ "$VANILLA_MODE" == "false" ]]; then
-        echo "1. Set your GitHub token: export GITHUB_TOKEN=your_token_here"
-        echo "2. Then run with AWD: awd run start"
-        echo ""
-        log_info "GitHub Models provides free access to OpenAI models with your GitHub token"
+        # Show MCP integration status and appropriate next steps
+        if [[ -n "${GITHUB_TOKEN:-}" ]] && check_docker_available; then
+            echo "🚀 Ready to use AWD with GitHub integration!"
+            echo "   - Run: awd run start --param name=YourName"
+            echo ""
+            log_success "✨ GitHub MCP Server integration configured!"
+            echo "   - Your AWD scripts can now use GitHub tools like 'get_me', 'list_repos', etc."
+            echo "   - Docker is available and MCP server will work automatically"
+            echo "   - GitHub Models provides free access to OpenAI models with your GitHub token"
+        elif [[ -n "${GITHUB_TOKEN:-}" ]] && ! check_docker_available; then
+            echo "1. Install and start Docker to enable GitHub tools in AWD scripts"
+            echo "2. Re-run this script to enable MCP integration"
+            echo "3. Then run: awd run start --param name=YourName"
+            echo ""
+            log_warning "⚠️  GitHub MCP Server integration requires Docker"
+            echo "   - GITHUB_TOKEN is configured but Docker is not available"
+            echo "   - GitHub Models provides free access to OpenAI models with your GitHub token"
+        else
+            echo "1. Set your GitHub token: export GITHUB_TOKEN=your_token_here"
+            echo "2. Re-run this script to enable GitHub MCP integration"
+            echo "3. Then run: awd run start --param name=YourName"
+            echo ""
+            log_warning "⚠️  GitHub MCP Server integration not configured"
+            echo "   - Set GITHUB_TOKEN environment variable and ensure Docker is running"
+            echo "   - GitHub Models provides free access to OpenAI models with your GitHub token"
+        fi
     else
         echo "1. Configure Codex with your preferred provider (see: codex --help)"
         echo "2. Then run with AWD: awd run start"
