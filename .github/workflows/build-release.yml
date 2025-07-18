@@ -69,6 +69,8 @@ jobs:
         pytest tests/unit tests/test_console.py
 
     - name: Run smoke tests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         source .venv/bin/activate
         pytest tests/integration/test_runtime_smoke.py -v
