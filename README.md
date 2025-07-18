@@ -15,14 +15,16 @@
 
 > [!NOTE] 
 > **📋 Prerequisites**: Get a GitHub fine-grained Personal Access Token with **read-only Models permissions** at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
+>
+> **Optional**: Docker installed and running (enables automatic GitHub MCP Server integration with tools like `get_me`, `list_repos`, etc.)
 
 ```bash
 # 1. Install AWD CLI (zero dependencies)
 curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
 
-# 2. Setup AI runtime with GitHub Models (OpenAI Codex here)
-awd runtime setup codex
+# 2. Set your GitHub Personal Access token
 export GITHUB_TOKEN=your_token_here
+awd runtime setup codex
 
 # 3. Initialize your first AWD project (like npm init)
 awd init my-hello-world
@@ -39,14 +41,14 @@ awd run start --param name="Developer"
 
 AWD manages LLM runtime installation and configuration automatically:
 
-- **⚡ OpenAI Codex CLI** (recommended) - OpenAI's [`codex`](https://github.com/openai/codex) with advanced code understanding and native MCP support
+- **⚡ OpenAI Codex CLI** (recommended) - OpenAI's [`codex`](https://github.com/openai/codex) with advanced code understanding and native MCP support. Automatically configures GitHub MCP Server integration when GITHUB_TOKEN and Docker are available.
 - **🔧 LLM Library** - Simon Willison's [`llm`](https://llm.datasette.io/en/stable/index.html) with 100+ models from GitHub, OpenAI, Anthropic, local Ollama, and more
 
 ```bash
 # AWD manages runtime installation
-awd runtime setup codex        # Install Codex with GitHub Models
+awd runtime setup codex        # Install Codex with GitHub Models and GitHub MCP Server
 awd runtime setup llm          # Install LLM library  
-awd runtime list              # Show installed runtimes
+awd runtime list               # Show installed runtimes
 ```
 
 ## How It Works
@@ -246,7 +248,7 @@ cd awd-cli && pip install -e .
 
 ```bash
 # Quick start commands
-awd runtime setup codex                           # Install Codex runtime
+awd runtime setup codex                           # Install Codex with automatic GitHub MCP integration
 awd init my-project                               # Initialize new AWD project
 awd install                                       # Install dependencies
 awd run start --param key=value                   # Run start script
