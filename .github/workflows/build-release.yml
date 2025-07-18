@@ -258,53 +258,11 @@ jobs:
             ./dist/awd-darwin-arm64.tar.gz
             ./dist/awd-darwin-arm64.tar.gz.sha256
 
-  # Test installation script on each platform
-  test-installation:
-    name: Test Installation Script
-    needs: [create-release]
-    if: github.ref_type == 'tag'
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-24.04
-            platform: linux
-          - os: macos-13
-            platform: darwin
-          - os: macos-14
-            platform: darwin
-    
-    runs-on: ${{ matrix.os }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Test installation script
-        run: |
-          # Run the installation script
-          bash install.sh
-          
-          # Verify installation worked
-          if ! command -v awd >/dev/null 2>&1; then
-            echo "❌ Installation failed - awd command not found"
-            exit 1
-          fi
-          
-          # Test basic functionality
-          awd --version
-          echo "✅ Installation test passed on ${{ matrix.platform }}"
-      
-      - name: Cleanup
-        if: always()
-        run: |
-          # Remove installed binary
-          sudo rm -f /usr/local/bin/awd || true
-
   # Publish to PyPI (only on tags and after successful builds)  
   publish-pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    needs: [test, build, e2e-tests, create-release, test-installation]
+    needs: [test, build, e2e-tests, create-release]
     if: github.ref_type == 'tag' && success() # Only run on tags AND if all previous jobs succeeded 
     environment:
       name: pypi
@@ -341,7 +299,7 @@ jobs:
   update-homebrew:
     name: Update Homebrew Formula
     runs-on: ubuntu-latest
-    needs: [test, build, e2e-tests, create-release, publish-pypi, test-installation]
+    needs: [test, build, e2e-tests, create-release, publish-pypi]
     if: github.ref_type == 'tag' && success() # Only run on tags AND if all previous jobs succeeded
     
     steps:

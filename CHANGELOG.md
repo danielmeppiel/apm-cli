@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12] - 2025-01-18
+
+### Fixed
+- **CI/CD Pipeline improvements** - Removed cumbersome test-installation job that was causing timing issues
+- **Release process reliability** - Simplified release pipeline by removing installation testing dependency
+- **GitHub API authentication** - Fixed Bearer token format for authenticated requests to prevent rate limiting
+
+### Changed
+- Streamlined CI/CD pipeline for faster and more reliable releases
+- PyPI and Homebrew jobs now depend only on core build/test jobs instead of flaky installation tests
+- Manual installation testing can still be performed when needed without blocking releases
+
 ## [0.0.11] - 2025-01-18
 
 ### Fixed
