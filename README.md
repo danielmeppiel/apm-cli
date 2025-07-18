@@ -106,7 +106,7 @@ version: 1.0.0
 scripts:
   start: "codex analyze-logs.prompt.md"
   llm: "llm analyze-logs.prompt.md -m github/gpt-4o-mini"
-  debug: "DEBUG=true codex analyze-logs.prompt.md"
+  debug: "RUST_LOG=debug codex analyze-logs.prompt.md"
 dependencies:
   mcp:
     - ghcr.io/github/github-mcp-server
@@ -227,13 +227,13 @@ Download the binary for your platform from [GitHub Releases](https://github.com/
 
 ```bash
 # Linux x86_64
-curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-linux-x86_64 -o awd && chmod +x awd
+curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-linux-x86_64.tar.gz | tar -xz && sudo mv awd-linux-x86_64/awd /usr/local/bin/
 
 # macOS Intel
-curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-x86_64 -o awd && chmod +x awd
+curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-x86_64.tar.gz | tar -xz && sudo mv awd-darwin-x86_64/awd /usr/local/bin/
 
 # macOS Apple Silicon  
-curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-arm64 -o awd && chmod +x awd
+curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-arm64.tar.gz | tar -xz && sudo mv awd-darwin-arm64/awd /usr/local/bin/
 ```
 
 ### From Source (Developers)
@@ -258,6 +258,11 @@ awd run llm --param key=value                     # Run llm script
 awd run start                                     # Use default Codex runtime
 awd run llm --llm=github/gpt-4o-mini            # Use LLM with GitHub Models
 awd run debug --param key=value --verbose        # Debug with environment variables
+
+# Debug mode - see detailed execution logs
+RUST_LOG=debug awd run start --param name="Test"  # Enable Codex debug logging
+RUST_LOG=info awd run start --param name="Test"   # Enable Codex info logging  
+RUST_LOG=trace awd run start --param name="Test"  # Enable Codex trace logging (most verbose)
 ```
 
 ## Community

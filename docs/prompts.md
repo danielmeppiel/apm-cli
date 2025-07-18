@@ -243,7 +243,7 @@ awd preview start --param service_name=api-gateway --param time_window="1h"
 scripts:
   start: "codex analyze-logs.prompt.md"
   llm: "llm analyze-logs.prompt.md -m github/gpt-4o-mini"
-  debug: "DEBUG=true codex analyze-logs.prompt.md"
+  debug: "RUST_LOG=debug codex analyze-logs.prompt.md"
 ```
 
 ### Example Project Structure
@@ -277,7 +277,7 @@ scripts:
   llm: "llm analyze-logs.prompt.md -m github/gpt-4o-mini"
   
   # Debug script with environment variables
-  debug: "DEBUG=true VERBOSE=true codex analyze-logs.prompt.md"
+  debug: "RUST_LOG=debug codex analyze-logs.prompt.md"
   
   # Code review script
   review: "codex prompts/code-review.prompt.md"

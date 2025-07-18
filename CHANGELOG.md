@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.13] - 2025-01-19
+
+### Added
+- **Automatic GitHub MCP Server Integration** - Codex runtime setup now automatically configures GitHub MCP Server when GITHUB_TOKEN and Docker are available
+
+### Fixed
+- **Manual Installation Documentation** - Fixed incorrect binary download URLs in README.md to use proper `.tar.gz` archives with extraction steps
+- **Codex Debug Fix** - fixed the awd app template `debug` script to correctly setup Codex in debug mode
+
+### Documentation
+- **Enhanced Quick Start** - Updated README with clearer prerequisites and Docker requirement for full GitHub integration
+
 ## [0.0.12] - 2025-01-18
 
 ### Fixed

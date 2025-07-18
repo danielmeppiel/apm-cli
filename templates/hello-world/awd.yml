@@ -6,7 +6,7 @@ author: {{author}}
 scripts:
   start: "codex --skip-git-repo-check hello-world.prompt.md"
   llm: "llm hello-world.prompt.md -m github/gpt-4o-mini"
-  debug: "DEBUG=true codex --skip-git-repo-check hello-world.prompt.md"
+  debug: "RUST_LOG=debug codex --skip-git-repo-check hello-world.prompt.md"
 
 dependencies:
   mcp:

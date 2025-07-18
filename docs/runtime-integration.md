@@ -70,7 +70,7 @@ awd run debug --param service_name=api-gateway
 ```yaml
 scripts:
   start: "codex analyze-logs.prompt.md"
-  debug: "DEBUG=true codex analyze-logs.prompt.md"
+  debug: "RUST_LOG=debug codex analyze-logs.prompt.md"
 ```
 
 ## LLM Runtime
