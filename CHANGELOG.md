@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11] - 2025-01-18
+
+### Fixed
+- **Critical installation script fix** - Fixed 404 error when installing from GitHub releases
+- **Binary archive format** - Installation script now correctly downloads and extracts `.tar.gz` archives
+- **Cross-platform installation** - Proper handling of directory structure in release archives for Linux and macOS
+
+### Added
+- **Installation validation in CI** - Added automated testing of installation script on all supported platforms
+- **Release integrity checks** - CI now validates installation process before publishing to PyPI/Homebrew
+
+### Changed
+- Installation script now properly handles `.tar.gz` archives instead of raw binaries
+- Enhanced CI pipeline to catch installation issues before release
+- Improved error messages in installation script with better troubleshooting guidance
+
 ## [0.0.10] - 2025-06-30
 
 ### Fixed
@@ -164,4 +180,5 @@ awd install
 awd run --param name="Developer"
 ```
 
+[0.0.11]: https://github.com/danielmeppiel/awd-cli/releases/tag/v0.0.11
 [0.0.10]: https://github.com/danielmeppiel/awd-cli/releases/tag/v0.0.10

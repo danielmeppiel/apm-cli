@@ -70,8 +70,29 @@ setup_codex() {
     # Determine download URL for the tar.gz file
     local download_url
     if [[ "$CODEX_VERSION" == "latest" ]]; then
-        # Use the specific release tag that contains the rust binaries
-        download_url="https://github.com/$CODEX_REPO/releases/download/codex-rs-6a8a936f75ea44faf05ff4fab0c6a36fc970428d-1-rust-v0.0.2506261603/codex-$codex_platform.tar.gz"
+        # Fetch the latest release tag from GitHub API
+        log_info "Fetching latest Codex release information..."
+        local latest_release_url="https://api.github.com/repos/$CODEX_REPO/releases/latest"
+        local latest_tag
+        
+        # Try to get the latest release tag using curl
+        if command -v curl >/dev/null 2>&1; then
+            log_info "Using unauthenticated GitHub API request (60 requests/hour limit)"
+            latest_tag=$(curl -s "$latest_release_url" | grep '"tag_name":' | sed -E 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/')
+        else
+            log_error "curl is required to fetch latest release information"
+            exit 1
+        fi
+        
+        # Verify we got a valid tag
+        if [[ -z "$latest_tag" || "$latest_tag" == "null" ]]; then
+            log_error "Failed to fetch latest release tag from GitHub API"
+            log_error "No fallback available. Please check your internet connection or specify a specific version."
+            exit 1
+        fi
+        
+        log_info "Using Codex release: $latest_tag"
+        download_url="https://github.com/$CODEX_REPO/releases/download/$latest_tag/codex-$codex_platform.tar.gz"
     else
         download_url="https://github.com/$CODEX_REPO/releases/download/$CODEX_VERSION/codex-$codex_platform.tar.gz"
     fi
