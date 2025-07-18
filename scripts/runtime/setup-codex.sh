@@ -80,7 +80,7 @@ setup_codex() {
             # Use authenticated request if GITHUB_TOKEN is available
             if [[ -n "${GITHUB_TOKEN:-}" ]]; then
                 log_info "Using authenticated GitHub API request"
-                latest_tag=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$latest_release_url" | grep '"tag_name":' | sed -E 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/')
+                latest_tag=$(curl -s -H "Authorization: token \"$GITHUB_TOKEN\"" "$latest_release_url" | grep '"tag_name":' | sed -E 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/')
             else
                 log_info "Using unauthenticated GitHub API request (60 requests/hour limit)"
                 latest_tag=$(curl -s "$latest_release_url" | grep '"tag_name":' | sed -E 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/')
