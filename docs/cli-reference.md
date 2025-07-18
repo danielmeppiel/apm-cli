@@ -188,7 +188,7 @@ awd list
 Available scripts:
   start: codex hello-world.prompt.md
   llm: llm hello-world.prompt.md -m github/gpt-4o-mini  
-  debug: DEBUG=true codex hello-world.prompt.md
+  debug: RUST_LOG=debug codex hello-world.prompt.md
 ```
 
 ### `awd config` - ⚙️ Configure AWD CLI
@@ -323,7 +323,7 @@ author: Your Name
 scripts:
   start: "codex hello-world.prompt.md"
   llm: "llm hello-world.prompt.md -m github/gpt-4o-mini"
-  debug: "DEBUG=true codex hello-world.prompt.md"
+  debug: "RUST_LOG=debug codex hello-world.prompt.md"
 
 dependencies:
   mcp:
