@@ -256,7 +256,7 @@ EOF
             echo "   - Your AWD scripts can now use GitHub tools like 'get_me', 'list_repos', etc."
             echo "   - Docker is available and MCP server will work automatically"
             echo "   - GitHub Models provides free access to OpenAI models with your GitHub token"
-        elif [[ -n "${GITHUB_TOKEN:-}" ]] && ! check_docker_available; then
+        elif [[ -n "${GITHUB_TOKEN:-}" ]] && [[ "$docker_available" == "false" ]]; then
             echo "1. Install and start Docker to enable GitHub tools in AWD scripts"
             echo "2. Re-run this script to enable MCP integration"
             echo "3. Then run: awd run start --param name=YourName"
