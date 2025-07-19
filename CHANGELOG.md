@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.14] - 2025-01-19
+
+### Changed
+- **Python Version Standardization** - Standardized build environment to Python 3.12 for better Ubuntu 24.04 LTS compatibility
+- **Build System Optimization** - Updated CI/CD pipeline to use Python 3.12 for binary builds, resolving shared library issues on Ubuntu systems
+
+### Technical
+- Updated GitHub Actions workflow to use Python 3.12 consistently
+- Updated development tools (black, mypy) to target Python 3.12
+- Improved binary compatibility with Ubuntu 24.04 LTS default Python version
+
 ## [0.0.13] - 2025-01-19
 
 ### Added
