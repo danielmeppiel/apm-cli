@@ -1,7 +1,7 @@
 name: CI/CD Pipeline
 
 env:
-  PYTHON_VERSION: '3.13'  # Standardize on 3.13 for compatibility
+  PYTHON_VERSION: '3.12'  # Standardize on 3.12 for Ubuntu 24.04 LTS compatibility
 
 on:
   push:

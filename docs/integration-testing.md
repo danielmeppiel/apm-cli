@@ -137,7 +137,7 @@ All integration tests run on:
 - **macOS Intel**: macos-13 (x86_64) 
 - **macOS Apple Silicon**: macos-14 (arm64)
 
-**Python Version**: 3.13 (standardized across all environments)
+**Python Version**: 3.12 (standardized across all environments)
 **Package Manager**: uv (for fast dependency management and virtual environments)
 
 ## What the Tests Verify
