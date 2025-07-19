@@ -209,7 +209,7 @@ install_test_dependencies() {
     # Check if uv is available, otherwise use pip
     if command -v uv >/dev/null 2>&1; then
         log_info "Using uv for dependency installation..."
-        uv venv --python 3.13 || uv venv  # Try 3.13 first, fallback to default
+        uv venv --python 3.12 || uv venv  # Try 3.12 first, fallback to default
         source .venv/bin/activate
         uv pip install -e ".[dev]"
     else

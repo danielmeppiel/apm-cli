@@ -21,7 +21,7 @@ A clear and concise description of what you expected to happen.
 
 **Environment (please complete the following information):**
  - OS: [e.g. macOS, Linux, Windows]
- - Python Version: [e.g. 3.13.0]
+ - Python Version: [e.g. 3.12.0]
  - AWD-CLI Version: [e.g. 0.1.0]
  - VSCode Version (if relevant): [e.g. 1.80.0]
 
