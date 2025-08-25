@@ -191,6 +191,48 @@ Available scripts:
   debug: RUST_LOG=debug codex hello-world.prompt.md
 ```
 
+### `awd compile` - 📝 Compile AWD primitives into AGENTS.md
+
+Compile AWD primitives (chatmodes, instructions, contexts) into a single intelligent AGENTS.md file with conditional sections, markdown link resolution, and project setup auto-detection.
+
+```bash
+awd compile [OPTIONS]
+```
+
+**Options:**
+- `-o, --output TEXT` - Output file path (default: AGENTS.md)
+- `--chatmode TEXT` - Chatmode to prepend to the AGENTS.md file
+- `--dry-run` - Generate content without writing file
+- `--no-links` - Skip markdown link resolution
+
+**Examples:**
+```bash
+# Basic compilation with auto-detected primitives
+awd compile
+
+# Generate with specific chatmode
+awd compile --chatmode architect
+
+# Preview without writing file
+awd compile --dry-run
+
+# Custom output file
+awd compile --output docs/AI-CONTEXT.md
+```
+
+**Generated AGENTS.md structure:**
+- **Header** - Generation metadata and AWD version
+- **Pattern-based Sections** - Content grouped by exact `applyTo` patterns from instruction primitives (e.g., "Files matching `**/*.py`")
+- **Footer** - Regeneration instructions
+
+The structure is entirely dictated by the instruction primitives found in `.awd/` and `.github/instructions/` directories. No predefined sections or project detection are applied.
+
+**Primitive Discovery:**
+- **Chatmodes**: `.chatmode.md` files in `.awd/chatmodes/`, `.github/chatmodes/`
+- **Instructions**: `.instructions.md` files in `.awd/instructions/`, `.github/instructions/`
+- **Contexts**: `.context.md`, `.memory.md` files in `.awd/context/`, `.github/context/`
+- **Workflows**: `.prompt.md` files in project and `.github/prompts/`
+
 ### `awd config` - ⚙️ Configure AWD CLI
 
 Display AWD CLI configuration information.
