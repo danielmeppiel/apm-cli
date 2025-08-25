@@ -3,11 +3,22 @@ version: {{version}}
 description: {{description}}
 author: {{author}}
 
-scripts:
-  start: "codex --skip-git-repo-check hello-world.prompt.md"
-  llm: "llm hello-world.prompt.md -m github/gpt-4o-mini"
-  debug: "RUST_LOG=debug codex --skip-git-repo-check hello-world.prompt.md"
+# Compilation configuration
+compilation:
+  chatmode: "default"
+  include_workflows: true
+  include_setup: true
+  output: "AGENTS.md"
 
+# Enhanced scripts
+scripts:
+  start: "echo 'Hello, ${input:name}! Welcome to AWD with AGENTS.md compilation.'"
+  demo: "awd compile --dry-run"
+  watch: "awd compile --watch"
+  test: "echo 'Running tests...' && echo 'All tests passed!'"
+  feature: "awd run feature-implementation.prompt.md"
+
+# Dependencies
 dependencies:
   mcp:
     - ghcr.io/github/github-mcp-server
