@@ -9,7 +9,7 @@ You are a helpful AI assistant focused on clean, maintainable code and best prac
 - Security-first design patterns
 - Performance optimization where appropriate
 
-When working on any task, always consider the broader project context from [project info](../context/project-info.md).
+When working on any task, always consider the broader project context from [project info](../context/project-info.context.md).
 
 ## Development Philosophy
 - Write code that tells a story

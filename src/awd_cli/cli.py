@@ -332,26 +332,13 @@ def init(ctx, project_name, force, yes):
         # Create files from config
         _create_project_files(config)
         
-        # Show created files in a nice format
-        files = ["awd.yml", "hello-world.prompt.md", "README.md"]
-        console = _get_console()
-        _rich_info("Created files:")
-        if console:
-            try:
-                console.print(_create_files_table(files))
-            except Exception:
-                click.echo(_create_files_table(files))
-        else:
-            click.echo(_create_files_table(files))
-            
-        _rich_blank_line()
         _rich_success("AWD project initialized successfully!", symbol="sparkles")
         
         # Next steps with better formatting
         next_steps = [
-            f"1. {STATUS_SYMBOLS['gear']} awd install - Install dependencies",
-            f"2. {STATUS_SYMBOLS['running']} awd run start --param name=\"Your Name\" - Run the start script", 
-            f"3. {STATUS_SYMBOLS['info']} awd list - See all available scripts"
+            f"1. {STATUS_SYMBOLS['sparkles']} awd compile - Generate AGENTS.md from your primitives",
+            f"2. {STATUS_SYMBOLS['gear']} awd install - Install dependencies", 
+            f"3. {STATUS_SYMBOLS['running']} awd run start --param name=\"Your Name\" - Run the start script"
         ]
         
         try:
@@ -913,7 +900,8 @@ def _watch_mode(output, chatmode, no_links, dry_run):
         
     except ImportError:
         _rich_error("Watch mode requires the 'watchdog' library")
-        _rich_info("Install it with: pip install watchdog")
+        _rich_info("Install it with: uv pip install watchdog")
+        _rich_info("Or reinstall AWD CLI: uv pip install -e . (from the awd-cli directory)")
         sys.exit(1)
     except Exception as e:
         _rich_error(f"Error in watch mode: {e}")

@@ -29,4 +29,4 @@ description: "Testing guidelines and best practices"
 - Use realistic but safe test data
 - Clean up test data after each test
 
-See [project architecture](../context/architecture.md) for testing patterns.
+See [project architecture](../context/architecture.context.md) for testing patterns.

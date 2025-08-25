@@ -24,4 +24,4 @@ description: "Python development guidelines"
 - Maintain test coverage above 85%
 - Use linting tools (flake8, black, mypy)
 
-See [project architecture](../context/architecture.md) for detailed patterns.
+See [project architecture](../context/architecture.context.md) for detailed patterns.

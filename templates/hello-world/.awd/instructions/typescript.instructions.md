@@ -23,4 +23,4 @@ description: "TypeScript development guidelines"
 - Implement integration tests for API interactions
 - Achieve minimum 80% code coverage
 
-See [project architecture](../context/architecture.md) for detailed patterns.
+See [project architecture](../context/architecture.context.md) for detailed patterns.

@@ -1,47 +1,128 @@
-# Agentic Workflow Definitions (AWD)
+# AWD CLI
 
-**The NPM for AI-Native Development** - Natural language in Markdown is the new scripting language. Now you can build, package, share, and run Markdown agentic prompts and workflows across any LLM runtime. 
+**Engineering system for reliable AI coding agents.**
 
-**Think npm + Node.js, but for Natural Language (Markdown).**
+Generate production-ready `agents.md` files from **Agent Primitives** with advanced targeting, validation, and composition. Make your VSCode primitives portable across any AI coding agent.
 
-| Traditional Web Dev | AI-Native Development | Role |
-|---------------------|----------------------|------|
-| **npm** | **AWD Package Manager** | Dependency resolution, distribution |
-| **TypeScript Compiler** | **AWD Prompt Compiler** | Transform .prompt.md → runtime-ready format |
-| **Node.js** | **LLM Runtimes (codex/llm)** | Execute compiled artifacts |
-| **JavaScript** | **Natural Language** | What runtimes actually understand |
+## The Problem with AI Coding Agents Today
 
-## Quick Start (30 seconds)
+Every developer using AI coding agents (Codex CLI, Gemini CLI, Jules, RooCode) faces the same issues:
 
-> [!NOTE] 
-> **📋 Prerequisites**: Get a GitHub fine-grained Personal Access Token with **read-only Models permissions** at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
->
-> **Optional**: Docker installed and running (enables automatic GitHub MCP Server integration with tools like `get_me`, `list_repos`, etc.)
+- 🤖 **Unreliable interactions** - No engineering system, just raw prompting
+- 📄 **Manual agents.md maintenance** - Error-prone, inconsistent, hard to maintain  
+- 🔒 **Vendor lock-in** - VSCode primitives only work in VSCode
+- 🎯 **Poor targeting** - Same context for all file types (Python, React, tests, etc.)
+
+## See AWD in Action (30 seconds)
+
+**Transform Agent Primitives into production-ready agents.md:**
 
 ```bash
-# 1. Install AWD CLI (zero dependencies)
+# Install AWD CLI
 curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
 
-# 2. Set your GitHub Personal Access token
-export GITHUB_TOKEN=your_token_here
-awd runtime setup codex
+# Create Agent Primitives with examples
+awd init my-project
+cd my-project
 
-# 3. Initialize your first AWD project (like npm init)
-awd init my-hello-world
-
-# 4. Install and run (like npm install && npm start)
-cd my-hello-world
-awd install
-awd run start --param name="Developer"
+# Compile into agents.md with advanced targeting & validation
+awd compile
 ```
 
-**That's it!** You're now running AI prompt applications against an LLM runtime.
+**Result**: Production-ready `agents.md` that works reliably across all AI coding agents.
 
-## Supported Runtimes
+## VSCode Users: Make Your Agent Primitives Portable
 
-AWD manages LLM runtime installation and configuration automatically:
+**Using `.github/instructions/` or `.github/chatmodes/`?** AWD compiles them for any AI coding agent.
 
-- **⚡ OpenAI Codex CLI** (recommended) - OpenAI's [`codex`](https://github.com/openai/codex) with advanced code understanding and native MCP support. Automatically configures GitHub MCP Server integration when GITHUB_TOKEN and Docker are available.
+```bash
+# Works with your existing VSCode setup
+cd your-vscode-project
+awd compile  # Finds .github/ primitives, generates universal agents.md
+
+# Or migrate to enhanced .awd/ structure
+awd init --migrate-github  # Converts to .awd/ with advanced features
+```
+
+**For GitHub colleagues**: Turn your VSCode Agent Primitives into portable agents.md files.
+
+## How AWD Goes Beyond Basic Agents.md
+
+### 1. **Complete Agent Primitives System**
+```
+.awd/
+├── instructions/
+│   ├── python.instructions.md      # applyTo: "**/*.py"
+│   ├── react.instructions.md       # applyTo: "**/*.{tsx,jsx}"
+│   └── testing.instructions.md     # applyTo: "**/*{test,spec}*"
+├── chatmodes/
+│   ├── backend.chatmode.md         # AI personas for different roles
+│   └── frontend.chatmode.md        # Domain-specific expertise
+├── context/
+│   └── architecture.context.md     # System design context
+├── specs/
+│   └── oauth-feature.spec.md       # Implementation blueprints
+├── memory/
+│   └── lessons-learned.memory.md   # Preserved knowledge across sessions
+└── workflows/
+    └── implement-feature.prompt.md # Agentic Workflows for non-interactive execution
+```
+
+### 2. **Advanced Targeting with `applyTo`**
+```markdown
+---
+applyTo: "**/*.py"
+---
+# Python-specific standards (only shows for Python files)
+```
+
+### 3. **Engineering Reliability**
+```bash
+awd compile --validate  # Validates syntax before generation
+awd compile --watch     # Auto-regenerates on changes
+awd compile --chatmode backend  # Include specific AI persona
+```
+
+### 4. **Agentic Workflows: Complete Non-Interactive Processes**
+Execute complete development tasks through structured `.prompt.md` files across **any coding agent CLI**:
+
+```bash
+# Same workflow, different runtimes - AWD handles the translation
+awd run implement-oauth --param feature=oauth           # Uses Codex runtime
+awd run implement-oauth --param feature=oauth --runtime llm  # Uses LLM library
+awd run implement-oauth --param feature=oauth --runtime gemini # Uses Gemini CLI (future)
+```
+
+**Key Value**: Your `.prompt.md` workflows are **runtime-portable**. Write once, execute on any supported coding agent CLI through AWD's simple runtime API.
+
+```bash
+# AWD abstracts away runtime differences
+awd runtime setup codex     # OpenAI Codex with GitHub MCP integration
+awd runtime setup llm       # Simon Willison's LLM with 100+ models
+# Future: awd runtime setup gemini, jules, roocode...
+
+# Same workflow file works across all runtimes
+awd run debug-performance --param service=api --runtime codex
+awd run debug-performance --param service=api --runtime llm
+```
+
+Each Agentic Workflow orchestrates multiple Agent Primitives into systematic processes that work whether executed locally in your IDE or delegated to async Coding Agents - **regardless of which coding agent CLI you prefer**.
+
+## Works with All AI Coding Agents
+
+Your generated `agents.md` works with:
+- **Codex CLI** - OpenAI's coding agent
+- **Gemini CLI** - Google's coding agent  
+- **Jules** - Anthropic's coding agent
+- **RooCode** - Open source coding agent
+- **Any agent supporting [agents.md standard](https://agents.md)**
+
+## Advanced Features
+
+### Agentic Workflow Execution
+AWD supports multiple LLM runtimes for executing your `.prompt.md` Agentic Workflows:
+
+- **⚡ OpenAI Codex CLI** (recommended) - OpenAI's [`codex`](https://github.com/openai/codex) with advanced code understanding and native MCP support
 - **🔧 LLM Library** - Simon Willison's [`llm`](https://llm.datasette.io/en/stable/index.html) with 100+ models from GitHub, OpenAI, Anthropic, local Ollama, and more
 
 ```bash
@@ -49,109 +130,51 @@ AWD manages LLM runtime installation and configuration automatically:
 awd runtime setup codex        # Install Codex with GitHub Models and GitHub MCP Server
 awd runtime setup llm          # Install LLM library  
 awd runtime list               # Show installed runtimes
+
+# Execute Agentic Workflows across different runtimes
+awd run implement-oauth --param feature=oauth    # Uses default Codex runtime
+awd run llm --param feature=oauth               # Uses LLM library
 ```
 
-## How It Works
-
-**Initialize like npm:**
-
+### Package Management
 ```bash
-# Create new AWD project (like npm init)
-awd init my-app
+# Initialize like npm
+awd init my-project
 
-# Install MCP dependencies (like npm install)
-cd my-app && awd install
+# Install MCP dependencies  
+awd install
+
+# Manage like npm packages
 ```
 
-**Write prompts with MCP integration:**
-
-```markdown
----
-description: Analyzes application logs for errors
-mcp:
-  - ghcr.io/github/github-mcp-server
-input: [service_name, time_window]
----
-
-# Analyze Application Logs
-
-Analyze logs for ${input:service_name} over the last ${input:time_window}.
-
-## Instructions
-
-1. Use the **get_me** tool to identify the user
-2. Retrieve logs for the specified service and timeframe
-3. Identify ERROR and FATAL messages  
-4. Look for patterns and provide recommendations
-```
-
-**Run anywhere:**
-
-```bash
-# Run start script
-awd run start --param service_name=api --param time_window=1h
-
-# Run with different runtimes and models
-awd run start                                    # Uses codex (default) 
-awd run llm --param service_name=api            # Uses LLM 
-awd run debug --param service_name=api          # Uses codex with debug mode
-```
-
-**Manage like npm packages:**
-
+**Example awd.yml:**
 ```yaml
-# Project configuration (awd.yml)
-name: my-logging-app
+name: my-auth-service
 version: 1.0.0
 scripts:
-  start: "codex analyze-logs.prompt.md"
-  llm: "llm analyze-logs.prompt.md -m github/gpt-4o-mini"
-  debug: "RUST_LOG=debug codex analyze-logs.prompt.md"
+  start: "codex implement-feature.prompt.md"
+  debug: "RUST_LOG=debug codex implement-feature.prompt.md"
 dependencies:
   mcp:
     - ghcr.io/github/github-mcp-server
 ```
 
-## Beyond Simple Prompts: Composable Workflows
+## Why AWD?
 
-> [!WARNING]
-> Workflow composition and prompt chaining are part of the vision but not yet implemented. This is planned for Phase 3. Currently, AWD executes individual prompts only.
+**Engineering Infrastructure for AI Coding Agents**
 
-**Prompts can reference other prompts** to create powerful agentic workflows:
+Just as npm revolutionized JavaScript development by creating a package ecosystem, AWD creates the missing engineering infrastructure for reliable AI coding agent interactions.
 
-```markdown
----
-name: incident-response
-description: Complete incident response procedure
-input: [severity, affected_service]
----
+**The Problem**: AI coding agents support agents.md, but creating and maintaining quality agents.md files is manual, error-prone, and vendor-locked. We have the AI coding agents but lack the engineering system around them.
 
-# Incident Response
+**The AWD Solution**: Complete engineering toolchain for Agent Primitives and agents.md generation
 
-## Step 1: Initial Analysis
-Analyze logs using [analyze-logs](./analyze-logs.prompt.md) with ${service_name:${input:affected_service}} and ${time_window:1h}
-
-## Step 2: Determine Response
-Based on the log analysis results:
-- If severity is **CRITICAL**: escalate immediately and proceed to emergency response
-- If severity is **HIGH**: notify team using [alert-team](./alert-team.prompt.md) with ${service:${input:affected_service}} and ${severity:${input:severity}}
-- Otherwise: create standard incident ticket
-
-## Step 3: Emergency Response (Critical Only)
-**Ask for approval**: "Critical incident detected for ${input:affected_service}. Execute emergency procedures? (yes/no)"
-
-If approved:
-- Scale service using [scale-service](./scale-service.prompt.md) with ${service:${input:affected_service}} and ${action:scale-up}
-```
-
-Run it as any other prompt:
-```bash
-# Run complex agentic workflows  
-awd run start --param severity=HIGH --param affected_service=api-gateway
-
-# Preview compiled prompts for debugging
-awd preview start --param severity=HIGH --param affected_service=api-gateway
-```
+**Key Benefits**:
+- 🏗️ **Engineering Reliability** - Validation, targeting, composition vs manual agents.md maintenance
+- ✅ **Portability** - VSCode Agent Primitives work with any AI coding agent supporting agents.md
+- ✅ **Advanced Targeting** - `applyTo` patterns for file-specific context vs one-size-fits-all
+- ✅ **Complete System** - Instructions + Chat Modes + Agentic Workflows + Specs + Memory + Context
+- ✅ **Standards Compliant** - Works with the [agents.md ecosystem](https://agents.md)
 
 ## Philosophy: The AWD Manifesto
 
@@ -159,56 +182,38 @@ AWD follows our **[AWD Manifesto](MANIFESTO.md)** - core principles for AI-nativ
 
 - 🌐 **Portability over Vendor Lock-in** - Write once, run anywhere
 - 📝 **Natural Language over Code Complexity** - English beats any programming language  
-- ♻️ **Reusability over Reinvention** - Share prompts like code packages
+- ♻️ **Reusability over Reinvention** - Share Agent Primitives like code packages
 - 🔍 **Reliability over Magic** - Predictable, transparent execution
 - 🛠️ **Developer Experience over AI Sophistication** - Simple tools, powerful results
 
-## Why AWD?
-
-**Think NPM + Node.js, but for AI-Native Development**
-
-Just as npm revolutionized JavaScript development by creating a package ecosystem, AWD creates the missing infrastructure for AI-native applications written in Markdown.
-
-**The Problem**: We have the new programming language (natural language in markdown) but lack the essential tooling infrastructure. Every team reinvents their prompts, cannot share them, cannot distribute them, can't run them at scale. It's like having JavaScript syntax but no npm, Node.js, or package ecosystem.
-
-**The AWD Solution**: Complete the tooling stack for AI-native development
-
-**Key Benefits**:
-- 🏗️ **Infrastructure Layer** - AWD is the package manager, runtimes ([llm](https://github.com/simonw/llm), [codex](https://github.com/openai/codex)) are the execution engines
-- ✅ **Portable** - Same prompt runs on any LLM runtime (just like npm packages run on any Node.js version)
-- ✅ **Reusable** - Share prompts like code packages with versioning and dependencies
-- ✅ **Composable** - Prompts can reference other prompts to create complex workflows
-- ✅ **Tool-enabled** - Integrate with APIs via MCP servers, handled by your chosen runtime
-
-Just as npm enabled JavaScript's explosive growth, AWD enables the prompt-based application ecosystem to flourish.
-
 ## Architecture
-
 
 ```mermaid
 graph TD
-    A["📝 Prompts<br/>.prompt.md<br/>Natural Language Programs"] --> B["🔧 AWD CLI"]
+    A["📝 Agent Primitives<br/>.instructions.md, .chatmode.md<br/>.prompt.md, .spec.md, etc."] --> B["🔧 AWD CLI"]
     
     B --> D["📦 AWD Package Manager<br/>Dependencies<br/>Templates"]
-    B --> C["⚙️ AWD Prompt Compiler<br/>Script Resolution<br/>Prompt Compilation"]
+    B --> C["⚙️ AWD Agents Compiler<br/>agents.md Generation<br/>Validation & Targeting"]
     B --> E["🏗️ AWD Runtime Manager<br/>Install & Configure<br/>Codex, LLM, etc."]
     
-    C --> F["⚡ LLM Runtimes<br/>Codex (Rust)<br/>LLM (Python)"]
+    C --> F["📄 agents.md<br/>Production-Ready<br/>AI Coding Agent Context"]
+    E --> G["⚡ LLM Runtimes<br/>Codex (Rust)<br/>LLM (Python)"]
     
-    F --> G["🛠️ MCP Servers<br/>Tool Integration"]
-    F --> H["🧠 LLM Models<br/>GitHub Models<br/>Ollama, etc."]
+    F --> H["🤖 AI Coding Agents<br/>Codex CLI, Gemini CLI<br/>Jules, RooCode"]
+    G --> I["🛠️ MCP Servers<br/>Tool Integration"]
     
     style A fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
     style B fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px,color:#000
     style C fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
     style D fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
     style E fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
-    style F fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
-    style G fill:#e8f5e8,stroke:#388e3c,stroke-width:1px,color:#000
-    style H fill:#fff3e0,stroke:#ff9800,stroke-width:1px,color:#000
+    style F fill:#065f46,stroke:#047857,stroke-width:2.5px,color:#ffffff
+    style G fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    style H fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000
+    style I fill:#fff3e0,stroke:#ff9800,stroke-width:1px,color:#000
 ```
 
-**Key Insight**: AWD CLI provides three core components: Package Manager (dependencies), Prompt Compiler (script processing), and Runtime Manager (install/configure runtimes). LLM runtimes handle execution and call MCP servers for tool integration. 
+**Key Insight**: AWD CLI transforms Agent Primitives into production-ready agents.md files through compilation with advanced targeting and validation. The agents.md output works with any AI coding agent supporting the standard. 
 
 ## Installation
 
@@ -247,22 +252,25 @@ cd awd-cli && pip install -e .
 **Complete CLI Reference**: See [CLI Reference](docs/cli-reference.md) for detailed documentation.
 
 ```bash
-# Quick start commands
-awd runtime setup codex                           # Install Codex with automatic GitHub MCP integration
-awd init my-project                               # Initialize new AWD project
-awd install                                       # Install dependencies
-awd run start --param key=value                   # Run start script
-awd run llm --param key=value                     # Run llm script
+# Core agents.md compilation
+awd compile                                       # Generate agents.md from Agent Primitives
+awd compile --validate                           # Validate Agent Primitives syntax
+awd compile --watch                              # Auto-regenerate on changes
+awd compile --chatmode backend                   # Include specific AI persona
 
-# Runtime selection and options
-awd run start                                     # Use default Codex runtime
-awd run llm --llm=github/gpt-4o-mini            # Use LLM with GitHub Models
-awd run debug --param key=value --verbose        # Debug with environment variables
+# Project management
+awd init my-project                              # Initialize new AWD project with Agent Primitives
+awd install                                      # Install MCP dependencies
 
-# Debug mode - see detailed execution logs
-RUST_LOG=debug awd run start --param name="Test"  # Enable Codex debug logging
-RUST_LOG=info awd run start --param name="Test"   # Enable Codex info logging  
-RUST_LOG=trace awd run start --param name="Test"  # Enable Codex trace logging (most verbose)
+# Agentic Workflow execution (requires runtime setup)
+awd runtime setup codex                          # Install Codex runtime with GitHub MCP integration
+awd run implement-feature --param name="oauth"   # Execute .prompt.md Agentic Workflows
+awd run debug-issue --param service="api"        # Run diagnostic Agentic Workflows
+awd preview implement-feature                    # Preview compiled Agentic Workflow
+
+# Runtime management
+awd runtime list                                 # Show installed runtimes
+awd runtime status                              # Check active runtime
 ```
 
 ## Community
@@ -273,4 +281,4 @@ RUST_LOG=trace awd run start --param name="Test"  # Enable Codex trace logging (
 
 ---
 
-**AWD makes AI prompts as shareable and reusable as code packages.**
+**AWD makes Agent Primitives portable across any AI coding agent supporting agents.md.**

@@ -175,6 +175,19 @@ class AgentsCompiler:
                     # Treat validation errors as warnings instead of hard errors
                     # This allows compilation to continue with incomplete primitives
                     self.warnings.append(f"{file_path}: {error}")
+            
+            # Validate markdown links in each primitive's content using its own directory as base
+            if hasattr(primitive, 'content') and primitive.content:
+                primitive_dir = primitive.file_path.parent
+                link_errors = validate_link_targets(primitive.content, primitive_dir)
+                if link_errors:
+                    try:
+                        file_path = str(primitive.file_path.relative_to(self.base_dir))
+                    except ValueError:
+                        file_path = str(primitive.file_path)
+                    
+                    for link_error in link_errors:
+                        self.warnings.append(f"{file_path}: {link_error}")
         
         return errors
     
@@ -193,11 +206,6 @@ class AgentsCompiler:
         # Resolve markdown links if enabled
         if config.resolve_links:
             content = resolve_markdown_links(content, self.base_dir)
-            
-            # Validate link targets
-            link_errors = validate_link_targets(content, self.base_dir)
-            if link_errors:
-                self.warnings.extend(link_errors)
         
         return content
     

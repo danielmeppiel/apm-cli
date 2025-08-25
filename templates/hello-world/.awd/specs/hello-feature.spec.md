@@ -33,5 +33,5 @@ This specification defines the requirements for implementing a basic "Hello" fea
 
 ## Implementation Guidelines
 - Follow the testing guidelines from [testing instructions](../instructions/testing.instructions.md)
-- Implement using patterns from [architecture context](../context/architecture.md)
+- Implement using patterns from [architecture context](../context/architecture.context.md)
 - Ensure code quality meets standards in language-specific instructions
