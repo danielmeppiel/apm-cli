@@ -231,8 +231,6 @@ awd compile --output docs/AI-CONTEXT.md
 - **Footer** - Regeneration instructions
 
 The structure is entirely dictated by the instruction primitives found in `.awd/` and `.github/instructions/` directories. No predefined sections or project detection are applied.
-- **Java**: `pom.xml`, `build.gradle`
-- **PHP**: `composer.json`
 
 **Primitive Discovery:**
 - **Chatmodes**: `.chatmode.md` files in `.awd/chatmodes/`, `.github/chatmodes/`
