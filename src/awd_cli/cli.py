@@ -726,13 +726,10 @@ def list(ctx):
 
 @cli.command(help="📝 Compile AWD primitives into AGENTS.md")
 @click.option('--output', '-o', default="AGENTS.md", help="Output file path")
-@click.option('--chatmode', '-m', help="Specific chatmode to use")
-@click.option('--no-setup', is_flag=True, help="Skip project setup section")
-@click.option('--no-workflows', is_flag=True, help="Skip workflows section")
 @click.option('--dry-run', is_flag=True, help="Generate content without writing file")
 @click.option('--no-links', is_flag=True, help="Skip markdown link resolution")
 @click.pass_context
-def compile(ctx, output, chatmode, no_setup, no_workflows, dry_run, no_links):
+def compile(ctx, output, dry_run, no_links):
     """Compile AWD primitives into a single AGENTS.md file."""
     try:
         # Import here to avoid circular imports and improve startup time
@@ -743,9 +740,6 @@ def compile(ctx, output, chatmode, no_setup, no_workflows, dry_run, no_links):
         # Create configuration
         config = CompilationConfig(
             output_path=output,
-            chatmode=chatmode,
-            include_setup=not no_setup,
-            include_workflows=not no_workflows,
             resolve_links=not no_links,
             dry_run=dry_run
         )
@@ -781,10 +775,8 @@ def compile(ctx, output, chatmode, no_setup, no_workflows, dry_run, no_links):
                 # Show statistics
                 stats = result.stats
                 _rich_info(f"Processed {stats.get('primitives_found', 0)} primitives:")
-                _rich_info(f"  • {stats.get('chatmodes', 0)} chatmodes")
                 _rich_info(f"  • {stats.get('instructions', 0)} instructions")
                 _rich_info(f"  • {stats.get('contexts', 0)} contexts")
-                _rich_info(f"  • {stats.get('workflows', 0)} workflows")
                 
                 # Show next steps
                 try:

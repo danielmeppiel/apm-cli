@@ -9,12 +9,9 @@ from ..primitives.discovery import discover_primitives
 from ..version import get_version
 from .template_builder import (
     build_conditional_sections,
-    build_chatmode_sections,
-    build_workflow_listing,
     generate_agents_md_template,
     TemplateData
 )
-from .project_detector import auto_detect_setup_commands, generate_setup_section
 from .link_resolver import resolve_markdown_links, validate_link_targets
 
 
@@ -23,11 +20,8 @@ class CompilationConfig:
     """Configuration for AGENTS.md compilation."""
     output_path: str = "AGENTS.md"
     chatmode: Optional[str] = None
-    include_workflows: bool = True
-    include_setup: bool = True
     resolve_links: bool = True
     dry_run: bool = False
-    watch_mode: bool = False
 
 
 @dataclass
@@ -173,61 +167,18 @@ class AgentsCompiler:
         Returns:
             TemplateData: Template data for generation.
         """
-        # Build chatmode content
-        chatmode_content = build_chatmode_sections(primitives.chatmodes, config.chatmode)
-        
-        # Build setup content
-        setup_content = ""
-        if config.include_setup:
-            setup_commands = auto_detect_setup_commands(str(self.base_dir))
-            setup_content = generate_setup_section(setup_commands)
-        
         # Build instructions content
         instructions_content = build_conditional_sections(primitives.instructions)
-        
-        # Build workflows content
-        workflows_content = ""
-        if config.include_workflows:
-            prompt_files = self._discover_workflow_files()
-            workflows_content = build_workflow_listing(prompt_files)
         
         # Generate metadata
         timestamp = datetime.datetime.now().isoformat()
         version = get_version()
         
         return TemplateData(
-            chatmode_content=chatmode_content,
-            setup_content=setup_content,
             instructions_content=instructions_content,
-            workflows_content=workflows_content,
             timestamp=timestamp,
             version=version
         )
-    
-    def _discover_workflow_files(self) -> List[Path]:
-        """Discover .prompt.md files in the project.
-        
-        Returns:
-            List[Path]: List of prompt files found.
-        """
-        prompt_files = []
-        
-        # Search patterns for prompt files
-        search_patterns = [
-            "**/*.prompt.md",
-            ".github/prompts/*.md",
-            ".awd/prompts/*.md"
-        ]
-        
-        for pattern in search_patterns:
-            for file_path in self.base_dir.glob(pattern):
-                if file_path.is_file() and file_path not in prompt_files:
-                    prompt_files.append(file_path)
-        
-        # Sort by name for consistent output
-        prompt_files.sort(key=lambda p: p.name)
-        
-        return prompt_files
     
     def _write_output_file(self, output_path: str, content: str) -> None:
         """Write the generated content to the output file.
@@ -257,11 +208,7 @@ class AgentsCompiler:
             "chatmodes": len(primitives.chatmodes),
             "instructions": len(primitives.instructions),
             "contexts": len(primitives.contexts),
-            "workflows": len(self._discover_workflow_files()),
-            "content_length": len(template_data.chatmode_content + 
-                                template_data.setup_content + 
-                                template_data.instructions_content + 
-                                template_data.workflows_content),
+            "content_length": len(template_data.instructions_content),
             "timestamp": template_data.timestamp,
             "version": template_data.version
         }
