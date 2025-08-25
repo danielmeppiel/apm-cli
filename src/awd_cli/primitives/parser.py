@@ -172,20 +172,17 @@ def _extract_primitive_name(file_path: Path) -> str:
 
 
 def _is_context_file(file_path: Path) -> bool:
-    """Check if a file should be treated as a context file.
+    """Check if a file should be treated as a context file based on its directory.
     
     Args:
         file_path (Path): Path to check.
     
     Returns:
-        bool: True if file should be treated as context.
+        bool: True if file is in .awd/memory/ or .github/memory/ directory.
     """
-    # Files in memory/ directories, with .context.md/.memory.md extension, or in context directories
-    path_parts = file_path.parts
-    return ('memory' in path_parts or 
-            file_path.name.endswith('.context.md') or
-            file_path.name.endswith('.memory.md') or
-            (file_path.name.endswith('.md') and 'context' in path_parts))
+    # Only files directly under .awd/memory/ or .github/memory/ are considered context files here
+    parent_parts = file_path.parent.parts[-2:]  # Get last two parts of parent path
+    return parent_parts in [('.awd', 'memory'), ('.github', 'memory')]
 
 
 def validate_primitive(primitive: Primitive) -> List[str]:
