@@ -201,9 +201,7 @@ awd compile [OPTIONS]
 
 **Options:**
 - `-o, --output TEXT` - Output file path (default: AGENTS.md)
-- `-m, --chatmode TEXT` - Specific chatmode to use (default: auto-detect)
-- `--no-setup` - Skip project setup section
-- `--no-workflows` - Skip workflows section  
+- `--chatmode TEXT` - Chatmode to prepend to the AGENTS.md file
 - `--dry-run` - Generate content without writing file
 - `--no-links` - Skip markdown link resolution
 
@@ -217,9 +215,6 @@ awd compile --chatmode architect
 
 # Preview without writing file
 awd compile --dry-run
-
-# Minimal output without setup and workflows
-awd compile --no-setup --no-workflows
 
 # Custom output file
 awd compile --output docs/AI-CONTEXT.md
