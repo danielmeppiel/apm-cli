@@ -40,7 +40,17 @@ def build_conditional_sections(instructions: List[Instruction]) -> str:
         for instruction in pattern_instructions:
             content = instruction.content.strip()
             if content:
+                # Add source file comment before the content
+                try:
+                    # Try to get relative path for cleaner display
+                    relative_path = instruction.file_path.relative_to(Path.cwd())
+                except ValueError:
+                    # Fall back to absolute path if relative fails
+                    relative_path = instruction.file_path
+                
+                sections.append(f"<!-- Source: {relative_path} -->")
                 sections.append(content)
+                sections.append(f"<!-- End source: {relative_path} -->")
                 sections.append("")
     
     return "\n".join(sections)

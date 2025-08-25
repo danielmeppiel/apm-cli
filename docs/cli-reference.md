@@ -227,17 +227,10 @@ awd compile --output docs/AI-CONTEXT.md
 
 **Generated AGENTS.md structure:**
 - **Header** - Generation metadata and AWD version
-- **Development Approach** - From selected chatmode primitive
-- **Project Setup** - Auto-detected commands for the project type
-- **Development Guidelines** - Conditional sections from instruction primitives
-- **Available Workflows** - Discovered .prompt.md files
+- **Pattern-based Sections** - Content grouped by exact `applyTo` patterns from instruction primitives (e.g., "Files matching `**/*.py`")
 - **Footer** - Regeneration instructions
 
-**Project Setup Detection:**
-- **Python**: `pyproject.toml`, `requirements.txt`, Poetry, Pipenv
-- **Node.js**: `package.json`, npm/yarn/pnpm lock files  
-- **Rust**: `Cargo.toml`
-- **Go**: `go.mod`
+The structure is entirely dictated by the instruction primitives found in `.awd/` and `.github/instructions/` directories. No predefined sections or project detection are applied.
 - **Java**: `pom.xml`, `build.gradle`
 - **PHP**: `composer.json`
 
