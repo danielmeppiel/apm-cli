@@ -1,5 +1,6 @@
 """Unit tests for the simplified compilation module."""
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -270,6 +271,52 @@ class TestAgentsCompiler(unittest.TestCase):
         self.assertIn("Chatmode 'nonexistent' not found", result.warnings)
         # Should not contain chatmode content since it wasn't found
         self.assertNotIn("You are a test assistant.", result.content)
+
+
+class TestCLIIntegration(unittest.TestCase):
+    """Test CLI-specific functionality for the compile command."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.temp_dir = tempfile.mkdtemp()
+        self.original_cwd = Path.cwd()
+        os.chdir(self.temp_dir)
+    
+    def tearDown(self):
+        """Clean up test fixtures."""
+        os.chdir(self.original_cwd)
+        import shutil
+        shutil.rmtree(self.temp_dir)
+    
+    def test_validate_mode_with_valid_primitives(self):
+        """Test validation mode with valid primitives."""
+        from awd_cli.cli import _display_validation_errors, _get_validation_suggestion
+        
+        # Test validation suggestion function
+        suggestion = _get_validation_suggestion("Missing 'description' in frontmatter")
+        self.assertIn("Add 'description:", suggestion)
+        
+        suggestion = _get_validation_suggestion("Missing 'applyTo' in frontmatter")
+        self.assertIn("Add 'applyTo:", suggestion)
+        
+        suggestion = _get_validation_suggestion("Empty content")
+        self.assertIn("Add markdown content", suggestion)
+    
+    def test_validation_error_display(self):
+        """Test validation error display functionality."""
+        from awd_cli.cli import _display_validation_errors
+        
+        # Test with mock errors
+        errors = [
+            "test.md: Missing 'description' in frontmatter",
+            "other.md: Empty content"
+        ]
+        
+        # This should not raise an exception
+        try:
+            _display_validation_errors(errors)
+        except Exception as e:
+            self.fail(f"_display_validation_errors raised an exception: {e}")
 
 
 if __name__ == '__main__':

@@ -204,6 +204,8 @@ awd compile [OPTIONS]
 - `--chatmode TEXT` - Chatmode to prepend to the AGENTS.md file
 - `--dry-run` - Generate content without writing file
 - `--no-links` - Skip markdown link resolution
+- `--watch` - Auto-regenerate on changes (file system monitoring)
+- `--validate` - Validate primitives without compiling
 
 **Examples:**
 ```bash
@@ -218,7 +220,29 @@ awd compile --dry-run
 
 # Custom output file
 awd compile --output docs/AI-CONTEXT.md
+
+# Validate primitives without generating output
+awd compile --validate
+
+# Watch for changes and auto-recompile (development mode)
+awd compile --watch
+
+# Watch mode with dry-run for testing
+awd compile --watch --dry-run
 ```
+
+**Watch Mode:**
+- Monitors `.awd/`, `.github/instructions/`, `.github/chatmodes/` directories
+- Auto-recompiles when `.md` or `awd.yml` files change
+- Includes 1-second debounce to prevent rapid recompilation
+- Press Ctrl+C to stop watching
+- Requires `watchdog` library (automatically installed)
+
+**Validation Mode:**
+- Checks primitive structure and frontmatter completeness
+- Displays actionable suggestions for fixing validation errors
+- Exits with error code 1 if validation fails
+- No output file generation in validation-only mode
 
 **Generated AGENTS.md structure:**
 - **Header** - Generation metadata and AWD version
