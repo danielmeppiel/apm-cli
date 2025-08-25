@@ -1116,6 +1116,9 @@ def _get_default_config(project_name):
 
 def _create_project_files(config):
     """Create project files from configuration."""
+    import os
+    import shutil
+    
     # Create awd.yml
     awd_yml_content = _load_template_file('hello-world', 'awd.yml', 
                                           project_name=config['name'],
@@ -1136,6 +1139,38 @@ def _create_project_files(config):
                                          project_name=config['name'])
     with open('README.md', 'w') as f:
         f.write(readme_content)
+    
+    # Create feature-implementation.prompt.md from template
+    feature_content = _load_template_file('hello-world', 'feature-implementation.prompt.md',
+                                          project_name=config['name'])
+    with open('feature-implementation.prompt.md', 'w') as f:
+        f.write(feature_content)
+    
+    # Create .awd directory structure with all primitive files
+    template_dir = _get_template_dir()
+    template_awd_dir = template_dir / 'hello-world' / '.awd'
+    
+    if template_awd_dir.exists():
+        # Copy the entire .awd directory structure
+        shutil.copytree(template_awd_dir, '.awd')
+        
+        # Process any template files in the .awd directory that need variable substitution
+        _process_awd_template_files(config)
+
+
+def _process_awd_template_files(config):
+    """Process .awd template files that need variable substitution."""
+    # Process project-info.context.md which contains {{project_name}}
+    context_file = Path('.awd/context/project-info.context.md')
+    if context_file.exists():
+        with open(context_file, 'r') as f:
+            content = f.read()
+        
+        # Substitute template variables
+        content = content.replace('{{project_name}}', config['name'])
+        
+        with open(context_file, 'w') as f:
+            f.write(content)
 
 
 def main():
