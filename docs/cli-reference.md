@@ -14,7 +14,7 @@ export GITHUB_TOKEN=your_github_token
 
 # 3. Create and run project  
 awd init my-project && cd my-project
-awd install && awd run start --param name="Developer"
+awd compile && awd install && awd run start --param name="Developer"
 ```
 
 ## Installation
@@ -94,9 +94,15 @@ awd init my-project --yes
 - **Strictly additive**: Like npm, preserves existing fields and values where possible
 
 **Creates:**
-- `awd.yml` - Project configuration with MCP dependencies
-- `hello-world.prompt.md` - Sample prompt with GitHub integration
-- `README.md` - Project documentation
+- `awd.yml` - Project configuration with MCP dependencies and compilation settings
+- `hello-world.prompt.md` - Sample prompt with GitHub integration  
+- `feature-implementation.prompt.md` - Feature development workflow
+- `README.md` - Project documentation with compilation examples
+- `.awd/` directory with AWD primitives:
+  - `chatmodes/` - AI assistant personalities (default, backend-engineer)
+  - `instructions/` - File-type specific coding guidelines (TypeScript, Python, testing)
+  - `context/` - Shared project knowledge (project info, architecture)
+  - `specs/` - Feature specifications and requirements
 
 ### `awd install` - 📦 Install dependencies
 
