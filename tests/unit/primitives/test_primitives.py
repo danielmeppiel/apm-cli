@@ -279,7 +279,7 @@ This project is a command-line tool for managing AI workflows.
         
         # Test memory files
         self.assertEqual(
-            _extract_primitive_name(Path(".awd/memory/team-info.md")),
+            _extract_primitive_name(Path(".awd/memory/team-info.memory.md")),
             "team-info"
         )
         

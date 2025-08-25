@@ -38,7 +38,7 @@ def parse_primitive_file(file_path: Union[str, Path]) -> Primitive:
             return _parse_chatmode(name, file_path, metadata, content)
         elif file_path.name.endswith('.instructions.md'):
             return _parse_instruction(name, file_path, metadata, content)
-        elif file_path.name.endswith('.context.md') or _is_context_file(file_path):
+        elif file_path.name.endswith('.context.md') or file_path.name.endswith('.memory.md') or _is_context_file(file_path):
             return _parse_context(name, file_path, metadata, content)
         else:
             raise ValueError(f"Unknown primitive file type: {file_path}")
@@ -147,6 +147,8 @@ def _extract_primitive_name(file_path: Path) -> str:
                     return basename.replace('.instructions.md', '')
                 elif basename.endswith('.context.md'):
                     return basename.replace('.context.md', '')
+                elif basename.endswith('.memory.md'):
+                    return basename.replace('.memory.md', '')
                 elif basename.endswith('.md'):
                     return basename.replace('.md', '')
         except (ValueError, IndexError):
@@ -160,6 +162,8 @@ def _extract_primitive_name(file_path: Path) -> str:
         return basename.replace('.instructions.md', '')
     elif basename.endswith('.context.md'):
         return basename.replace('.context.md', '')
+    elif basename.endswith('.memory.md'):
+        return basename.replace('.memory.md', '')
     elif basename.endswith('.md'):
         return basename.replace('.md', '')
     
@@ -176,10 +180,11 @@ def _is_context_file(file_path: Path) -> bool:
     Returns:
         bool: True if file should be treated as context.
     """
-    # Files in memory/ directories or with .context.md extension
+    # Files in memory/ directories, with .context.md/.memory.md extension, or in context directories
     path_parts = file_path.parts
     return ('memory' in path_parts or 
             file_path.name.endswith('.context.md') or
+            file_path.name.endswith('.memory.md') or
             (file_path.name.endswith('.md') and 'context' in path_parts))
 
 

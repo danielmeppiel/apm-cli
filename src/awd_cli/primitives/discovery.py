@@ -12,7 +12,7 @@ from .parser import parse_primitive_file
 def discover_primitives(base_dir: str = ".") -> PrimitiveCollection:
     """Find all AWD primitive files in the project.
     
-    Searches for .chatmode.md, .instructions.md, and .context.md files
+    Searches for .chatmode.md, .instructions.md, .context.md, and .memory.md files
     in both .awd/ and .github/ directory structures.
     
     Args:
@@ -37,10 +37,11 @@ def discover_primitives(base_dir: str = ".") -> PrimitiveCollection:
         ],
         'context': [
             "**/.awd/context/*.context.md",
-            "**/.awd/memory/*.md",  # AWD memory convention
+            "**/.awd/memory/*.memory.md",  # AWD memory convention
             "**/.github/context/*.context.md",
-            "**/.github/memory/*.md",  # VSCode compatibility
-            "**/*.context.md"  # Generic .context.md files
+            "**/.github/memory/*.memory.md",  # VSCode compatibility
+            "**/*.context.md",  # Generic .context.md files
+            "**/*.memory.md"  # Generic .memory.md files
         ]
     }
     

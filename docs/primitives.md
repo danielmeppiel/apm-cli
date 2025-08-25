@@ -8,7 +8,7 @@ The AWD CLI supports three types of primitives:
 
 - **Chatmodes** (`.chatmode.md`) - Define AI assistant personalities and behaviors
 - **Instructions** (`.instructions.md`) - Provide coding standards and guidelines for specific file types
-- **Context** (`.context.md`, memory files) - Supply background information and project context
+- **Context** (`.context.md`, `.memory.md`) - Supply background information and project context
 
 ## File Structure
 
@@ -26,7 +26,7 @@ AWD discovers primitives in these locations:
 ├── context/            # Project context files
 │   └── *.context.md
 └── memory/             # Team info, contacts, etc.
-    └── *.md
+    └── *.memory.md
 
 # VSCode-compatible structure  
 .github/
@@ -39,6 +39,7 @@ AWD discovers primitives in these locations:
 *.chatmode.md
 *.instructions.md
 *.context.md
+*.memory.md
 ```
 
 ## Primitive Types
@@ -133,7 +134,7 @@ def calculate_metrics(data: List[Dict], threshold: float = 0.5) -> Dict[str, flo
 
 Context files provide background information, project details, and other relevant context that AI assistants should be aware of.
 
-**Format:** `.context.md` or `.md` files in memory directories
+**Format:** `.context.md` or `.memory.md` files
 
 **Frontmatter:**
 - `description` (optional) - Brief description of the context
@@ -164,7 +165,7 @@ Command-line tool for AI-powered development workflows.
 - Extensible primitive system
 ```
 
-Team information (`.awd/memory/team-contacts.md`):
+Team information (`.awd/memory/team-contacts.memory.md`):
 ```markdown
 # Team Contacts
 
