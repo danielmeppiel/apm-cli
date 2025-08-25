@@ -724,25 +724,254 @@ def list(ctx):
         sys.exit(1)
 
 
+def _display_validation_errors(errors):
+    """Display validation errors in a Rich table with actionable feedback."""
+    try:
+        console = _get_console()
+        if console:
+            from rich.table import Table
+            
+            error_table = Table(title="❌ Primitive Validation Errors", show_header=True, header_style="bold red")
+            error_table.add_column("File", style="bold red", min_width=20)
+            error_table.add_column("Error", style="white", min_width=30)
+            error_table.add_column("Suggestion", style="yellow", min_width=25)
+            
+            for error in errors:
+                file_path = str(error) if hasattr(error, '__str__') else "Unknown"
+                # Extract file path from error string if it contains file info
+                if ":" in file_path:
+                    parts = file_path.split(":", 1)
+                    file_name = parts[0] if len(parts) > 1 else "Unknown"
+                    error_msg = parts[1].strip() if len(parts) > 1 else file_path
+                else:
+                    file_name = "Unknown"
+                    error_msg = file_path
+                
+                # Provide actionable suggestions based on error type
+                suggestion = _get_validation_suggestion(error_msg)
+                error_table.add_row(file_name, error_msg, suggestion)
+            
+            console.print(error_table)
+            return
+        
+    except (ImportError, NameError):
+        pass
+    
+    # Fallback to simple text output
+    _rich_error("Validation errors found:")
+    for error in errors:
+        click.echo(f"  ❌ {error}")
+
+
+def _get_validation_suggestion(error_msg):
+    """Get actionable suggestions for validation errors."""
+    if "Missing 'description'" in error_msg:
+        return "Add 'description: Your description here' to frontmatter"
+    elif "Missing 'applyTo'" in error_msg:
+        return "Add 'applyTo: \"**/*.py\"' to frontmatter"
+    elif "Empty content" in error_msg:
+        return "Add markdown content below the frontmatter"
+    else:
+        return "Check primitive structure and frontmatter"
+
+
+def _watch_mode(output, chatmode, no_links, dry_run):
+    """Watch for changes in .awd/ directories and auto-recompile."""
+    try:
+        # Try to import watchdog for file system monitoring
+        from watchdog.observers import Observer
+        from watchdog.events import FileSystemEventHandler
+        import time
+        
+        class AWDFileHandler(FileSystemEventHandler):
+            def __init__(self, output, chatmode, no_links, dry_run):
+                self.output = output
+                self.chatmode = chatmode
+                self.no_links = no_links
+                self.dry_run = dry_run
+                self.last_compile = 0
+                self.debounce_delay = 1.0  # 1 second debounce
+                
+            def on_modified(self, event):
+                if event.is_directory:
+                    return
+                    
+                # Check if it's a relevant file
+                if (event.src_path.endswith('.md') or 
+                    event.src_path.endswith('awd.yml')):
+                    
+                    # Debounce rapid changes
+                    current_time = time.time()
+                    if current_time - self.last_compile < self.debounce_delay:
+                        return
+                    
+                    self.last_compile = current_time
+                    self._recompile(event.src_path)
+            
+            def _recompile(self, changed_file):
+                """Recompile after file change."""
+                try:
+                    _rich_info(f"File changed: {changed_file}", symbol="eyes")
+                    _rich_info("Recompiling...", symbol="gear")
+                    
+                    # Import compilation modules
+                    from .compilation import AgentsCompiler, CompilationConfig
+                    
+                    # Create configuration from awd.yml with overrides
+                    config = CompilationConfig.from_awd_yml(
+                        output_path=self.output if self.output != "AGENTS.md" else None,
+                        chatmode=self.chatmode,
+                        resolve_links=not self.no_links if self.no_links else None,
+                        dry_run=self.dry_run
+                    )
+                    
+                    # Create compiler and compile
+                    compiler = AgentsCompiler(".")
+                    result = compiler.compile(config)
+                    
+                    if result.success:
+                        if self.dry_run:
+                            _rich_success("Recompilation successful (dry run)", symbol="sparkles")
+                        else:
+                            _rich_success(f"Recompiled to {result.output_path}", symbol="sparkles")
+                    else:
+                        _rich_error("Recompilation failed")
+                        for error in result.errors:
+                            click.echo(f"  ❌ {error}")
+                    
+                except Exception as e:
+                    _rich_error(f"Error during recompilation: {e}")
+        
+        # Set up file watching
+        event_handler = AWDFileHandler(output, chatmode, no_links, dry_run)
+        observer = Observer()
+        
+        # Watch patterns for AWD files
+        watch_paths = []
+        
+        # Check for .awd directory
+        if Path(".awd").exists():
+            observer.schedule(event_handler, ".awd", recursive=True)
+            watch_paths.append(".awd/")
+        
+        # Check for .github/instructions and chatmodes
+        if Path(".github/instructions").exists():
+            observer.schedule(event_handler, ".github/instructions", recursive=True)
+            watch_paths.append(".github/instructions/")
+            
+        if Path(".github/chatmodes").exists():
+            observer.schedule(event_handler, ".github/chatmodes", recursive=True)
+            watch_paths.append(".github/chatmodes/")
+        
+        # Watch awd.yml if it exists
+        if Path("awd.yml").exists():
+            observer.schedule(event_handler, ".", recursive=False)
+            watch_paths.append("awd.yml")
+        
+        if not watch_paths:
+            _rich_warning("No AWD directories found to watch")
+            _rich_info("Run 'awd init' to create an AWD project")
+            return
+        
+        # Start watching
+        observer.start()
+        _rich_info(f"👀 Watching for changes in: {', '.join(watch_paths)}", symbol="eyes")
+        _rich_info("Press Ctrl+C to stop watching...", symbol="info")
+        
+        # Do initial compilation
+        _rich_info("Performing initial compilation...", symbol="gear")
+        from .compilation import AgentsCompiler, CompilationConfig
+        
+        config = CompilationConfig.from_awd_yml(
+            output_path=output if output != "AGENTS.md" else None,
+            chatmode=chatmode,
+            resolve_links=not no_links if no_links else None,
+            dry_run=dry_run
+        )
+        
+        compiler = AgentsCompiler(".")
+        result = compiler.compile(config)
+        
+        if result.success:
+            if dry_run:
+                _rich_success("Initial compilation successful (dry run)", symbol="sparkles")
+            else:
+                _rich_success(f"Initial compilation complete: {result.output_path}", symbol="sparkles")
+        else:
+            _rich_error("Initial compilation failed")
+            for error in result.errors:
+                click.echo(f"  ❌ {error}")
+        
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            observer.stop()
+            _rich_info("Stopped watching for changes", symbol="info")
+        
+        observer.join()
+        
+    except ImportError:
+        _rich_error("Watch mode requires the 'watchdog' library")
+        _rich_info("Install it with: pip install watchdog")
+        sys.exit(1)
+    except Exception as e:
+        _rich_error(f"Error in watch mode: {e}")
+        sys.exit(1)
+
+
 @cli.command(help="📝 Compile AWD primitives into AGENTS.md")
 @click.option('--output', '-o', default="AGENTS.md", help="Output file path")
 @click.option('--dry-run', is_flag=True, help="Generate content without writing file")
 @click.option('--no-links', is_flag=True, help="Skip markdown link resolution")
 @click.option('--chatmode', help="Chatmode to prepend to the AGENTS.md file")
+@click.option('--watch', is_flag=True, help="Auto-regenerate on changes")
+@click.option('--validate', is_flag=True, help="Validate primitives without compiling")
 @click.pass_context
-def compile(ctx, output, dry_run, no_links, chatmode):
-    """Compile AWD primitives into a single AGENTS.md file."""
+def compile(ctx, output, dry_run, no_links, chatmode, watch, validate):
+    """Compile AWD primitives into a single AGENTS.md file.
+    
+    Supports validation-only mode with --validate, watch mode with --watch,
+    and various output customization options.
+    """
     try:
         # Import here to avoid circular imports and improve startup time
         from .compilation import AgentsCompiler, CompilationConfig
         
+        # Handle validation-only mode
+        if validate:
+            _rich_info("Validating AWD primitives...", symbol="gear")
+            compiler = AgentsCompiler(".")
+            
+            # Discover and validate primitives
+            from .primitives.discovery import discover_primitives
+            primitives = discover_primitives(".")
+            validation_errors = compiler.validate_primitives(primitives)
+            
+            if validation_errors:
+                _display_validation_errors(validation_errors)
+                _rich_error(f"Validation failed with {len(validation_errors)} errors")
+                sys.exit(1)
+            else:
+                _rich_success("All primitives validated successfully!", symbol="sparkles")
+                _rich_info(f"Validated {primitives.count()} primitives:")
+                _rich_info(f"  • {len(primitives.chatmodes)} chatmodes")
+                _rich_info(f"  • {len(primitives.instructions)} instructions")
+                _rich_info(f"  • {len(primitives.contexts)} contexts")
+            return
+        
+        # Handle watch mode
+        if watch:
+            _watch_mode(output, chatmode, no_links, dry_run)
+            return
+            
         _rich_info("Starting AGENTS.md compilation...", symbol="gear")
         
-        # Create configuration
-        config = CompilationConfig(
-            output_path=output,
+        # Create configuration from awd.yml with command-line overrides
+        config = CompilationConfig.from_awd_yml(
+            output_path=output if output != "AGENTS.md" else None,  # Only override if not default
             chatmode=chatmode,
-            resolve_links=not no_links,
+            resolve_links=not no_links if no_links else None,  # Only override if explicitly set
             dry_run=dry_run
         )
         
@@ -845,6 +1074,15 @@ def config(ctx, show):
                     config_table.add_row("", "Version", config.get('version', 'Unknown'))
                     config_table.add_row("", "Entrypoint", config.get('entrypoint', 'None'))
                     config_table.add_row("", "MCP Dependencies", str(len(config.get('dependencies', {}).get('mcp', []))))
+                    
+                    # Show compilation configuration
+                    compilation_config = config.get('compilation', {})
+                    if compilation_config:
+                        config_table.add_row("Compilation", "Output", compilation_config.get('output', 'AGENTS.md'))
+                        config_table.add_row("", "Chatmode", compilation_config.get('chatmode', 'auto-detect'))
+                        config_table.add_row("", "Resolve Links", str(compilation_config.get('resolve_links', True)))
+                    else:
+                        config_table.add_row("Compilation", "Status", "Using defaults (no config)")
                 else:
                     config_table.add_row("Project", "Status", "Not in an AWD project directory")
                 

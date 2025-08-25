@@ -32,6 +32,7 @@ dependencies = [
     "tomli>=1.2.0; python_version<'3.11'",
     "rich>=13.0.0",
     "rich-click>=1.7.0",
+    "watchdog>=3.0.0",
 ]
 
 [project.optional-dependencies]
