@@ -724,6 +724,112 @@ def list(ctx):
         sys.exit(1)
 
 
+@cli.command(help="📝 Compile AWD primitives into AGENTS.md")
+@click.option('--output', '-o', default="AGENTS.md", help="Output file path")
+@click.option('--chatmode', '-m', help="Specific chatmode to use")
+@click.option('--no-setup', is_flag=True, help="Skip project setup section")
+@click.option('--no-workflows', is_flag=True, help="Skip workflows section")
+@click.option('--dry-run', is_flag=True, help="Generate content without writing file")
+@click.option('--no-links', is_flag=True, help="Skip markdown link resolution")
+@click.pass_context
+def compile(ctx, output, chatmode, no_setup, no_workflows, dry_run, no_links):
+    """Compile AWD primitives into a single AGENTS.md file."""
+    try:
+        # Import here to avoid circular imports and improve startup time
+        from .compilation import AgentsCompiler, CompilationConfig
+        
+        _rich_info("Starting AGENTS.md compilation...", symbol="gear")
+        
+        # Create configuration
+        config = CompilationConfig(
+            output_path=output,
+            chatmode=chatmode,
+            include_setup=not no_setup,
+            include_workflows=not no_workflows,
+            resolve_links=not no_links,
+            dry_run=dry_run
+        )
+        
+        # Create compiler and compile
+        compiler = AgentsCompiler(".")
+        result = compiler.compile(config)
+        
+        # Display results
+        if result.success:
+            if dry_run:
+                _rich_success("Compilation completed successfully (dry run)", symbol="sparkles")
+                _rich_info(f"Generated {len(result.content)} characters of content")
+                
+                # Show preview
+                try:
+                    console = _get_console()
+                    if console:
+                        from rich.panel import Panel
+                        preview = result.content[:500] + ("..." if len(result.content) > 500 else "")
+                        console.print(Panel(preview, title="📋 Generated Content Preview", border_style="cyan"))
+                    else:
+                        _rich_info("Generated content preview:")
+                        preview = result.content[:500] + ("..." if len(result.content) > 500 else "")
+                        click.echo(preview)
+                except (ImportError, NameError):
+                    _rich_info("Generated content preview:")
+                    preview = result.content[:500] + ("..." if len(result.content) > 500 else "")
+                    click.echo(preview)
+            else:
+                _rich_success(f"AGENTS.md compiled successfully to {result.output_path}", symbol="sparkles")
+                
+                # Show statistics
+                stats = result.stats
+                _rich_info(f"Processed {stats.get('primitives_found', 0)} primitives:")
+                _rich_info(f"  • {stats.get('chatmodes', 0)} chatmodes")
+                _rich_info(f"  • {stats.get('instructions', 0)} instructions")
+                _rich_info(f"  • {stats.get('contexts', 0)} contexts")
+                _rich_info(f"  • {stats.get('workflows', 0)} workflows")
+                
+                # Show next steps
+                try:
+                    next_steps = [
+                        f"Review the generated {output} file",
+                        "Make any manual adjustments if needed",
+                        "Share with your AI assistant for context"
+                    ]
+                    
+                    console = _get_console()
+                    if console:
+                        from rich.panel import Panel
+                        steps_content = "\n".join(f"• {step}" for step in next_steps)
+                        console.print(Panel(steps_content, title="💡 Next Steps", border_style="blue"))
+                    else:
+                        _rich_info("Next steps:")
+                        for step in next_steps:
+                            click.echo(f"  • {step}")
+                except (ImportError, NameError):
+                    _rich_info("Next steps:")
+                    for step in next_steps:
+                        click.echo(f"  • {step}")
+        
+        # Display warnings
+        if result.warnings:
+            _rich_warning(f"Compilation completed with {len(result.warnings)} warnings:")
+            for warning in result.warnings:
+                click.echo(f"  ⚠️  {warning}")
+        
+        # Display errors
+        if result.errors:
+            _rich_error(f"Compilation failed with {len(result.errors)} errors:")
+            for error in result.errors:
+                click.echo(f"  ❌ {error}")
+            sys.exit(1)
+            
+    except ImportError as e:
+        _rich_error(f"Compilation module not available: {e}")
+        _rich_info("This might be a development environment issue.")
+        sys.exit(1)
+    except Exception as e:
+        _rich_error(f"Error during compilation: {e}")
+        sys.exit(1)
+
+
 @cli.command(help="⚙️  Configure AWD CLI")
 @click.option('--show', is_flag=True, help="Show current configuration")
 @click.pass_context

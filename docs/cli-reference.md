@@ -191,6 +191,62 @@ Available scripts:
   debug: RUST_LOG=debug codex hello-world.prompt.md
 ```
 
+### `awd compile` - 📝 Compile AWD primitives into AGENTS.md
+
+Compile AWD primitives (chatmodes, instructions, contexts) into a single intelligent AGENTS.md file with conditional sections, markdown link resolution, and project setup auto-detection.
+
+```bash
+awd compile [OPTIONS]
+```
+
+**Options:**
+- `-o, --output TEXT` - Output file path (default: AGENTS.md)
+- `-m, --chatmode TEXT` - Specific chatmode to use (default: auto-detect)
+- `--no-setup` - Skip project setup section
+- `--no-workflows` - Skip workflows section  
+- `--dry-run` - Generate content without writing file
+- `--no-links` - Skip markdown link resolution
+
+**Examples:**
+```bash
+# Basic compilation with auto-detected primitives
+awd compile
+
+# Generate with specific chatmode
+awd compile --chatmode architect
+
+# Preview without writing file
+awd compile --dry-run
+
+# Minimal output without setup and workflows
+awd compile --no-setup --no-workflows
+
+# Custom output file
+awd compile --output docs/AI-CONTEXT.md
+```
+
+**Generated AGENTS.md structure:**
+- **Header** - Generation metadata and AWD version
+- **Development Approach** - From selected chatmode primitive
+- **Project Setup** - Auto-detected commands for the project type
+- **Development Guidelines** - Conditional sections from instruction primitives
+- **Available Workflows** - Discovered .prompt.md files
+- **Footer** - Regeneration instructions
+
+**Project Setup Detection:**
+- **Python**: `pyproject.toml`, `requirements.txt`, Poetry, Pipenv
+- **Node.js**: `package.json`, npm/yarn/pnpm lock files  
+- **Rust**: `Cargo.toml`
+- **Go**: `go.mod`
+- **Java**: `pom.xml`, `build.gradle`
+- **PHP**: `composer.json`
+
+**Primitive Discovery:**
+- **Chatmodes**: `.chatmode.md` files in `.awd/chatmodes/`, `.github/chatmodes/`
+- **Instructions**: `.instructions.md` files in `.awd/instructions/`, `.github/instructions/`
+- **Contexts**: `.context.md`, `.memory.md` files in `.awd/context/`, `.github/context/`
+- **Workflows**: `.prompt.md` files in project and `.github/prompts/`
+
 ### `awd config` - ⚙️ Configure AWD CLI
 
 Display AWD CLI configuration information.
