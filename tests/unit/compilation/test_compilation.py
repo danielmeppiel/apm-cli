@@ -3,6 +3,7 @@
 import os
 import tempfile
 import unittest
+import yaml
 from pathlib import Path
 from unittest.mock import patch
 
@@ -317,6 +318,41 @@ class TestCLIIntegration(unittest.TestCase):
             _display_validation_errors(errors)
         except Exception as e:
             self.fail(f"_display_validation_errors raised an exception: {e}")
+    
+    def test_compilation_config_from_awd_yml(self):
+        """Test CompilationConfig loading from awd.yml."""
+        from awd_cli.compilation.agents_compiler import CompilationConfig
+        import yaml
+        
+        # Create test awd.yml
+        test_config = {
+            'compilation': {
+                'output': 'CUSTOM.md',
+                'chatmode': 'test-mode',
+                'resolve_links': False
+            }
+        }
+        
+        with open('awd.yml', 'w') as f:
+            yaml.dump(test_config, f)
+        
+        # Test config loading
+        config = CompilationConfig.from_awd_yml()
+        self.assertEqual(config.output_path, 'CUSTOM.md')
+        self.assertEqual(config.chatmode, 'test-mode')
+        self.assertEqual(config.resolve_links, False)
+        
+        # Test with overrides
+        config_with_overrides = CompilationConfig.from_awd_yml(
+            output_path='OVERRIDE.md',
+            chatmode='override-mode'
+        )
+        self.assertEqual(config_with_overrides.output_path, 'OVERRIDE.md')
+        self.assertEqual(config_with_overrides.chatmode, 'override-mode')
+        self.assertEqual(config_with_overrides.resolve_links, False)  # Should keep from config
+        
+        # Clean up
+        Path('awd.yml').unlink()
 
 
 if __name__ == '__main__':

@@ -244,6 +244,21 @@ awd compile --watch --dry-run
 - Exits with error code 1 if validation fails
 - No output file generation in validation-only mode
 
+**Configuration Integration:**
+The compile command supports configuration via `awd.yml`:
+
+```yaml
+compilation:
+  output: "AGENTS.md"           # Default output file
+  chatmode: "backend-engineer"  # Default chatmode to use
+  resolve_links: true           # Enable markdown link resolution
+```
+
+Command-line options always override `awd.yml` settings. Priority order:
+1. Command-line flags (highest priority)
+2. `awd.yml` compilation section
+3. Built-in defaults (lowest priority)
+
 **Generated AGENTS.md structure:**
 - **Header** - Generation metadata and AWD version
 - **Pattern-based Sections** - Content grouped by exact `applyTo` patterns from instruction primitives (e.g., "Files matching `**/*.py`")

@@ -817,11 +817,11 @@ def _watch_mode(output, chatmode, no_links, dry_run):
                     # Import compilation modules
                     from .compilation import AgentsCompiler, CompilationConfig
                     
-                    # Create configuration
-                    config = CompilationConfig(
-                        output_path=self.output,
+                    # Create configuration from awd.yml with overrides
+                    config = CompilationConfig.from_awd_yml(
+                        output_path=self.output if self.output != "AGENTS.md" else None,
                         chatmode=self.chatmode,
-                        resolve_links=not self.no_links,
+                        resolve_links=not self.no_links if self.no_links else None,
                         dry_run=self.dry_run
                     )
                     
@@ -882,10 +882,10 @@ def _watch_mode(output, chatmode, no_links, dry_run):
         _rich_info("Performing initial compilation...", symbol="gear")
         from .compilation import AgentsCompiler, CompilationConfig
         
-        config = CompilationConfig(
-            output_path=output,
+        config = CompilationConfig.from_awd_yml(
+            output_path=output if output != "AGENTS.md" else None,
             chatmode=chatmode,
-            resolve_links=not no_links,
+            resolve_links=not no_links if no_links else None,
             dry_run=dry_run
         )
         
@@ -967,11 +967,11 @@ def compile(ctx, output, dry_run, no_links, chatmode, watch, validate):
             
         _rich_info("Starting AGENTS.md compilation...", symbol="gear")
         
-        # Create configuration
-        config = CompilationConfig(
-            output_path=output,
+        # Create configuration from awd.yml with command-line overrides
+        config = CompilationConfig.from_awd_yml(
+            output_path=output if output != "AGENTS.md" else None,  # Only override if not default
             chatmode=chatmode,
-            resolve_links=not no_links,
+            resolve_links=not no_links if no_links else None,  # Only override if explicitly set
             dry_run=dry_run
         )
         
@@ -1074,6 +1074,15 @@ def config(ctx, show):
                     config_table.add_row("", "Version", config.get('version', 'Unknown'))
                     config_table.add_row("", "Entrypoint", config.get('entrypoint', 'None'))
                     config_table.add_row("", "MCP Dependencies", str(len(config.get('dependencies', {}).get('mcp', []))))
+                    
+                    # Show compilation configuration
+                    compilation_config = config.get('compilation', {})
+                    if compilation_config:
+                        config_table.add_row("Compilation", "Output", compilation_config.get('output', 'AGENTS.md'))
+                        config_table.add_row("", "Chatmode", compilation_config.get('chatmode', 'auto-detect'))
+                        config_table.add_row("", "Resolve Links", str(compilation_config.get('resolve_links', True)))
+                    else:
+                        config_table.add_row("Compilation", "Status", "Using defaults (no config)")
                 else:
                     config_table.add_row("Project", "Status", "Not in an AWD project directory")
                 

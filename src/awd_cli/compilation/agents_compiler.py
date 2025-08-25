@@ -23,6 +23,49 @@ class CompilationConfig:
     chatmode: Optional[str] = None
     resolve_links: bool = True
     dry_run: bool = False
+    
+    @classmethod
+    def from_awd_yml(cls, **overrides) -> 'CompilationConfig':
+        """Create configuration from awd.yml with command-line overrides.
+        
+        Args:
+            **overrides: Command-line arguments that override config file values.
+            
+        Returns:
+            CompilationConfig: Configuration with awd.yml values and overrides applied.
+        """
+        config = cls()
+        
+        # Try to load from awd.yml
+        try:
+            from pathlib import Path
+            import yaml
+            
+            if Path('awd.yml').exists():
+                with open('awd.yml', 'r') as f:
+                    awd_config = yaml.safe_load(f) or {}
+                
+                # Look for compilation section
+                compilation_config = awd_config.get('compilation', {})
+                
+                # Apply config file values
+                if 'output' in compilation_config:
+                    config.output_path = compilation_config['output']
+                if 'chatmode' in compilation_config:
+                    config.chatmode = compilation_config['chatmode']
+                if 'resolve_links' in compilation_config:
+                    config.resolve_links = compilation_config['resolve_links']
+                
+        except Exception:
+            # If config loading fails, use defaults
+            pass
+        
+        # Apply command-line overrides (highest priority)
+        for key, value in overrides.items():
+            if value is not None:  # Only override if explicitly provided
+                setattr(config, key, value)
+        
+        return config
 
 
 @dataclass
