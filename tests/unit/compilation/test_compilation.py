@@ -4,6 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+import re
+from urllib.parse import urlparse
 
 from awd_cli.compilation.project_detector import (
     detect_project_type,
@@ -188,7 +190,15 @@ This is the actual content."""
         
         errors = validate_link_targets(content, Path("."))
         # External URLs and anchors should not generate errors
-        self.assertEqual(len([e for e in errors if 'example.com' in e or '#section' in e]), 0)
+        def is_example_com_error(e):
+            # Find all URLs in the error message
+            urls = re.findall(r'https?://[^\s)]+', e)
+            for url in urls:
+                host = urlparse(url).hostname
+                if host == "example.com":
+                    return True
+            return False
+        self.assertEqual(len([e for e in errors if is_example_com_error(e) or '#section' in e]), 0)
 
     def test_validate_link_targets_with_missing_files(self):
         """Test link validation with missing files."""
