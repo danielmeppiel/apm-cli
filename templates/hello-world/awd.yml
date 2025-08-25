@@ -3,7 +3,7 @@ version: {{version}}
 description: {{description}}
 author: {{author}}
 
-# Compilation configuration
+# Compilation configuration (for future use when CLI integration is complete)
 compilation:
   chatmode: "default"
   include_workflows: true
@@ -14,7 +14,6 @@ scripts:
   start: "codex --skip-git-repo-check hello-world.prompt.md"
   llm: "llm hello-world.prompt.md -m github/gpt-4o-mini"
   demo: "awd compile --dry-run"
-  watch: "awd compile --watch"
   test: "echo 'Running tests...' && echo 'All tests passed!'"
   debug: "RUST_LOG=debug codex --skip-git-repo-check hello-world.prompt.md"
 

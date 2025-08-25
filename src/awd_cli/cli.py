@@ -330,19 +330,18 @@ def init(ctx, project_name, force, yes):
         _rich_success(f"Initializing AWD project: {config['name']}", symbol="rocket")
         
         # Create files from config
-        _create_project_files(config)
+        created_files = _create_project_files(config)
         
         # Show created files in a nice format
-        files = ["awd.yml", "hello-world.prompt.md", "README.md"]
         console = _get_console()
         _rich_info("Created files:")
         if console:
             try:
-                console.print(_create_files_table(files))
+                console.print(_create_files_table(created_files))
             except Exception:
-                click.echo(_create_files_table(files))
+                click.echo(_create_files_table(created_files))
         else:
-            click.echo(_create_files_table(files))
+            click.echo(_create_files_table(created_files))
             
         _rich_blank_line()
         _rich_success("AWD project initialized successfully!", symbol="sparkles")
@@ -1119,6 +1118,8 @@ def _create_project_files(config):
     import os
     import shutil
     
+    created_files = []
+    
     # Create awd.yml
     awd_yml_content = _load_template_file('hello-world', 'awd.yml', 
                                           project_name=config['name'],
@@ -1127,24 +1128,28 @@ def _create_project_files(config):
                                           author=config.get('author', 'Your Name'))
     with open('awd.yml', 'w') as f:
         f.write(awd_yml_content)
+    created_files.append('awd.yml')
     
     # Create hello-world.prompt.md from template
     prompt_content = _load_template_file('hello-world', 'hello-world.prompt.md',
                                          project_name=config['name'])
     with open('hello-world.prompt.md', 'w') as f:
         f.write(prompt_content)
+    created_files.append('hello-world.prompt.md')
         
     # Create README.md from template
     readme_content = _load_template_file('hello-world', 'README.md',
                                          project_name=config['name'])
     with open('README.md', 'w') as f:
         f.write(readme_content)
+    created_files.append('README.md')
     
     # Create feature-implementation.prompt.md from template
     feature_content = _load_template_file('hello-world', 'feature-implementation.prompt.md',
                                           project_name=config['name'])
     with open('feature-implementation.prompt.md', 'w') as f:
         f.write(feature_content)
+    created_files.append('feature-implementation.prompt.md')
     
     # Create .awd directory structure with all primitive files
     template_dir = _get_template_dir()
@@ -1154,8 +1159,16 @@ def _create_project_files(config):
         # Copy the entire .awd directory structure
         shutil.copytree(template_awd_dir, '.awd')
         
+        # Collect all the .awd files that were created
+        for root, dirs, files in os.walk('.awd'):
+            for file in files:
+                file_path = os.path.join(root, file)
+                created_files.append(file_path)
+        
         # Process any template files in the .awd directory that need variable substitution
         _process_awd_template_files(config)
+    
+    return created_files
 
 
 def _process_awd_template_files(config):

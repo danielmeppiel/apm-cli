@@ -36,8 +36,8 @@ awd compile
 # Use specific chatmode
 awd compile --chatmode backend-engineer
 
-# Watch mode for development
-awd compile --watch
+# Watch mode for development (not yet implemented)
+# awd compile --watch
 
 # Preview without writing files
 awd compile --dry-run
