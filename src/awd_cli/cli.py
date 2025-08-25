@@ -728,8 +728,9 @@ def list(ctx):
 @click.option('--output', '-o', default="AGENTS.md", help="Output file path")
 @click.option('--dry-run', is_flag=True, help="Generate content without writing file")
 @click.option('--no-links', is_flag=True, help="Skip markdown link resolution")
+@click.option('--chatmode', help="Chatmode to prepend to the AGENTS.md file")
 @click.pass_context
-def compile(ctx, output, dry_run, no_links):
+def compile(ctx, output, dry_run, no_links, chatmode):
     """Compile AWD primitives into a single AGENTS.md file."""
     try:
         # Import here to avoid circular imports and improve startup time
@@ -740,6 +741,7 @@ def compile(ctx, output, dry_run, no_links):
         # Create configuration
         config = CompilationConfig(
             output_path=output,
+            chatmode=chatmode,
             resolve_links=not no_links,
             dry_run=dry_run
         )

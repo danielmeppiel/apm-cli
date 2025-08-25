@@ -3,7 +3,8 @@
 from .agents_compiler import AgentsCompiler, compile_agents_md, CompilationConfig, CompilationResult
 from .template_builder import (
     build_conditional_sections,
-    TemplateData
+    TemplateData,
+    find_chatmode_by_name
 )
 from .link_resolver import (
     resolve_markdown_links,
@@ -20,6 +21,7 @@ __all__ = [
     # Template building
     'build_conditional_sections',
     'TemplateData',
+    'find_chatmode_by_name',
     
     # Link resolution
     'resolve_markdown_links',

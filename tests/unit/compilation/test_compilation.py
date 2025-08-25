@@ -16,7 +16,7 @@ from awd_cli.compilation.agents_compiler import (
     CompilationConfig,
     compile_agents_md
 )
-from awd_cli.primitives.models import Instruction, PrimitiveCollection
+from awd_cli.primitives.models import Instruction, Chatmode, PrimitiveCollection
 
 
 class TestTemplateBuilder(unittest.TestCase):
@@ -208,6 +208,68 @@ class TestAgentsCompiler(unittest.TestCase):
         self.assertIn("# AGENTS.md", content)
         self.assertIn("Files matching `**/*.py`", content)
         self.assertIn("Test content.", content)
+
+    def test_compile_with_chatmode(self):
+        """Test compilation with chatmode."""
+        # Create test primitives with chatmode
+        primitives = PrimitiveCollection()
+        
+        chatmode = Chatmode(
+            name="test-chatmode",
+            file_path=Path("test.chatmode.md"),
+            description="Test chatmode",
+            apply_to=None,
+            content="You are a test assistant.",
+            author="test"
+        )
+        primitives.add_primitive(chatmode)
+        
+        instruction = Instruction(
+            name="test",
+            file_path=Path("test.md"),
+            description="Test instruction",
+            apply_to="**/*.py",
+            content="Use type hints.",
+            author="test"
+        )
+        primitives.add_primitive(instruction)
+
+        compiler = AgentsCompiler(str(self.temp_path))
+        config = CompilationConfig(chatmode="test-chatmode", dry_run=True, resolve_links=False)
+
+        result = compiler.compile(config, primitives)
+
+        self.assertTrue(result.success)
+        self.assertIn("You are a test assistant.", result.content)
+        self.assertIn("Files matching `**/*.py`", result.content)
+        # Chatmode should come before instructions
+        chatmode_pos = result.content.find("You are a test assistant.")
+        instructions_pos = result.content.find("Files matching `**/*.py`")
+        self.assertTrue(chatmode_pos < instructions_pos)
+
+    def test_compile_with_nonexistent_chatmode(self):
+        """Test compilation with non-existent chatmode."""
+        primitives = PrimitiveCollection()
+        
+        instruction = Instruction(
+            name="test",
+            file_path=Path("test.md"),
+            description="Test instruction",
+            apply_to="**/*.py",
+            content="Use type hints.",
+            author="test"
+        )
+        primitives.add_primitive(instruction)
+
+        compiler = AgentsCompiler(str(self.temp_path))
+        config = CompilationConfig(chatmode="nonexistent", dry_run=True, resolve_links=False)
+
+        result = compiler.compile(config, primitives)
+
+        self.assertTrue(result.success)
+        self.assertIn("Chatmode 'nonexistent' not found", result.warnings)
+        # Should not contain chatmode content since it wasn't found
+        self.assertNotIn("You are a test assistant.", result.content)
 
 
 if __name__ == '__main__':

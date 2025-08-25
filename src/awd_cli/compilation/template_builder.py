@@ -13,6 +13,7 @@ class TemplateData:
     instructions_content: str
     timestamp: str
     version: str
+    chatmode_content: Optional[str] = None
     
 
 def build_conditional_sections(instructions: List[Instruction]) -> str:
@@ -43,9 +44,12 @@ def build_conditional_sections(instructions: List[Instruction]) -> str:
                 # Add source file comment before the content
                 try:
                     # Try to get relative path for cleaner display
-                    relative_path = instruction.file_path.relative_to(Path.cwd())
-                except ValueError:
-                    # Fall back to absolute path if relative fails
+                    if instruction.file_path.is_absolute():
+                        relative_path = instruction.file_path.relative_to(Path.cwd())
+                    else:
+                        relative_path = instruction.file_path
+                except (ValueError, OSError):
+                    # Fall back to absolute or given path if relative fails
                     relative_path = instruction.file_path
                 
                 sections.append(f"<!-- Source: {relative_path} -->")
@@ -54,6 +58,22 @@ def build_conditional_sections(instructions: List[Instruction]) -> str:
                 sections.append("")
     
     return "\n".join(sections)
+
+
+def find_chatmode_by_name(chatmodes: List[Chatmode], chatmode_name: str) -> Optional[Chatmode]:
+    """Find a chatmode by name.
+    
+    Args:
+        chatmodes (List[Chatmode]): List of available chatmodes.
+        chatmode_name (str): Name of the chatmode to find.
+    
+    Returns:
+        Optional[Chatmode]: The found chatmode, or None if not found.
+    """
+    for chatmode in chatmodes:
+        if chatmode.name == chatmode_name:
+            return chatmode
+    return None
 
 
 def _group_instructions_by_pattern(instructions: List[Instruction]) -> Dict[str, List[Instruction]]:
@@ -98,6 +118,11 @@ def generate_agents_md_template(template_data: TemplateData) -> str:
     sections.append(f"<!-- Generated on: {template_data.timestamp} -->")
     sections.append(f"<!-- AWD Version: {template_data.version} -->")
     sections.append("")
+    
+    # Chatmode content (if provided)
+    if template_data.chatmode_content:
+        sections.append(template_data.chatmode_content.strip())
+        sections.append("")
     
     # Instructions content (grouped by patterns)
     if template_data.instructions_content:

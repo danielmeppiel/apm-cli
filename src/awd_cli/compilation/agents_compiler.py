@@ -10,7 +10,8 @@ from ..version import get_version
 from .template_builder import (
     build_conditional_sections,
     generate_agents_md_template,
-    TemplateData
+    TemplateData,
+    find_chatmode_by_name
 )
 from .link_resolver import resolve_markdown_links, validate_link_targets
 
@@ -174,10 +175,20 @@ class AgentsCompiler:
         timestamp = datetime.datetime.now().isoformat()
         version = get_version()
         
+        # Handle chatmode content
+        chatmode_content = None
+        if config.chatmode:
+            chatmode = find_chatmode_by_name(primitives.chatmodes, config.chatmode)
+            if chatmode:
+                chatmode_content = chatmode.content
+            else:
+                self.warnings.append(f"Chatmode '{config.chatmode}' not found")
+        
         return TemplateData(
             instructions_content=instructions_content,
             timestamp=timestamp,
-            version=version
+            version=version,
+            chatmode_content=chatmode_content
         )
     
     def _write_output_file(self, output_path: str, content: str) -> None:
