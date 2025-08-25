@@ -1369,11 +1369,49 @@ def _create_project_files(config):
     with open('hello-world.prompt.md', 'w') as f:
         f.write(prompt_content)
         
+    # Create feature-implementation.prompt.md from template
+    feature_content = _load_template_file('hello-world', 'feature-implementation.prompt.md',
+                                         project_name=config['name'])
+    with open('feature-implementation.prompt.md', 'w') as f:
+        f.write(feature_content)
+        
     # Create README.md from template
     readme_content = _load_template_file('hello-world', 'README.md',
                                          project_name=config['name'])
     with open('README.md', 'w') as f:
         f.write(readme_content)
+    
+    # Create .awd directory structure and copy all primitive files
+    awd_dir = Path('.awd')
+    awd_dir.mkdir(exist_ok=True)
+    
+    # Create subdirectories
+    for subdir in ['chatmodes', 'instructions', 'context', 'specs']:
+        (awd_dir / subdir).mkdir(exist_ok=True)
+    
+    # Copy primitive files
+    primitive_files = [
+        '.awd/chatmodes/default.chatmode.md',
+        '.awd/chatmodes/backend-engineer.chatmode.md',
+        '.awd/instructions/typescript.instructions.md',
+        '.awd/instructions/python.instructions.md',
+        '.awd/instructions/testing.instructions.md',
+        '.awd/context/project-info.context.md',
+        '.awd/context/architecture.context.md',
+        '.awd/specs/hello-feature.spec.md'
+    ]
+    
+    for primitive_file in primitive_files:
+        try:
+            primitive_content = _load_template_file('hello-world', primitive_file,
+                                                   project_name=config['name'])
+            output_path = Path(primitive_file)
+            with open(output_path, 'w') as f:
+                f.write(primitive_content)
+        except Exception as e:
+            # Don't fail if individual primitive files can't be loaded
+            _rich_warning(f"Could not create {primitive_file}: {e}")
+            continue
 
 
 def main():
