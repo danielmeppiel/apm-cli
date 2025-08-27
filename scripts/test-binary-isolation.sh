@@ -16,7 +16,7 @@
 # Can be run locally: ./test-binary-isolation.sh ./path/to/apm
 # Or in CI: automatically finds the binary
 
-set -euo pipefail
+set -uo pipefail  # Removed -e to allow better error handling
 
 # Colors for output
 RED='\033[0;31m'
@@ -251,6 +251,20 @@ main() {
     
     find_binary "$@"
     
+    # Test binary accessibility first
+    echo "Testing binary accessibility..."
+    if [[ ! -f "$BINARY_PATH" ]]; then
+        log_error "Binary file does not exist: $BINARY_PATH"
+        exit 1
+    fi
+    
+    if [[ ! -x "$BINARY_PATH" ]]; then
+        log_error "Binary is not executable: $BINARY_PATH"
+        exit 1
+    fi
+    
+    echo "Binary found and executable: $BINARY_PATH"
+    
     local tests_passed=0
     local tests_total=6
     
@@ -261,26 +275,38 @@ main() {
     # Run the exact README golden scenario
     if check_prerequisites; then
         ((tests_passed++))
+    else
+        log_error "Prerequisites check failed"
     fi
     
     if test_basic_commands; then
         ((tests_passed++))
+    else
+        log_error "Basic commands test failed"
     fi
     
     if test_runtime_setup; then
         ((tests_passed++))
+    else
+        log_error "Runtime setup test failed"
     fi
     
     if test_init_project; then
         ((tests_passed++))
+    else
+        log_error "Project init test failed"
     fi
     
     if test_compile; then
         ((tests_passed++))
+    else
+        log_error "Compile test failed"
     fi
     
     if test_install; then
         ((tests_passed++))
+    else
+        log_error "Install test failed"
     fi
     
     # Note: Skipping the run test for now as it requires more complex setup
