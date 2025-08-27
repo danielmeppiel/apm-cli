@@ -141,7 +141,7 @@ jobs:
         with:
           name: ${{ matrix.binary_name }}
           path: |
-            ./dist/${{ matrix.binary_name }}/
+            ./dist/${{ matrix.binary_name }}
             ./dist/${{ matrix.binary_name }}.sha256
             ./scripts/test-binary-isolation.sh
           include-hidden-files: true  # Required to include .apm directories
@@ -202,7 +202,12 @@ jobs:
           path: ./dist/
       
       - name: Make binary executable
-        run: chmod +x ./dist/${{ matrix.binary_name }}/apm
+        run: |
+          # Debug: List the downloaded structure
+          echo "Downloaded structure:"
+          ls -la ./dist/
+          # Make the binary executable
+          chmod +x ./dist/${{ matrix.binary_name }}/apm
       
       - name: Create APM symlink for testing
         run: |
