@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-08-27
+
+### Fixed
+- **Critical binary installation fix** - Fixed PyInstaller `--onedir` mode binary distribution where only the main executable was being installed, leaving behind the essential `_internal/` directory containing the Python runtime
+- **Template bundling fix** - Fixed PyInstaller spec to properly bundle template files including hidden `.apm` directories that were being ignored during packaging
+- **Compilation module fix** - Added missing `apm_cli.compilation` modules to PyInstaller's `hiddenimports` to resolve "attempted relative import with no known parent package" errors
+
+### Improved
+- **Enhanced install script** - Updated install script to properly handle PyInstaller `--onedir` mode by copying the entire bundle directory to `/usr/local/lib/apm/` and creating a symlink in `/usr/local/bin/apm`
+- **Faster startup times** - Maintained `--onedir` mode for optimal binary startup performance while fixing installation reliability
+- **Complete hero section workflow** - All steps in the Quick Start (install, init, compile, install dependencies, run) now work end-to-end
+
+### Technical
+- Enhanced PyInstaller spec with explicit template file inclusion using glob patterns
+- Added comprehensive compilation module imports to prevent runtime import errors
+- Improved binary distribution structure for reliable cross-platform installation
+
 ## [0.1.0] - 2025-08-27
 
 ### Changed

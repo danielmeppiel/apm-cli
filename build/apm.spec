@@ -27,6 +27,22 @@ datas = [
     (str(repo_root / 'pyproject.toml'), '.'),  # Bundle pyproject.toml for version reading
 ]
 
+# Add all files from templates directory, including hidden .apm directories
+import glob
+template_files = []
+for template_dir in (repo_root / 'templates').iterdir():
+    if template_dir.is_dir():
+        # Use glob to include all files, including those in hidden directories
+        for file_pattern in ['**/*', '**/.*']:
+            for file_path in template_dir.glob(file_pattern):
+                if file_path.is_file():
+                    # Create relative path from templates directory
+                    rel_path = file_path.relative_to(repo_root / 'templates')
+                    template_files.append((str(file_path), f'templates/{rel_path.parent}'))
+
+# Add template files to datas
+datas.extend(template_files)
+
 # Hidden imports for APM modules that might not be auto-detected
 hiddenimports = [
     'apm_cli',
@@ -38,6 +54,10 @@ hiddenimports = [
     'apm_cli.adapters.client.base',
     'apm_cli.adapters.client.vscode',
     'apm_cli.adapters.package_manager',
+    'apm_cli.compilation',  # Add compilation module
+    'apm_cli.compilation.agents_compiler',
+    'apm_cli.compilation.template_builder',
+    'apm_cli.compilation.link_resolver',
     'apm_cli.core',
     'apm_cli.core.operations',
     'apm_cli.deps',

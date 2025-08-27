@@ -135,12 +135,35 @@ else
     exit 1
 fi
 
-# Install binary
+# Install binary directory structure
 echo -e "${YELLOW}Installing APM CLI to $INSTALL_DIR...${NC}"
-if [ -w "$INSTALL_DIR" ]; then
-    cp "$TMP_DIR/$EXTRACTED_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+
+# APM installation directory (for the complete bundle)
+APM_INSTALL_DIR="/usr/local/lib/apm"
+
+# Remove any existing installation
+if [ -d "$APM_INSTALL_DIR" ]; then
+    if [ -w "/usr/local/lib" ]; then
+        rm -rf "$APM_INSTALL_DIR"
+    else
+        sudo rm -rf "$APM_INSTALL_DIR"
+    fi
+fi
+
+# Create installation directory
+if [ -w "/usr/local/lib" ]; then
+    mkdir -p "$APM_INSTALL_DIR"
+    cp -r "$TMP_DIR/$EXTRACTED_DIR"/* "$APM_INSTALL_DIR/"
 else
-    sudo cp "$TMP_DIR/$EXTRACTED_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+    sudo mkdir -p "$APM_INSTALL_DIR"
+    sudo cp -r "$TMP_DIR/$EXTRACTED_DIR"/* "$APM_INSTALL_DIR/"
+fi
+
+# Create symlink in /usr/local/bin pointing to the actual binary
+if [ -w "$INSTALL_DIR" ]; then
+    ln -sf "$APM_INSTALL_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+else
+    sudo ln -sf "$APM_INSTALL_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 fi
 
 # Verify installation
@@ -148,7 +171,7 @@ if command -v apm >/dev/null 2>&1; then
     INSTALLED_VERSION=$(apm --version 2>/dev/null || echo "unknown")
     echo -e "${GREEN}✓ APM CLI installed successfully!${NC}"
     echo -e "${BLUE}Version: $INSTALLED_VERSION${NC}"
-    echo -e "${BLUE}Location: $INSTALL_DIR/$BINARY_NAME${NC}"
+    echo -e "${BLUE}Location: $INSTALL_DIR/$BINARY_NAME -> $APM_INSTALL_DIR/$BINARY_NAME${NC}"
 else
     echo -e "${YELLOW}⚠ APM CLI installed but not found in PATH${NC}"
     echo "You may need to add $INSTALL_DIR to your PATH environment variable."

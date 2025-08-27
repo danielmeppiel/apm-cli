@@ -20,7 +20,7 @@ Instead of custom TypeScript actions for every AI task, developers write markdow
 - uses: pelikhan/action-genai-issue-labeller@v0
 
 # After: Universal APM action + reusable prompts (zero TypeScript)
-- uses: awd-action/run@v1
+- uses: apm-action/run@v1
   with:
     script: issue-triage
     issue_number: ${{ github.event.issue.number }}
@@ -47,7 +47,7 @@ The action is just a **thin wrapper** around APM's proven capabilities:
 // The entire action (simplified)
 async function run() {
   // 1. Install APM (one command)
-  await exec.exec('curl -sSL https://install.awd.sh | sh');
+  await exec.exec('curl -sSL https://install.apm.sh | sh');
   
   // 2. Setup runtime automatically  
   await exec.exec('apm runtime setup codex');
@@ -99,7 +99,7 @@ runs:
 **Goal**: Working action that installs APM and runs scripts
 
 **Week 1**: Core functionality
-- [ ] Create `awd-action` repository with TypeScript setup
+- [ ] Create `apm-action` repository with TypeScript setup
 - [ ] Implement APM installation and script execution
 - [ ] Handle parameter passing (all inputs become `--param key=value`)
 - [ ] Basic error handling and output streaming
@@ -146,7 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: awd-action/run@v1
+      - uses: apm-action/run@v1
         with:
           script: issue-triage
           issue_number: ${{ github.event.issue.number }}
@@ -168,7 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: awd-action/run@v1
+      - uses: apm-action/run@v1
         with:
           script: code-review
           pr_number: ${{ github.event.number }}
@@ -190,7 +190,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: awd-action/run@v1
+      - uses: apm-action/run@v1
         with:
           script: release-notes
           version: ${{ github.event.release.tag_name }}
@@ -244,7 +244,7 @@ jobs:
 
 ### Repository Structure
 ```
-awd-action/
+apm-action/
 ├── action.yml           # GitHub Action metadata
 ├── dist/               # Compiled TypeScript 
 ├── src/
@@ -288,7 +288,7 @@ runs:
 ## Next Steps: Execute Fast
 
 ### Week 1: Foundation
-1. **Create `awd-action` repository** with TypeScript GitHub Action template
+1. **Create `apm-action` repository** with TypeScript GitHub Action template
 2. **Implement core functionality**: APM installation + script execution
 3. **Handle parameter mapping**: All action inputs → `--param key=value`  
 4. **Basic testing**: Verify with simple APM project
