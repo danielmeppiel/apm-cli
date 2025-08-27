@@ -199,12 +199,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.binary_name }}
-          path: ./dist/
+          path: ./
       
       - name: Make binary executable
         run: |
           # Debug: List the downloaded structure
           echo "Downloaded structure:"
+          find . -name "apm" -type f
           ls -la ./dist/
           # Make the binary executable
           chmod +x ./dist/${{ matrix.binary_name }}/apm
