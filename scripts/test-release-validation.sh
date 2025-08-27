@@ -38,8 +38,9 @@ log_test() {
     echo -e "${YELLOW}🧪 $1${NC}"
 }
 
-# Global variable for test directory (needed for cleanup)
+# Global variables (needed for cleanup and cross-function access)
 test_dir=""
+BINARY_PATH=""
 
 # Find the binary
 find_binary() {
@@ -262,7 +263,9 @@ echo ""
 echo "Testing the EXACT user experience with the shipped binary"
 echo "Environment: Complete isolation (no source code access)"
 echo "Purpose: Final validation before release"
-echo ""    find_binary "$@"
+echo ""
+    
+    find_binary "$@"
     
     # Test binary accessibility first
     echo "Testing binary accessibility..."
