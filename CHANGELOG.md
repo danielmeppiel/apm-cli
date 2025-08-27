@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2025-08-27
+
+### Fixed
+- **Critical PyInstaller template bundling fix** - Fixed PyInstaller spec file to properly bundle hidden `.apm` directories containing Agent Primitives (chatmodes, instructions, context, specs)
+- **Template discovery in binary** - Updated template collection logic to use `os.walk()` instead of glob patterns to correctly handle hidden directories
+- **Binary installation process** - Fixed system binary installation to properly copy entire PyInstaller bundle including `_internal` directory
+
+### Technical Details
+- Modified `collect_template_files()` function in `apm.spec` to recursively collect all template files including hidden directories
+- Ensures all Agent Primitives templates are available in binary distributions
+- Fixed path handling to maintain correct directory structure in bundled binaries
+- Templates now properly accessible at runtime without "Template file not found" errors
+
 ## [0.1.3] - 2025-08-27
 
 ### Fixed
