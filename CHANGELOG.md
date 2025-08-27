@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2025-08-28
+
+### Fixed
+- **Release validation script fixes** - Fixed unbound variable error in `test-release-validation.sh`
+  - Declared `BINARY_PATH` as global variable to fix "unbound variable" error during CI/CD release validation
+  - Fixed script formatting issue where function call was on same line as echo statement
+- **Enhanced CI/CD reliability** - Release validation tests now properly validate shipped binary isolation
+
+### Technical Details
+- Root cause: `BINARY_PATH` variable was locally scoped in `find_binary()` function
+- Impact: Release validation tests were failing during CI/CD pipeline execution
+- Solution: Moved variable declaration to global scope for cross-function access
+
 ## [0.1.6] - 2025-08-27
 
 ### Fixed
