@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-08-27
+
+### Fixed
+- **Critical CI/CD artifact merge issue** - Fixed GitHub Actions workflow where `merge-multiple: true` was causing artifact conflicts and dropping hidden `.apm` directories
+- **Template bundling in CI builds** - Removed `merge-multiple: true` to prevent artifacts from overwriting each other's hidden directories
+- **Release binary packaging** - Updated tar.gz creation logic to handle separate artifact directories correctly
+
+### Technical Details
+- Removed `merge-multiple: true` from `actions/download-artifact@v4` step which was causing multiple platform artifacts to merge and conflict
+- Updated binary packaging logic to correctly handle artifact directory structure (artifacts now download to separate subdirectories)
+- Fixed tar creation to preserve complete directory hierarchy including `.apm` directories for all platforms
+- All Agent Primitives templates now properly accessible in CI-built binaries
+
 ## [0.1.4] - 2025-08-27
 
 ### Fixed
