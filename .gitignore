@@ -1,7 +1,7 @@
 # Project-specific files
 APPROACH.md
 next-steps.md
-awd-action-plan.md
+apm-action-plan.md
 
 # Python
 __pycache__/
@@ -10,7 +10,7 @@ __pycache__/
 *.so
 .Python
 build/build/
-build/awd/
+build/apm/
 *.bak
 develop-eggs/
 dist/

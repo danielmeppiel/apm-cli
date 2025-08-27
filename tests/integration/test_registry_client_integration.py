@@ -3,7 +3,7 @@
 import unittest
 import os
 import requests
-from awd_cli.registry.client import SimpleRegistryClient
+from apm_cli.registry.client import SimpleRegistryClient
 
 
 class TestRegistryClientIntegration(unittest.TestCase):

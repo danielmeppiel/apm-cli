@@ -51,7 +51,7 @@ detect_platform() {
         linux*)
             case "$arch" in
                 x86_64|amd64)
-                    BINARY_NAME="awd-linux-x86_64"
+                    BINARY_NAME="apm-linux-x86_64"
                     ;;
                 *)
                     log_error "Unsupported Linux architecture: $arch"
@@ -62,10 +62,10 @@ detect_platform() {
         darwin*)
             case "$arch" in
                 x86_64)
-                    BINARY_NAME="awd-darwin-x86_64"
+                    BINARY_NAME="apm-darwin-x86_64"
                     ;;
                 arm64)
-                    BINARY_NAME="awd-darwin-arm64"
+                    BINARY_NAME="apm-darwin-arm64"
                     ;;
                 *)
                     log_error "Unsupported macOS architecture: $arch"
@@ -87,10 +87,10 @@ detect_environment() {
     log_info "Detecting environment..."
     
     # Check if we're in CI with pre-built artifacts (binary exists in ./dist/)
-    # The binary is located at ./dist/$BINARY_NAME/awd (directory structure)
-    if [[ -d "./dist/$BINARY_NAME" ]] && [[ -f "./dist/$BINARY_NAME/awd" ]]; then
+    # The binary is located at ./dist/$BINARY_NAME/apm (directory structure)
+    if [[ -d "./dist/$BINARY_NAME" ]] && [[ -f "./dist/$BINARY_NAME/apm" ]]; then
         USE_EXISTING_BINARY=true
-        log_info "Found existing binary: ./dist/$BINARY_NAME/awd (CI mode)"
+        log_info "Found existing binary: ./dist/$BINARY_NAME/apm (CI mode)"
     else
         USE_EXISTING_BINARY=false
         log_info "No existing binary found, will build locally"
@@ -103,7 +103,7 @@ build_binary() {
         return 0
     fi
     
-    log_info "=== Building AWD binary (local mode) ==="
+    log_info "=== Building APM binary (local mode) ==="
     
     # Install Python dependencies (like CI does)
     log_info "Installing Python dependencies..."
@@ -117,39 +117,39 @@ build_binary() {
     ./scripts/build-binary.sh
     
     # Verify binary was created
-    # The build script creates ./dist/$BINARY_NAME/awd (directory structure)
-    if [[ ! -f "./dist/$BINARY_NAME/awd" ]]; then
-        log_error "Binary not found: ./dist/$BINARY_NAME/awd"
+    # The build script creates ./dist/$BINARY_NAME/apm (directory structure)
+    if [[ ! -f "./dist/$BINARY_NAME/apm" ]]; then
+        log_error "Binary not found: ./dist/$BINARY_NAME/apm"
         exit 1
     fi
     
-    log_success "Binary built: ./dist/$BINARY_NAME/awd"
+    log_success "Binary built: ./dist/$BINARY_NAME/apm"
 }
 
 # Set up binary for testing (exactly like CI does)
 setup_binary_for_testing() {
     log_info "=== Setting up binary for testing (mirroring CI process) ==="
     
-    # The binary is located at ./dist/$BINARY_NAME/awd (directory structure)
-    BINARY_PATH="./dist/$BINARY_NAME/awd"
+    # The binary is located at ./dist/$BINARY_NAME/apm (directory structure)
+    BINARY_PATH="./dist/$BINARY_NAME/apm"
     
     # Make binary executable (like CI does)
     chmod +x "$BINARY_PATH"
     
-    # Create AWD symlink for testing (exactly like CI does)
-    ln -sf "$(pwd)/dist/$BINARY_NAME/awd" "$(pwd)/awd"
+    # Create APM symlink for testing (exactly like CI does)
+    ln -sf "$(pwd)/dist/$BINARY_NAME/apm" "$(pwd)/apm"
     
     # Add current directory to PATH (like CI does)
     export PATH="$(pwd):$PATH"
     
     # Verify setup
-    if ! command -v awd >/dev/null 2>&1; then
-        log_error "AWD not found in PATH after setup"
+    if ! command -v apm >/dev/null 2>&1; then
+        log_error "APM not found in PATH after setup"
         exit 1
     fi
     
-    local version=$(awd --version)
-    log_success "AWD binary ready for testing: $version"
+    local version=$(apm --version)
+    log_success "APM binary ready for testing: $version"
 }
 
 # Set up runtimes (codex/llm) - THE MISSING PIECE!
@@ -158,21 +158,21 @@ setup_runtimes() {
     
     # Set up codex runtime
     log_info "Setting up Codex runtime..."
-    if ! ./awd runtime setup codex; then
+    if ! ./apm runtime setup codex; then
         log_error "Failed to set up Codex runtime"
         exit 1
     fi
     
     # Set up LLM runtime  
     log_info "Setting up LLM runtime..."
-    if ! ./awd runtime setup llm; then
+    if ! ./apm runtime setup llm; then
         log_error "Failed to set up LLM runtime"
         exit 1
     fi
     
     # Add runtime paths to current session PATH
     log_info "Adding runtime paths to current session..."
-    RUNTIME_PATH="$HOME/.awd/runtimes"
+    RUNTIME_PATH="$HOME/.apm/runtimes"
     export PATH="$RUNTIME_PATH:$PATH"
     
     # Verify runtimes are available
@@ -191,7 +191,7 @@ setup_runtimes() {
     fi
     
     # Check LLM wrapper
-    local llm_path="$HOME/.awd/runtimes/llm"
+    local llm_path="$HOME/.apm/runtimes/llm"
     if [[ -x "$llm_path" ]]; then
         log_success "LLM runtime ready at: $llm_path"
     else
@@ -225,14 +225,14 @@ run_e2e_tests() {
     log_info "=== Running E2E golden scenario tests (mirroring CI) ==="
     
     # Set environment variables (like CI does)
-    export AWD_E2E_TESTS="1"
+    export APM_E2E_TESTS="1"
     export GITHUB_TOKEN="$GITHUB_TOKEN"
     
     log_info "Environment:"
-    echo "  AWD_E2E_TESTS: $AWD_E2E_TESTS"
+    echo "  APM_E2E_TESTS: $APM_E2E_TESTS"
     echo "  GITHUB_TOKEN: ${GITHUB_TOKEN:0:10}..."
-    echo "  PATH contains: $(dirname "$(which awd)")"
-    echo "  AWD binary: $(which awd)"
+    echo "  PATH contains: $(dirname "$(which apm)")"
+    echo "  APM binary: $(which apm)"
     
     # Activate virtual environment if it exists
     if [[ -f ".venv/bin/activate" ]]; then
@@ -253,7 +253,7 @@ run_e2e_tests() {
 
 # Main execution
 main() {
-    echo "AWD CLI E2E Testing - Unified CI/Local Script"
+    echo "APM CLI E2E Testing - Unified CI/Local Script"
     echo "============================================="
     echo ""
     echo "This script adapts to CI (using artifacts) or local (building) environments"
@@ -286,8 +286,8 @@ main() {
 
 # Cleanup on exit
 cleanup() {
-    if [[ -f "awd" ]]; then
-        rm -f awd
+    if [[ -f "apm" ]]; then
+        rm -f apm
     fi
 }
 trap cleanup EXIT

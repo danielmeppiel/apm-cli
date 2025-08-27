@@ -9,8 +9,8 @@ import shutil
 import gc
 import sys
 from pathlib import Path
-from awd_cli.registry.client import SimpleRegistryClient
-from awd_cli.adapters.client.vscode import VSCodeClientAdapter
+from apm_cli.registry.client import SimpleRegistryClient
+from apm_cli.adapters.client.vscode import VSCodeClientAdapter
 
 
 def safe_rmdir(path):

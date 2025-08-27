@@ -1,52 +1,52 @@
-# AWD CLI Reference
+# APM CLI Reference
 
-Complete command-line interface reference for Agentic Workflow Definitions (AWD).
+Complete command-line interface reference for Agent Primitives Manager (APM).
 
 ## Quick Start
 
 ```bash
-# 1. Install AWD
-curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+# 1. Install APM
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/apm-cli/main/install.sh | sh
 
 # 2. Setup runtime
-awd runtime setup codex
+apm runtime setup codex
 export GITHUB_TOKEN=your_github_token
 
 # 3. Create and run project  
-awd init my-project && cd my-project
-awd install && awd run start --param name="Developer"
+apm init my-project && cd my-project
+apm install && apm run start --param name="Developer"
 ```
 
 ## Installation
 
 ### Quick Install (Recommended)
 ```bash
-curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/apm-cli/main/install.sh | sh
 ```
 
 ### Manual Download
-Download from [GitHub Releases](https://github.com/danielmeppiel/awd-cli/releases/latest):
+Download from [GitHub Releases](https://github.com/danielmeppiel/apm-cli/releases/latest):
 ```bash
 # Linux x86_64
-curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-linux-x86_64 -o awd && chmod +x awd
+curl -L https://github.com/danielmeppiel/apm-cli/releases/latest/download/apm-linux-x86_64 -o apm && chmod +x apm
 
 # macOS Intel
-curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-x86_64 -o awd && chmod +x awd
+curl -L https://github.com/danielmeppiel/apm-cli/releases/latest/download/apm-darwin-x86_64 -o apm && chmod +x apm
 
 # macOS Apple Silicon  
-curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-arm64 -o awd && chmod +x awd
+curl -L https://github.com/danielmeppiel/apm-cli/releases/latest/download/apm-darwin-arm64 -o apm && chmod +x apm
 ```
 
 ### From Source (Developers)
 ```bash
-git clone https://github.com/danielmeppiel/awd-cli.git
-cd awd-cli && pip install -e .
+git clone https://github.com/danielmeppiel/apm-cli.git
+cd apm-cli && pip install -e .
 ```
 
 ## Global Options
 
 ```bash
-awd [OPTIONS] COMMAND [ARGS]...
+apm [OPTIONS] COMMAND [ARGS]...
 ```
 
 ### Options
@@ -55,12 +55,12 @@ awd [OPTIONS] COMMAND [ARGS]...
 
 ## Core Commands
 
-### `awd init` - 🚀 Initialize new AWD project
+### `apm init` - 🚀 Initialize new APM project
 
-Initialize a new AWD project with sample prompt and configuration (like `npm init`).
+Initialize a new APM project with sample prompt and configuration (like `npm init`).
 
 ```bash
-awd init [PROJECT_NAME] [OPTIONS]
+apm init [PROJECT_NAME] [OPTIONS]
 ```
 
 **Arguments:**
@@ -73,57 +73,57 @@ awd init [PROJECT_NAME] [OPTIONS]
 **Examples:**
 ```bash
 # Initialize in current directory (interactive)
-awd init
+apm init
 
 # Initialize in current directory explicitly  
-awd init .
+apm init .
 
 # Create new project directory
-awd init my-hello-world
+apm init my-hello-world
 
 # Force overwrite existing project
-awd init --force
+apm init --force
 
 # Use defaults without prompts
-awd init my-project --yes
+apm init my-project --yes
 ```
 
 **Behavior:**
 - **Interactive mode**: Prompts for project details unless `--yes` specified
-- **Existing projects**: Detects existing `awd.yml` and preserves configuration unless `--force` used
+- **Existing projects**: Detects existing `apm.yml` and preserves configuration unless `--force` used
 - **Strictly additive**: Like npm, preserves existing fields and values where possible
 
 **Creates:**
-- `awd.yml` - Project configuration with MCP dependencies
+- `apm.yml` - Project configuration with MCP dependencies
 - `hello-world.prompt.md` - Sample prompt with GitHub integration
 - `README.md` - Project documentation
 
-### `awd install` - 📦 Install dependencies
+### `apm install` - 📦 Install dependencies
 
-Install MCP server dependencies from `awd.yml` (like `npm install`).
+Install MCP server dependencies from `apm.yml` (like `npm install`).
 
 ```bash
-awd install
+apm install
 ```
 
 **Examples:**
 ```bash
-# Install all dependencies from awd.yml
-awd install
+# Install all dependencies from apm.yml
+apm install
 ```
 
-**Requirements:** Must be run in a directory with `awd.yml` file.
+**Requirements:** Must be run in a directory with `apm.yml` file.
 
-### `awd run` - 🚀 Execute prompts
+### `apm run` - 🚀 Execute prompts
 
-Execute a script defined in your awd.yml with parameters and real-time output streaming.
+Execute a script defined in your apm.yml with parameters and real-time output streaming.
 
 ```bash
-awd run [SCRIPT_NAME] [OPTIONS]
+apm run [SCRIPT_NAME] [OPTIONS]
 ```
 
 **Arguments:**
-- `SCRIPT_NAME` - Name of script to run from awd.yml scripts section
+- `SCRIPT_NAME` - Name of script to run from apm.yml scripts section
 
 **Options:**
 - `-p, --param TEXT` - Parameter in format `name=value` (can be used multiple times)
@@ -131,31 +131,31 @@ awd run [SCRIPT_NAME] [OPTIONS]
 **Examples:**
 ```bash
 # Run start script (default script)
-awd run start --param name="Developer"
+apm run start --param name="Developer"
 
 # Run with different scripts 
-awd run start --param name="Alice"
-awd run llm --param service=api
-awd run debug --param service=api
+apm run start --param name="Alice"
+apm run llm --param service=api
+apm run debug --param service=api
 
 # Run specific scripts with parameters
-awd run llm --param service=api --param environment=prod
+apm run llm --param service=api --param environment=prod
 ```
 
 **Return Codes:**
 - `0` - Success
 - `1` - Execution failed or error occurred
 
-### `awd preview` - 👀 Preview compiled scripts
+### `apm preview` - 👀 Preview compiled scripts
 
 Show the processed prompt content with parameters substituted, without executing.
 
 ```bash
-awd preview [SCRIPT_NAME] [OPTIONS]
+apm preview [SCRIPT_NAME] [OPTIONS]
 ```
 
 **Arguments:**
-- `SCRIPT_NAME` - Name of script to preview from awd.yml scripts section
+- `SCRIPT_NAME` - Name of script to preview from apm.yml scripts section
 
 **Options:**
 - `-p, --param TEXT` - Parameter in format `name=value`
@@ -163,24 +163,24 @@ awd preview [SCRIPT_NAME] [OPTIONS]
 **Examples:**
 ```bash
 # Preview start script
-awd preview start --param name="Developer"
+apm preview start --param name="Developer"
 
 # Preview specific script with parameters
-awd preview llm --param name="Alice"
+apm preview llm --param name="Alice"
 ```
 
-### `awd list` - 📋 List available scripts
+### `apm list` - 📋 List available scripts
 
-Display all scripts defined in awd.yml.
+Display all scripts defined in apm.yml.
 
 ```bash
-awd list
+apm list
 ```
 
 **Examples:**
 ```bash
 # List all prompts in project
-awd list
+apm list
 ```
 
 **Output format:**
@@ -191,12 +191,12 @@ Available scripts:
   debug: RUST_LOG=debug codex hello-world.prompt.md
 ```
 
-### `awd compile` - 📝 Compile AWD primitives into AGENTS.md
+### `apm compile` - 📝 Compile APM primitives into AGENTS.md
 
-Compile AWD primitives (chatmodes, instructions, contexts) into a single intelligent AGENTS.md file with conditional sections, markdown link resolution, and project setup auto-detection.
+Compile APM primitives (chatmodes, instructions, contexts) into a single intelligent AGENTS.md file with conditional sections, markdown link resolution, and project setup auto-detection.
 
 ```bash
-awd compile [OPTIONS]
+apm compile [OPTIONS]
 ```
 
 **Options:**
@@ -210,30 +210,30 @@ awd compile [OPTIONS]
 **Examples:**
 ```bash
 # Basic compilation with auto-detected primitives
-awd compile
+apm compile
 
 # Generate with specific chatmode
-awd compile --chatmode architect
+apm compile --chatmode architect
 
 # Preview without writing file
-awd compile --dry-run
+apm compile --dry-run
 
 # Custom output file
-awd compile --output docs/AI-CONTEXT.md
+apm compile --output docs/AI-CONTEXT.md
 
 # Validate primitives without generating output
-awd compile --validate
+apm compile --validate
 
 # Watch for changes and auto-recompile (development mode)
-awd compile --watch
+apm compile --watch
 
 # Watch mode with dry-run for testing
-awd compile --watch --dry-run
+apm compile --watch --dry-run
 ```
 
 **Watch Mode:**
-- Monitors `.awd/`, `.github/instructions/`, `.github/chatmodes/` directories
-- Auto-recompiles when `.md` or `awd.yml` files change
+- Monitors `.apm/`, `.github/instructions/`, `.github/chatmodes/` directories
+- Auto-recompiles when `.md` or `apm.yml` files change
 - Includes 1-second debounce to prevent rapid recompilation
 - Press Ctrl+C to stop watching
 - Requires `watchdog` library (automatically installed)
@@ -245,7 +245,7 @@ awd compile --watch --dry-run
 - No output file generation in validation-only mode
 
 **Configuration Integration:**
-The compile command supports configuration via `awd.yml`:
+The compile command supports configuration via `apm.yml`:
 
 ```yaml
 compilation:
@@ -254,30 +254,30 @@ compilation:
   resolve_links: true           # Enable markdown link resolution
 ```
 
-Command-line options always override `awd.yml` settings. Priority order:
+Command-line options always override `apm.yml` settings. Priority order:
 1. Command-line flags (highest priority)
-2. `awd.yml` compilation section
+2. `apm.yml` compilation section
 3. Built-in defaults (lowest priority)
 
 **Generated AGENTS.md structure:**
-- **Header** - Generation metadata and AWD version
+- **Header** - Generation metadata and APM version
 - **Pattern-based Sections** - Content grouped by exact `applyTo` patterns from instruction primitives (e.g., "Files matching `**/*.py`")
 - **Footer** - Regeneration instructions
 
-The structure is entirely dictated by the instruction primitives found in `.awd/` and `.github/instructions/` directories. No predefined sections or project detection are applied.
+The structure is entirely dictated by the instruction primitives found in `.apm/` and `.github/instructions/` directories. No predefined sections or project detection are applied.
 
 **Primitive Discovery:**
-- **Chatmodes**: `.chatmode.md` files in `.awd/chatmodes/`, `.github/chatmodes/`
-- **Instructions**: `.instructions.md` files in `.awd/instructions/`, `.github/instructions/`
-- **Contexts**: `.context.md`, `.memory.md` files in `.awd/context/`, `.github/context/`
+- **Chatmodes**: `.chatmode.md` files in `.apm/chatmodes/`, `.github/chatmodes/`
+- **Instructions**: `.instructions.md` files in `.apm/instructions/`, `.github/instructions/`
+- **Contexts**: `.context.md`, `.memory.md` files in `.apm/context/`, `.github/context/`
 - **Workflows**: `.prompt.md` files in project and `.github/prompts/`
 
-### `awd config` - ⚙️ Configure AWD CLI
+### `apm config` - ⚙️ Configure APM CLI
 
-Display AWD CLI configuration information.
+Display APM CLI configuration information.
 
 ```bash
-awd config [OPTIONS]
+apm config [OPTIONS]
 ```
 
 **Options:**
@@ -286,70 +286,70 @@ awd config [OPTIONS]
 **Examples:**
 ```bash
 # Show current configuration
-awd config --show
+apm config --show
 ```
 
 ## Runtime Management
 
-### `awd runtime` - 🤖 Manage AI runtimes
+### `apm runtime` - 🤖 Manage AI runtimes
 
-AWD manages AI runtime installation and configuration automatically. Currently supports two runtimes: `codex` and `llm`.
+APM manages AI runtime installation and configuration automatically. Currently supports two runtimes: `codex` and `llm`.
 
 ```bash
-awd runtime COMMAND [OPTIONS]
+apm runtime COMMAND [OPTIONS]
 ```
 
 **Supported Runtimes:**
 - **`codex`** - OpenAI Codex CLI with GitHub Models support (recommended)
 - **`llm`** - Simon Willison's LLM library with multiple providers
 
-#### `awd runtime setup` - ⚙️ Install AI runtime
+#### `apm runtime setup` - ⚙️ Install AI runtime
 
 Download and configure an AI runtime from official sources.
 
 ```bash
-awd runtime setup RUNTIME_NAME [OPTIONS]
+apm runtime setup RUNTIME_NAME [OPTIONS]
 ```
 
 **Arguments:**
 - `RUNTIME_NAME` - Runtime to install: `codex` or `llm`
 
 **Options:**
-- `--vanilla` - Install runtime without AWD configuration (uses runtime's native defaults)
+- `--vanilla` - Install runtime without APM configuration (uses runtime's native defaults)
 
 **Examples:**
 ```bash
-# Install Codex with AWD defaults (GitHub Models, free)
-awd runtime setup codex
+# Install Codex with APM defaults (GitHub Models, free)
+apm runtime setup codex
 
-# Install LLM with AWD defaults  
-awd runtime setup llm
+# Install LLM with APM defaults  
+apm runtime setup llm
 
-# Install Codex without AWD configuration (vanilla)
-awd runtime setup codex --vanilla
+# Install Codex without APM configuration (vanilla)
+apm runtime setup codex --vanilla
 
-# Install LLM without AWD configuration (vanilla)
-awd runtime setup llm --vanilla
+# Install LLM without APM configuration (vanilla)
+apm runtime setup llm --vanilla
 ```
 
 **Default Behavior:**
 - Installs runtime binary from official sources
-- Configures with GitHub Models (free) as AWD default
+- Configures with GitHub Models (free) as APM default
 - Creates configuration file at `~/.codex/config.toml` or similar
 - Provides clear logging about what's being configured
 
 **Vanilla Behavior (`--vanilla` flag):**
 - Installs runtime binary only
-- No AWD-specific configuration applied
+- No APM-specific configuration applied
 - Uses runtime's native defaults (e.g., OpenAI for Codex)
-- No configuration files created by AWD
+- No configuration files created by APM
 
-#### `awd runtime list` - 📋 Show installed runtimes
+#### `apm runtime list` - 📋 Show installed runtimes
 
 List all available runtimes and their installation status.
 
 ```bash
-awd runtime list
+apm runtime list
 ```
 
 **Output includes:**
@@ -358,23 +358,23 @@ awd runtime list
 - Installation path and version
 - Configuration details
 
-#### `awd runtime remove` - 🗑️ Uninstall runtime
+#### `apm runtime remove` - 🗑️ Uninstall runtime
 
 Remove an installed runtime and its configuration.
 
 ```bash
-awd runtime remove RUNTIME_NAME
+apm runtime remove RUNTIME_NAME
 ```
 
 **Arguments:**
 - `RUNTIME_NAME` - Runtime to remove: `codex` or `llm`
 
-#### `awd runtime status` - 📊 Show runtime status
+#### `apm runtime status` - 📊 Show runtime status
 
-Display which runtime AWD will use for execution and runtime preference order.
+Display which runtime APM will use for execution and runtime preference order.
 
 ```bash
-awd runtime status
+apm runtime status
 ```
 
 **Output includes:**
@@ -382,12 +382,12 @@ awd runtime status
 - Currently active runtime
 - Next steps if no runtime is available
 
-#### `awd runtime status` - Show runtime status
+#### `apm runtime status` - Show runtime status
 
 Display detailed status for a specific runtime.
 
 ```bash
-awd runtime status RUNTIME_NAME
+apm runtime status RUNTIME_NAME
 ```
 
 **Arguments:**
@@ -395,11 +395,11 @@ awd runtime status RUNTIME_NAME
 
 ## File Formats
 
-### AWD Project Configuration (`awd.yml`)
+### APM Project Configuration (`apm.yml`)
 ```yaml
 name: my-project
 version: 1.0.0
-description: My AWD application
+description: My APM application
 author: Your Name
 scripts:
   start: "codex hello-world.prompt.md"
@@ -428,7 +428,7 @@ Your prompt content here with ${input:param1} substitution.
 ```
 
 ### Supported Prompt Locations
-AWD discovers `.prompt.md` files anywhere in your project:
+APM discovers `.prompt.md` files anywhere in your project:
 - `./hello-world.prompt.md`
 - `./prompts/my-prompt.prompt.md`
 - `./.github/prompts/workflow.prompt.md` 
@@ -438,65 +438,65 @@ AWD discovers `.prompt.md` files anywhere in your project:
 
 ```bash
 # 1. Initialize new project (like npm init)
-awd init my-hello-world
+apm init my-hello-world
 
 # 2. Navigate to project
 cd my-hello-world
 
 # 3. Install dependencies (like npm install)
-awd install
+apm install
 
 # 4. Run the hello world prompt
-awd run start --param name="Developer"
+apm run start --param name="Developer"
 
 # 5. Preview before execution
-awd preview start --param name="Developer"
+apm preview start --param name="Developer"
 
 # 6. List available prompts
-awd list
+apm list
 ```
 
 ## Tips & Best Practices
 
-1. **Start with runtime setup**: Run `awd runtime setup codex` for best experience
+1. **Start with runtime setup**: Run `apm runtime setup codex` for best experience
 2. **Use GitHub Models for free tier**: Set `GITHUB_TOKEN` for free Codex access
-3. **Preview before running**: Use `awd preview` to check parameter substitution
+3. **Preview before running**: Use `apm preview` to check parameter substitution
 4. **Organize prompts**: Use descriptive names and place in logical directories
-5. **Version control**: Include `.prompt.md` files and `awd.yml` in your git repository
+5. **Version control**: Include `.prompt.md` files and `apm.yml` in your git repository
 6. **Parameter naming**: Use clear, descriptive parameter names in prompts
 7. **Error handling**: Always check return codes in scripts and CI/CD
-8. **MCP integration**: Declare MCP dependencies in both `awd.yml` and prompt frontmatter
+8. **MCP integration**: Declare MCP dependencies in both `apm.yml` and prompt frontmatter
 
 ## Integration Examples
 
 ### In CI/CD (GitHub Actions)
 ```yaml
-- name: Setup AWD runtime
+- name: Setup APM runtime
   run: |
-    awd runtime setup codex
+    apm runtime setup codex
     export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
     
-- name: Setup AWD project
-  run: awd install
+- name: Setup APM project
+  run: apm install
     
 - name: Run code review
   run: |
-    awd run code-review \
+    apm run code-review \
       --param pr_number=${{ github.event.number }}
 ```
 
 ### In Development Scripts
 ```bash
 #!/bin/bash
-# Setup and run AWD project
-awd runtime setup codex
+# Setup and run APM project
+apm runtime setup codex
 export GITHUB_TOKEN=your_token
 
-cd my-awd-project
-awd install
+cd my-apm-project
+apm install
 
 # Run documentation analysis
-if awd run document --param project_name=$(basename $PWD); then
+if apm run document --param project_name=$(basename $PWD); then
     echo "Documentation analysis completed"
 else
     echo "Documentation analysis failed" 
@@ -506,8 +506,8 @@ fi
 
 ### Project Structure Example
 ```
-my-awd-project/
-├── awd.yml                           # Project configuration
+my-apm-project/
+├── apm.yml                           # Project configuration
 ├── README.md                         # Project documentation  
 ├── hello-world.prompt.md             # Main prompt file
 ├── prompts/
@@ -515,5 +515,5 @@ my-awd-project/
 │   └── documentation.prompt.md       # Documentation prompt
 └── .github/
     └── workflows/
-        └── awd-ci.yml                # CI using AWD prompts
+        └── apm-ci.yml                # CI using APM prompts
 ```

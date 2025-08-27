@@ -1,15 +1,15 @@
-# Agentic Workflow Definitions (AWD)
+# Agent Primitives Manager (APM)
 
-**Make any project compatible with AI-Native Development** - Stop the trial-and-error cycle of inconsistent AI results. AWD implements the proven [AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/) that delivers reliable, repeatable workflows with any coding agent.
+**Make any project compatible with AI-Native Development** - Stop the trial-and-error cycle of inconsistent AI results. APM implements the proven [AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/) that delivers reliable, repeatable workflows with any coding agent.
 
-**Works with Any Coding Agent** - From GitHub Copilot to Cursor, Codex to Aider. AWD creates portable Agent Primitives that ensure consistent AI behavior across all tools through the emerging [agents.md standard](https://agents.md).
+**Works with Any Coding Agent** - From GitHub Copilot to Cursor, Codex to Aider. APM creates portable Agent Primitives that ensure consistent AI behavior across all tools through the emerging [agents.md standard](https://agents.md).
 
 **Think npm + Node.js, but for AI-Native Development.**
 
 | Traditional Web Dev | AI-Native Development | Role |
 |---------------------|----------------------|------|
-| **npm** | **AWD Package Manager** | Dependency resolution, distribution |
-| **TypeScript Compiler** | **AWD Primitives Compiler** | Transform Agent Primitives → agents.md format |
+| **npm** | **APM Package Manager** | Dependency resolution, distribution |
+| **TypeScript Compiler** | **APM Primitives Compiler** | Transform Agent Primitives → agents.md format |
 | **Node.js** | **Coding Agent Runtimes** | Execute compiled AI workflows |
 | **JavaScript** | **Natural Language** | What runtimes actually understand |
 
@@ -19,23 +19,23 @@
 > **📋 Prerequisites**: Get a GitHub fine-grained Personal Access Token with **read-only Models permissions** at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
 
 ```bash
-# 1. Install AWD CLI (zero dependencies)
-curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+# 1. Install APM CLI (zero dependencies)
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/apm-cli/main/install.sh | sh
 
 # 2. Set up your GitHub PAT and an Agent CLI
 export GITHUB_TOKEN=your_token_here
-awd runtime setup codex # Installs OpenAI Codex CLI
+apm runtime setup codex # Installs OpenAI Codex CLI
 
 # 3. Transform your project with AI-Native structure
-awd init my-ai-native-project
+apm init my-ai-native-project
 
 # 4. Compile Agent Primitives for any coding agent
 cd my-ai-native-project
-awd compile  # Generates agents.md compatible with multiple Agent CLIs
+apm compile  # Generates agents.md compatible with multiple Agent CLIs
 
 # 5. Install MCP dependencies and execute agentic workflows (*.prompt.md files)
-awd install
-awd run start --param name="Developer"
+apm install
+apm run start --param name="Developer"
 ```
 
 **That's it!** Your project now has reliable AI-Native Development workflows that work with any coding agent.
@@ -57,7 +57,7 @@ Most developers experience AI as inconsistent and unreliable:
 - ❌ **Vendor lock-in** to specific AI tools and platforms
 - ❌ **No knowledge persistence** across sessions and team members
 
-**AWD solves this** by implementing the complete [3-layer AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/docs/concepts/):
+**APM solves this** by implementing the complete [3-layer AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/docs/concepts/):
 
 **🔧 Layer 1: Markdown Prompt Engineering** - Structured, repeatable AI instructions  
 **⚙️ Layer 2: Agent Primitives** - Configurable tools that deploy prompt + context engineering  
@@ -69,15 +69,15 @@ Most developers experience AI as inconsistent and unreliable:
 
 **From Manual Supervision → Engineered Architecture**
 
-Most developers start by manually supervising every AI interaction. AWD enables the transformation to AI-Native engineering:
+Most developers start by manually supervising every AI interaction. APM enables the transformation to AI-Native engineering:
 
-### 🔴 Before AWD: Manual Agent Supervision
+### 🔴 Before APM: Manual Agent Supervision
 - Write one-off prompts for each task  
 - Manually guide every AI conversation
 - Start from scratch each time
 - *You're the bottleneck - every AI task needs your attention*
 
-### 🟢 With AWD: Engineered Agent Delegation  
+### 🟢 With APM: Engineered Agent Delegation  
 - Build reusable Agent Primitives once
 - Engineer context strategically 
 - Delegate complete workflows to AI
@@ -87,20 +87,20 @@ Most developers start by manually supervising every AI interaction. AWD enables 
 
 ## How Agent Primitives Work
 
-AWD implements Agent Primitives - the configurable tools that deploy prompt engineering and context engineering techniques:
+APM implements Agent Primitives - the configurable tools that deploy prompt engineering and context engineering techniques:
 
 **🏗️ Initialize a project with AI-Native structure:**
 
 ```bash
-awd init my-project  # Creates complete Agent Primitives scaffolding + awd.yml
+apm init my-project  # Creates complete Agent Primitives scaffolding + apm.yml
 ```
 
 **⚙️ Generated Project Structure:**
 
 ```yaml
 my-project/
-├── awd.yml              # Project configuration and script definitions
-└── .awd/
+├── apm.yml              # Project configuration and script definitions
+└── .apm/
     ├── chatmodes/       # Role-based AI expertise with tool boundaries
     │   ├── backend-dev.chatmode.md     # API development specialist
     │   └── frontend-dev.chatmode.md    # UI development specialist
@@ -119,7 +119,7 @@ my-project/
 **🔄 Compile for Universal Agent CLI Compatibility:**
 
 ```bash
-awd compile  # Transforms .awd/ primitives → agents.md standard
+apm compile  # Transforms .apm/ primitives → agents.md standard
 ```
 
 This generates an `AGENTS.md` file compatible with all major coding agents.
@@ -158,21 +158,21 @@ Review [security standards](../context/security-standards.md) and [existing auth
 
 **Execute with any coding agent:**
 ```bash
-awd run implement-auth --param auth_method=jwt --param session_duration=24h
+apm run implement-auth --param auth_method=jwt --param session_duration=24h
 ```
 
 ## Supported AI Runtimes
 
-AWD manages AI runtime installation and provides MCP tool integration:
+APM manages AI runtime installation and provides MCP tool integration:
 
 - **⚡ OpenAI Codex CLI** (recommended) - Advanced code understanding with GitHub Models integration
 - **🔧 LLM Library** - 100+ models from OpenAI, Anthropic, GitHub, local Ollama
 
 ```bash
-# AWD manages runtime installation
-awd runtime setup codex        # Install Codex with GitHub Models  
-awd runtime setup llm          # Install LLM library
-awd runtime list               # Show installed runtimes
+# APM manages runtime installation
+apm runtime setup codex        # Install Codex with GitHub Models  
+apm runtime setup llm          # Install LLM library
+apm runtime list               # Show installed runtimes
 ```
 
 ## Packaging & Distribution
@@ -180,7 +180,7 @@ awd runtime list               # Show installed runtimes
 **Manage like npm packages:**
 
 ```yaml
-# awd.yml - Project configuration
+# apm.yml - Project configuration
 name: my-ai-native-app
 version: 1.0.0
 scripts:
@@ -194,16 +194,16 @@ dependencies:
 
 **Share and reuse across projects:**
 ```bash
-awd install                    # Install MCP dependencies
-awd run start --param feature="user-auth"
-awd run review --param files="src/auth/"
+apm install                    # Install MCP dependencies
+apm run start --param feature="user-auth"
+apm run review --param files="src/auth/"
 ```
 
-## Why AWD? The Missing Infrastructure for AI-Native Development
+## Why APM? The Missing Infrastructure for AI-Native Development
 
 **The Problem**: Developers have powerful AI coding assistants but lack systematic approaches to make them reliable and scalable. Every team reinvents their AI workflows, can't share effective patterns, and struggles with inconsistent results.
 
-**The Solution**: AWD provides the missing infrastructure layer that makes AI-Native Development portable and reliable.
+**The Solution**: APM provides the missing infrastructure layer that makes AI-Native Development portable and reliable.
 
 ### Key Benefits
 
@@ -215,7 +215,7 @@ awd run review --param files="src/auth/"
 
 ### The Infrastructure Analogy
 
-Just as npm revolutionized JavaScript by creating package ecosystem infrastructure, AWD creates the missing infrastructure for AI-Native Development:
+Just as npm revolutionized JavaScript by creating package ecosystem infrastructure, APM creates the missing infrastructure for AI-Native Development:
 
 - **Package Management**: Share and version AI workflows like code dependencies
 - **Compilation**: Transform Agent Primitives into runtime-compatible formats  
@@ -224,15 +224,15 @@ Just as npm revolutionized JavaScript by creating package ecosystem infrastructu
 
 ## The Complete AI-Native Framework
 
-AWD implements the complete [AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/docs/concepts/) through engineering practices:
+APM implements the complete [AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/docs/concepts/) through engineering practices:
 
 ```mermaid
 graph TD
-    A["📝 Agent Primitives<br/>.awd/ directory<br/>(.chatmode, .instructions, .prompt, .context, .spec)"] --> B["🔧 AWD CLI"]
+    A["📝 Agent Primitives<br/>.apm/ directory<br/>(.chatmode, .instructions, .prompt, .context, .spec)"] --> B["🔧 APM CLI"]
     
-    B --> D["📦 AWD Package Manager<br/>Dependencies<br/>Templates"]
-    B --> C["⚙️ AWD Primitives Compiler<br/>Script Resolution<br/>Primitive Compilation"]
-    B --> E["🏗️ AWD Runtime Manager<br/>Install & Configure<br/>Codex, LLM, etc."]
+    B --> D["📦 APM Package Manager<br/>Dependencies<br/>Templates"]
+    B --> C["⚙️ APM Primitives Compiler<br/>Script Resolution<br/>Primitive Compilation"]
+    B --> E["🏗️ APM Runtime Manager<br/>Install & Configure<br/>Codex, LLM, etc."]
     
     C --> F["📄 AGENTS.md<br/>Portable Standard<br/>Cross-Runtime Compatible"]
     
@@ -252,7 +252,7 @@ graph TD
     style I fill:#fff3e0,stroke:#ff9800,stroke-width:1px,color:#000
 ```
 
-**Key Architecture**: AWD CLI provides three core components: Package Manager (dependencies), Primitives Compiler (transforms .awd/ → agents.md), and Runtime Manager (install/configure AI tools). The compiled agents.md ensures your Agent Primitives work with any coding agent.
+**Key Architecture**: APM CLI provides three core components: Package Manager (dependencies), Primitives Compiler (transforms .apm/ → agents.md), and Runtime Manager (install/configure AI tools). The compiled agents.md ensures your Agent Primitives work with any coding agent.
 
 **Learn the Complete Framework**: [AI-Native Development Guide →](https://danielmeppiel.github.io/awesome-ai-native/) 
 
@@ -260,32 +260,32 @@ graph TD
 
 ### Quick Install (Recommended)
 ```bash
-curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/apm-cli/main/install.sh | sh
 ```
 
 ### Python Package
 ```bash
-pip install awd-cli
+pip install apm-cli
 ```
 
 ### Manual Download
-Download the binary for your platform from [GitHub Releases](https://github.com/danielmeppiel/awd-cli/releases/latest):
+Download the binary for your platform from [GitHub Releases](https://github.com/danielmeppiel/apm-cli/releases/latest):
 
 ```bash
 # Linux x86_64
-curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-linux-x86_64.tar.gz | tar -xz && sudo mv awd-linux-x86_64/awd /usr/local/bin/
+curl -L https://github.com/danielmeppiel/apm-cli/releases/latest/download/apm-linux-x86_64.tar.gz | tar -xz && sudo mv apm-linux-x86_64/apm /usr/local/bin/
 
 # macOS Intel
-curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-x86_64.tar.gz | tar -xz && sudo mv awd-darwin-x86_64/awd /usr/local/bin/
+curl -L https://github.com/danielmeppiel/apm-cli/releases/latest/download/apm-darwin-x86_64.tar.gz | tar -xz && sudo mv apm-darwin-x86_64/apm /usr/local/bin/
 
 # macOS Apple Silicon  
-curl -L https://github.com/danielmeppiel/awd-cli/releases/latest/download/awd-darwin-arm64.tar.gz | tar -xz && sudo mv awd-darwin-arm64/awd /usr/local/bin/
+curl -L https://github.com/danielmeppiel/apm-cli/releases/latest/download/apm-darwin-arm64.tar.gz | tar -xz && sudo mv apm-darwin-arm64/apm /usr/local/bin/
 ```
 
 ### From Source (Developers)
 ```bash
-git clone https://github.com/danielmeppiel/awd-cli.git
-cd awd-cli && uv pip install -e .
+git clone https://github.com/danielmeppiel/apm-cli.git
+cd apm-cli && uv pip install -e .
 ```
 
 ## CLI Reference
@@ -294,24 +294,24 @@ cd awd-cli && uv pip install -e .
 
 ```bash
 # Project initialization and setup
-awd init my-project                               # Initialize AI-native project structure
-awd runtime setup codex                           # Install Codex with GitHub Models
-awd install                                       # Install MCP dependencies
+apm init my-project                               # Initialize AI-native project structure
+apm runtime setup codex                           # Install Codex with GitHub Models
+apm install                                       # Install MCP dependencies
 
 # Agent Primitives compilation (run before AI workflows)
-awd compile                                       # Generate agents.md from .awd/ primitives  
-awd compile --watch                              # Auto-regenerate on changes
-awd compile --output custom.md                   # Custom output file
+apm compile                                       # Generate agents.md from .apm/ primitives  
+apm compile --watch                              # Auto-regenerate on changes
+apm compile --output custom.md                   # Custom output file
 
 # Workflow execution  
-awd run start --param key=value                   # Execute workflows with parameters
-awd run review --param files="src/**"            # Run code review workflow
-awd preview start --param key=value              # Preview compiled workflow
+apm run start --param key=value                   # Execute workflows with parameters
+apm run review --param files="src/**"            # Run code review workflow
+apm preview start --param key=value              # Preview compiled workflow
 
 # Runtime and debugging
-awd runtime list                                 # Show installed AI runtimes
-awd list                                         # Show available project scripts
-RUST_LOG=debug awd run start                     # Enable debug logging
+apm runtime list                                 # Show installed AI runtimes
+apm list                                         # Show available project scripts
+RUST_LOG=debug apm run start                     # Enable debug logging
 ```
 
 ## Beyond Simple Prompts: Advanced Workflows
@@ -322,16 +322,16 @@ RUST_LOG=debug awd run start                     # Enable debug logging
 **Example: Multi-step Feature Development**
 ```bash
 # 1. Generate specification from requirements
-awd run create-spec --param feature="user-auth"
+apm run create-spec --param feature="user-auth"
 
 # 2. Review and validate specification  
-awd run review-spec --param spec="specs/user-auth.spec.md"
+apm run review-spec --param spec="specs/user-auth.spec.md"
 
 # 3. Implement feature following specification
-awd run implement --param spec="specs/user-auth.spec.md"
+apm run implement --param spec="specs/user-auth.spec.md"
 
 # 4. Generate tests and documentation
-awd run test-feature --param feature="user-authentication"
+apm run test-feature --param feature="user-authentication"
 ```
 
 Each step leverages your project's Agent Primitives for consistent, reliable results.
@@ -339,10 +339,10 @@ Each step leverages your project's Agent Primitives for consistent, reliable res
 ## Community & Resources
 
 - 📚 **[AI-Native Development Guide](https://danielmeppiel.github.io/awesome-ai-native/)** - Complete framework documentation
-- 📖 **[Documentation](docs/index.md)** - AWD CLI guides and examples
+- 📖 **[Documentation](docs/index.md)** - APM CLI guides and examples
 - 🤝 **[Contributing](CONTRIBUTING.md)** - Help build the AI-native ecosystem  
-- ⭐ **Star this repo** if AWD helps transform your AI development workflow!
+- ⭐ **Star this repo** if APM helps transform your AI development workflow!
 
 ---
 
-**AWD transforms any project into reliable AI-Native Development.**
+**APM transforms any project into reliable AI-Native Development.**

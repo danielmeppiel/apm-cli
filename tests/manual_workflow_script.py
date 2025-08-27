@@ -15,9 +15,9 @@ import subprocess
 # Add the src directory to the path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from awd_cli.workflow.discovery import create_workflow_template
-from awd_cli.workflow.discovery import discover_workflows
-from awd_cli.workflow.runner import run_workflow
+from apm_cli.workflow.discovery import create_workflow_template
+from apm_cli.workflow.discovery import discover_workflows
+from apm_cli.workflow.runner import run_workflow
 
 def manual_test_workflow_commands():
     """Test the workflow commands."""

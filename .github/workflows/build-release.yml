@@ -77,7 +77,7 @@ jobs:
 
   # Build binaries (only on tags or manual dispatch)
   build:
-    name: Build AWD Binary
+    name: Build APM Binary
     needs: [test]
     if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     strategy:
@@ -86,15 +86,15 @@ jobs:
           - os: ubuntu-24.04
             platform: linux
             arch: x86_64
-            binary_name: awd-linux-x86_64
+            binary_name: apm-linux-x86_64
           - os: macos-13
             platform: darwin
             arch: x86_64
-            binary_name: awd-darwin-x86_64
+            binary_name: apm-darwin-x86_64
           - os: macos-14
             platform: darwin
             arch: arm64
-            binary_name: awd-darwin-arm64
+            binary_name: apm-darwin-arm64
     
     runs-on: ${{ matrix.os }}
     permissions:
@@ -152,15 +152,15 @@ jobs:
           - os: ubuntu-24.04
             arch: x86_64
             platform: linux
-            binary_name: awd-linux-x86_64
+            binary_name: apm-linux-x86_64
           - os: macos-13
             arch: x86_64
             platform: darwin
-            binary_name: awd-darwin-x86_64
+            binary_name: apm-darwin-x86_64
           - os: macos-14
             arch: arm64
             platform: darwin
-            binary_name: awd-darwin-arm64
+            binary_name: apm-darwin-arm64
     
     runs-on: ${{ matrix.os }}
     permissions:
@@ -186,23 +186,23 @@ jobs:
           uv venv
           uv pip install -e ".[dev]"
       
-      - name: Download AWD binary from build artifacts
+      - name: Download APM binary from build artifacts
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.binary_name }}
           path: ./dist/
       
       - name: Make binary executable
-        run: chmod +x ./dist/${{ matrix.binary_name }}/awd
+        run: chmod +x ./dist/${{ matrix.binary_name }}/apm
       
-      - name: Create AWD symlink for testing
+      - name: Create APM symlink for testing
         run: |
-          ln -s "$(pwd)/dist/${{ matrix.binary_name }}/awd" "$(pwd)/awd"
+          ln -s "$(pwd)/dist/${{ matrix.binary_name }}/apm" "$(pwd)/apm"
           echo "$(pwd)" >> $GITHUB_PATH
       
       - name: Run E2E golden scenario tests
         env:
-          AWD_E2E_TESTS: "1"
+          APM_E2E_TESTS: "1"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_MODELS_KEY: ${{ secrets.GITHUB_TOKEN }}  # LLM library expects GITHUB_MODELS_KEY
         run: |
@@ -234,9 +234,9 @@ jobs:
         run: |
           # Create tar.gz archives from directory structure for release and Homebrew
           cd dist
-          for binary in awd-linux-x86_64 awd-darwin-x86_64 awd-darwin-arm64; do
+          for binary in apm-linux-x86_64 apm-darwin-x86_64 apm-darwin-arm64; do
             # Ensure the binary is executable before archiving
-            chmod +x "${binary}/awd"
+            chmod +x "${binary}/apm"
             # Create tar.gz with preserved permissions
             tar -czf "${binary}.tar.gz" "$binary"
             if command -v sha256sum &> /dev/null; then
@@ -251,12 +251,12 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            ./dist/awd-linux-x86_64.tar.gz
-            ./dist/awd-linux-x86_64.tar.gz.sha256
-            ./dist/awd-darwin-x86_64.tar.gz
-            ./dist/awd-darwin-x86_64.tar.gz.sha256
-            ./dist/awd-darwin-arm64.tar.gz
-            ./dist/awd-darwin-arm64.tar.gz.sha256
+            ./dist/apm-linux-x86_64.tar.gz
+            ./dist/apm-linux-x86_64.tar.gz.sha256
+            ./dist/apm-darwin-x86_64.tar.gz
+            ./dist/apm-darwin-x86_64.tar.gz.sha256
+            ./dist/apm-darwin-arm64.tar.gz
+            ./dist/apm-darwin-arm64.tar.gz.sha256
 
   # Publish to PyPI (only on tags and after successful builds)  
   publish-pypi:
@@ -266,7 +266,7 @@ jobs:
     if: github.ref_type == 'tag' && success() # Only run on tags AND if all previous jobs succeeded 
     environment:
       name: pypi
-      url: https://pypi.org/p/awd-cli
+      url: https://pypi.org/p/apm-cli
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     
@@ -312,17 +312,17 @@ jobs:
           echo "Downloading checksums for release $RELEASE_TAG"
           
           # Download checksum files directly from the release
-          curl -L -o awd-darwin-arm64.tar.gz.sha256 \
-            "https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG/awd-darwin-arm64.tar.gz.sha256"
-          curl -L -o awd-darwin-x86_64.tar.gz.sha256 \
-            "https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG/awd-darwin-x86_64.tar.gz.sha256"
-          curl -L -o awd-linux-x86_64.tar.gz.sha256 \
-            "https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG/awd-linux-x86_64.tar.gz.sha256"
+          curl -L -o apm-darwin-arm64.tar.gz.sha256 \
+            "https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG/apm-darwin-arm64.tar.gz.sha256"
+          curl -L -o apm-darwin-x86_64.tar.gz.sha256 \
+            "https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG/apm-darwin-x86_64.tar.gz.sha256"
+          curl -L -o apm-linux-x86_64.tar.gz.sha256 \
+            "https://github.com/${{ github.repository }}/releases/download/$RELEASE_TAG/apm-linux-x86_64.tar.gz.sha256"
           
           # Extract SHA256 checksums
-          DARWIN_ARM64_SHA=$(cat awd-darwin-arm64.tar.gz.sha256 | cut -d' ' -f1)
-          DARWIN_X86_64_SHA=$(cat awd-darwin-x86_64.tar.gz.sha256 | cut -d' ' -f1)
-          LINUX_X86_64_SHA=$(cat awd-linux-x86_64.tar.gz.sha256 | cut -d' ' -f1)
+          DARWIN_ARM64_SHA=$(cat apm-darwin-arm64.tar.gz.sha256 | cut -d' ' -f1)
+          DARWIN_X86_64_SHA=$(cat apm-darwin-x86_64.tar.gz.sha256 | cut -d' ' -f1)
+          LINUX_X86_64_SHA=$(cat apm-linux-x86_64.tar.gz.sha256 | cut -d' ' -f1)
           
           echo "darwin-arm64-sha=$DARWIN_ARM64_SHA" >> $GITHUB_OUTPUT
           echo "darwin-x86_64-sha=$DARWIN_X86_64_SHA" >> $GITHUB_OUTPUT
@@ -336,7 +336,7 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.PAT_TOKEN }}
-          repository: danielmeppiel/homebrew-awd-cli
+          repository: danielmeppiel/homebrew-apm-cli
           event-type: formula-update
           client-payload: |
             {

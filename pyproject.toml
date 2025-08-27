@@ -3,7 +3,7 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "awd-cli"
+name = "apm-cli"
 version = "0.0.14"
 description = "MCP configuration tool"
 readme = "README.md"
@@ -48,11 +48,11 @@ build = [
 ]
 
 [project.scripts]
-awd = "awd_cli.cli:main"
+apm = "apm_cli.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["awd_cli*"]
+include = ["apm_cli*"]
 
 [tool.black]
 line-length = 88

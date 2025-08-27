@@ -11,9 +11,9 @@ import gc
 # Add the src directory to the path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from awd_cli.workflow.parser import WorkflowDefinition, parse_workflow_file
-from awd_cli.workflow.runner import substitute_parameters
-from awd_cli.workflow.discovery import create_workflow_template
+from apm_cli.workflow.parser import WorkflowDefinition, parse_workflow_file
+from apm_cli.workflow.runner import substitute_parameters
+from apm_cli.workflow.discovery import create_workflow_template
 
 
 def safe_rmdir(path):

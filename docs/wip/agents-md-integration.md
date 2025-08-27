@@ -4,7 +4,7 @@ Here’s a **succinct strategic positioning & direction note** you can drop stra
 
 ---
 
-# **Strategic Positioning & Direction: AWD CLI**
+# **Strategic Positioning & Direction: APM CLI**
 
 ### 1. Context
 
@@ -14,11 +14,11 @@ Here’s a **succinct strategic positioning & direction note** you can drop stra
 
 ---
 
-### 2. The Role of AWD CLI
+### 2. The Role of APM CLI
 
-**AWD CLI extends Agents.md into a scalable development paradigm.**
+**APM CLI extends Agents.md into a scalable development paradigm.**
 
-* **Primitives in `.awd/`**
+* **Primitives in `.apm/`**
 
   * `Chatmode.md` → system prompts (always prepended)
   * `Instruction.md` → scoped actions (with `applyTo` rules)
@@ -28,9 +28,9 @@ Here’s a **succinct strategic positioning & direction note** you can drop stra
 
 * **Compiler & Executor**
 
-  * AWD compiles primitives into **virtual Agents.md files** placed in the right repo scope (nearest wins).
+  * APM compiles primitives into **virtual Agents.md files** placed in the right repo scope (nearest wins).
   * These are then auto-discovered by Codex, Gemini, Copilot, etc.
-  * AWD can also execute `.prompt.md` workflows directly, binding them to a chosen `Chatmode.md`.
+  * APM can also execute `.prompt.md` workflows directly, binding them to a chosen `Chatmode.md`.
 
 ---
 
@@ -43,7 +43,7 @@ Here’s a **succinct strategic positioning & direction note** you can drop stra
   * Encapsulation → scoped Agents.md per subproject
   * Reuse → portable `.prompt.md` and `Spec.md` files across projects
   * Packaging → sharable primitives libraries (like npm modules or Terraform modules)
-* **Cross-CLI compatibility** → AWD outputs valid Agents.md, ensuring immediate interoperability.
+* **Cross-CLI compatibility** → APM outputs valid Agents.md, ensuring immediate interoperability.
 * **Scalability** → suitable for enterprise workflows, CI/CD integration, compliance, and auditability.
 
 ---
@@ -52,24 +52,24 @@ Here’s a **succinct strategic positioning & direction note** you can drop stra
 
 1. **OSS First**
 
-   * Release AWD CLI open source under a permissive license (Apache/MIT).
+   * Release APM CLI open source under a permissive license (Apache/MIT).
    * Position it as the *de facto compiler & orchestrator for Agents.md*.
 
 2. **Developer Adoption**
 
-   * Simple onboarding (`awd init`, `awd compile`, `awd run`).
+   * Simple onboarding (`apm init`, `apm compile`, `apm run`).
    * Publish best-practice primitive libraries (`Chatmode.md` personas, `Constraints.md` for security/compliance, etc.).
    * Integrations with VSCode/Cursor for developer experience.
 
 3. **Ecosystem & Standards**
 
-   * Establish AWD primitives spec as an open standard.
+   * Establish APM primitives spec as an open standard.
    * Drive community contribution of reusable `.prompt.md` workflows.
-   * Encourage CLIs (Codex, Gemini, etc.) to formally recognize AWD.
+   * Encourage CLIs (Codex, Gemini, etc.) to formally recognize APM.
 
 4. **Monetization Path**
 
-   * **AWD Cloud / AWD Pro**: enterprise features (centralized primitive registry, audit logs, compliance packs).
+   * **APM Cloud / APM Pro**: enterprise features (centralized primitive registry, audit logs, compliance packs).
    * **Marketplace**: reusable primitives and workflow packs.
    * **Consulting & Training**: lead the “AI Native Development” wave.
 
@@ -77,12 +77,12 @@ Here’s a **succinct strategic positioning & direction note** you can drop stra
 
 ### 5. Positioning Statement
 
-> **AWD CLI makes Agents.md scalable.**
+> **APM CLI makes Agents.md scalable.**
 > It introduces modular, reusable primitives that compile into valid Agents.md files and execute agentic workflows across all coding CLIs.
-> Like Git for source control or Terraform for infra, AWD is the **developer-first, vendor-neutral foundation for AI Native Development.**
+> Like Git for source control or Terraform for infra, APM is the **developer-first, vendor-neutral foundation for AI Native Development.**
 
 ---
 
-⚡ This keeps AWD **naturally layered on top of Agents.md** (never competing with it) while claiming the **scalable, structured paradigm** of AI Native Development as its domain.
+⚡ This keeps APM **naturally layered on top of Agents.md** (never competing with it) while claiming the **scalable, structured paradigm** of AI Native Development as its domain.
 
 ---

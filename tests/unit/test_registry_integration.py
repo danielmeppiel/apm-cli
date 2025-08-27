@@ -3,7 +3,7 @@
 import unittest
 from unittest import mock
 import requests
-from awd_cli.registry.integration import RegistryIntegration
+from apm_cli.registry.integration import RegistryIntegration
 
 
 class TestRegistryIntegration(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestRegistryIntegration(unittest.TestCase):
         """Set up test fixtures."""
         self.integration = RegistryIntegration()
         
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.list_servers')
     def test_list_available_packages(self, mock_list_servers):
         """Test listing available packages."""
         # Mock response
@@ -45,7 +45,7 @@ class TestRegistryIntegration(unittest.TestCase):
         self.assertEqual(packages[0]["repository"]["url"], "https://github.com/test/server1")
         self.assertEqual(packages[1]["name"], "server2")
         
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.search_servers')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.search_servers')
     def test_search_packages(self, mock_search_servers):
         """Test searching for packages."""
         # Mock response
@@ -65,7 +65,7 @@ class TestRegistryIntegration(unittest.TestCase):
         self.assertEqual(results[0]["name"], "test-server")
         mock_search_servers.assert_called_once_with("test")
         
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_info')
     def test_get_package_info(self, mock_get_server_info):
         """Test getting package information by ID."""
         # Mock response
@@ -104,8 +104,8 @@ class TestRegistryIntegration(unittest.TestCase):
         self.assertEqual(package_info["versions"][0]["version"], "1.0.0")
         mock_get_server_info.assert_called_once_with("123")
         
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_by_name')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_by_name')
     def test_get_package_info_by_name(self, mock_get_server_by_name, mock_get_server_info):
         """Test getting package information by name when ID fails."""
         # Mock get_server_info to fail
@@ -126,8 +126,8 @@ class TestRegistryIntegration(unittest.TestCase):
         self.assertEqual(result["name"], "test-server")
         mock_get_server_by_name.assert_called_once_with("test-server")
         
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_by_name')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_by_name')
     def test_get_package_info_not_found(self, mock_get_server_by_name, mock_get_server_info):
         """Test error handling when package is not found."""
         # Mock both methods to fail
@@ -138,7 +138,7 @@ class TestRegistryIntegration(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.integration.get_package_info("non-existent")
             
-    @mock.patch('awd_cli.registry.integration.RegistryIntegration.get_package_info')
+    @mock.patch('apm_cli.registry.integration.RegistryIntegration.get_package_info')
     def test_get_latest_version(self, mock_get_package_info):
         """Test getting the latest version of a package."""
         # Test with version_detail

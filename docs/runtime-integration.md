@@ -1,10 +1,10 @@
 # Runtime Integration Guide
 
-AWD manages LLM runtime installation and configuration automatically. This guide covers the supported runtimes, how to use them, and how to extend AWD with additional runtimes.
+APM manages LLM runtime installation and configuration automatically. This guide covers the supported runtimes, how to use them, and how to extend APM with additional runtimes.
 
 ## Overview
 
-AWD acts as a runtime package manager, downloading and configuring LLM runtimes from their official sources. Currently supports two runtimes:
+APM acts as a runtime package manager, downloading and configuring LLM runtimes from their official sources. Currently supports two runtimes:
 
 | Runtime | Description | Best For | Configuration |
 |---------|-------------|----------|---------------|
@@ -13,13 +13,13 @@ AWD acts as a runtime package manager, downloading and configuring LLM runtimes 
 
 ## Quick Setup
 
-### Install AWD and Setup Runtime
+### Install APM and Setup Runtime
 ```bash
-# 1. Install AWD
-curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+# 1. Install APM
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/apm-cli/main/install.sh | sh
 
 # 2. Setup AI runtime (downloads and configures automatically)
-awd runtime setup codex
+apm runtime setup codex
 
 # 3. Set GitHub token for free models
 export GITHUB_TOKEN=your_github_token
@@ -27,25 +27,25 @@ export GITHUB_TOKEN=your_github_token
 
 ### Runtime Management
 ```bash
-awd runtime list              # Show installed runtimes
-awd runtime setup llm         # Install LLM library
-awd runtime setup codex       # Install Codex CLI
+apm runtime list              # Show installed runtimes
+apm runtime setup llm         # Install LLM library
+apm runtime setup codex       # Install Codex CLI
 ```
 
 ## OpenAI Codex Runtime (Recommended)
 
-AWD automatically downloads, installs, and configures the Codex CLI with GitHub Models for free usage.
+APM automatically downloads, installs, and configures the Codex CLI with GitHub Models for free usage.
 
 ### Setup
 
-#### 1. Install via AWD
+#### 1. Install via APM
 ```bash
-awd runtime setup codex
+apm runtime setup codex
 ```
 
 This automatically:
 - Downloads the latest Codex binary for your platform
-- Installs to `~/.awd/runtimes/codex`
+- Installs to `~/.apm/runtimes/codex`
 - Creates configuration for GitHub Models (`openai/gpt-4.1`)
 - Updates your PATH
 
@@ -58,15 +58,15 @@ export GITHUB_TOKEN=your_github_token
 
 ### Usage
 
-AWD executes scripts defined in your `awd.yml`. When scripts reference `.prompt.md` files, AWD compiles them with parameter substitution. See [Prompts Guide](prompts.md) for details.
+APM executes scripts defined in your `apm.yml`. When scripts reference `.prompt.md` files, APM compiles them with parameter substitution. See [Prompts Guide](prompts.md) for details.
 
 ```bash
-# Run scripts (from awd.yml) with parameters
-awd run start --param service_name=api-gateway
-awd run debug --param service_name=api-gateway
+# Run scripts (from apm.yml) with parameters
+apm run start --param service_name=api-gateway
+apm run debug --param service_name=api-gateway
 ```
 
-**Script Configuration (awd.yml):**
+**Script Configuration (apm.yml):**
 ```yaml
 scripts:
   start: "codex analyze-logs.prompt.md"
@@ -75,19 +75,19 @@ scripts:
 
 ## LLM Runtime
 
-AWD also supports the LLM library runtime with multiple model providers and manual configuration.
+APM also supports the LLM library runtime with multiple model providers and manual configuration.
 
 ### Setup
 
-#### 1. Install via AWD
+#### 1. Install via APM
 ```bash
-awd runtime setup llm
+apm runtime setup llm
 ```
 
 This automatically:
 - Creates a Python virtual environment
 - Installs the `llm` library and dependencies
-- Creates a wrapper script at `~/.awd/runtimes/llm`
+- Creates a wrapper script at `~/.apm/runtimes/llm`
 
 #### 2. Configure API Keys (Manual)
 ```bash
@@ -102,15 +102,15 @@ llm keys set anthropic  # Anthropic API key
 
 ### Usage
 
-AWD executes scripts defined in your `awd.yml`. See [Prompts Guide](prompts.md) for details on prompt compilation.
+APM executes scripts defined in your `apm.yml`. See [Prompts Guide](prompts.md) for details on prompt compilation.
 
 ```bash
 # Run scripts that use LLM runtime
-awd run llm-script --param service_name=api-gateway
-awd run analysis --param time_window="24h"
+apm run llm-script --param service_name=api-gateway
+apm run analysis --param time_window="24h"
 ```
 
-**Script Configuration (awd.yml):**
+**Script Configuration (apm.yml):**
 ```yaml
 scripts:
   llm-script: "llm analyze-logs.prompt.md -m github/gpt-4o-mini"
@@ -121,24 +121,24 @@ scripts:
 
 ### Basic Usage
 ```bash
-# Run scripts defined in awd.yml
-awd run start --param service_name=api-gateway
-awd run llm --param service_name=api-gateway
-awd run debug --param service_name=api-gateway
+# Run scripts defined in apm.yml
+apm run start --param service_name=api-gateway
+apm run llm --param service_name=api-gateway
+apm run debug --param service_name=api-gateway
 ```
 
 ### Code Analysis
 ```bash
 # Scripts that use Codex for code understanding
-awd run code-review --param pull_request=123
-awd run analyze-code --param file_path="src/main.py"
+apm run code-review --param pull_request=123
+apm run analyze-code --param file_path="src/main.py"
 ```
 
 ### Documentation Tasks
 ```bash
 # Scripts that use LLM for text processing
-awd run document --param project_name=my-project
-awd run summarize --param report_type="weekly"
+apm run document --param project_name=my-project
+apm run summarize --param report_type="weekly"
 ```
 
 ## Troubleshooting
@@ -146,11 +146,11 @@ awd run summarize --param report_type="weekly"
 **"Runtime not found"**
 ```bash
 # Install missing runtime
-awd runtime setup codex
-awd runtime setup llm
+apm runtime setup codex
+apm runtime setup llm
 
 # Check installed runtimes
-awd runtime list
+apm runtime list
 ```
 
 **"No GitHub token"**
@@ -163,24 +163,24 @@ export GITHUB_TOKEN=your_github_token
 ```bash
 # Ensure PATH is updated (restart terminal)
 # Or reinstall runtime
-awd runtime setup codex
+apm runtime setup codex
 ```
 
-## Extending AWD with New Runtimes
+## Extending APM with New Runtimes
 
-AWD's runtime system is designed to be extensible. To add support for a new runtime:
+APM's runtime system is designed to be extensible. To add support for a new runtime:
 
 ### Architecture
 
-AWD's runtime system consists of three main components:
+APM's runtime system consists of three main components:
 
-1. **Runtime Adapter** (`src/awd_cli/runtime/`) - Python interface for executing prompts
+1. **Runtime Adapter** (`src/apm_cli/runtime/`) - Python interface for executing prompts
 2. **Setup Script** (`scripts/runtime/`) - Shell script for installation and configuration  
-3. **Runtime Manager** (`src/awd_cli/runtime/manager.py`) - Orchestrates installation and discovery
+3. **Runtime Manager** (`src/apm_cli/runtime/manager.py`) - Orchestrates installation and discovery
 
 ### Adding a New Runtime
 
-1. **Create Runtime Adapter** - Extend `RuntimeAdapter` in `src/awd_cli/runtime/your_runtime.py`
+1. **Create Runtime Adapter** - Extend `RuntimeAdapter` in `src/apm_cli/runtime/your_runtime.py`
 2. **Create Setup Script** - Add installation script in `scripts/runtime/setup-your-runtime.sh`
 3. **Register Runtime** - Add entry to `supported_runtimes` in `RuntimeManager`
 4. **Update CLI** - Add runtime to command choices in `cli.py`
@@ -192,14 +192,14 @@ AWD's runtime system consists of three main components:
 - Use `setup-common.sh` utilities for platform detection and PATH management
 - Handle errors gracefully with clear messages
 - Test installation works after setup completes
-- Support vanilla mode (no AWD-specific configuration)
+- Support vanilla mode (no APM-specific configuration)
 
 ### Contributing
 
-To contribute a new runtime to AWD:
+To contribute a new runtime to APM:
 
 1. Fork the repository and follow the extension guide above
 2. Add tests and update documentation
 3. Submit a pull request
 
-The AWD team welcomes contributions for popular LLM runtimes!
+The APM team welcomes contributions for popular LLM runtimes!

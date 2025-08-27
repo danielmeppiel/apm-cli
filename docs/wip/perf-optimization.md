@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-AWD-CLI binary startup is **23-30x slower** than Python source execution:
+APM-CLI binary startup is **23-30x slower** than Python source execution:
 - **Binary startup**: 3.7-4.9 seconds
 - **Python source**: 0.16 seconds  
 - **Performance penalty**: Unacceptable user experience
@@ -125,23 +125,23 @@ import yaml
 **Solution**:
 ```python
 # Remove module-level import, add to functions that need it
-@cli.command(help="📦 Install MCP dependencies from awd.yml")
+@cli.command(help="📦 Install MCP dependencies from apm.yml")
 def install(ctx):
     import yaml  # Import here instead
     # ... rest of function
 
-def _load_awd_config():
-    """Load configuration from awd.yml."""
-    if Path('awd.yml').exists():
+def _load_apm_config():
+    """Load configuration from apm.yml."""
+    if Path('apm.yml').exists():
         import yaml
-        with open('awd.yml', 'r') as f:
+        with open('apm.yml', 'r') as f:
             return yaml.safe_load(f)
     return None
 ```
 
 **Action Items**:
 - [ ] Remove `import yaml` from module level
-- [ ] Add `import yaml` to `install()`, `_load_awd_config()`, `run()`, `preview()`, `list()` functions
+- [ ] Add `import yaml` to `install()`, `_load_apm_config()`, `run()`, `preview()`, `list()` functions
 - [ ] Test all YAML-dependent commands work correctly
 
 #### 1.3 Streamline Version Detection (30 minutes) 🎯 LOW IMPACT
@@ -207,13 +207,13 @@ def get_version() -> str:
 
 **Solution**:
 ```python
-# build/awd.spec - Optimize configuration
+# build/apm.spec - Optimize configuration
 exe = EXE(
     pyz,
     a.scripts,
     # Optimization flags
     exclude_binaries=True,  # Use --onedir for faster startup
-    name='awd',
+    name='apm',
     debug=False,
     bootloader_ignore_signals=False,
     strip=True,  # Strip debug symbols
@@ -241,7 +241,7 @@ excludes = [
 **Build Script Optimization**:
 ```bash
 # scripts/build-binary.sh
-pyinstaller build/awd.spec \
+pyinstaller build/apm.spec \
     --clean \
     --noconfirm \
     --optimize=2 \
@@ -331,18 +331,18 @@ def install(*args, **kwargs):
 ### Measurement Commands
 ```bash
 # Startup time measurement
-time ./dist/awd-darwin-arm64 --version
+time ./dist/apm-darwin-arm64 --version
 
 # Import time measurement  
 python3 -c "
 import time
 start = time.time()
-from awd_cli.cli import cli
+from apm_cli.cli import cli
 print(f'CLI import: {time.time()-start:.3f}s')
 "
 
 # Binary size
-ls -lh dist/awd-*
+ls -lh dist/apm-*
 ```
 
 ## Risk Mitigation

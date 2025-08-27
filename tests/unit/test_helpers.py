@@ -2,7 +2,7 @@
 
 import unittest
 import sys
-from awd_cli.utils.helpers import is_tool_available, detect_platform, get_available_package_managers
+from apm_cli.utils.helpers import is_tool_available, detect_platform, get_available_package_managers
 
 
 class TestHelpers(unittest.TestCase):

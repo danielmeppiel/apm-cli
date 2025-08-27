@@ -1,10 +1,10 @@
 # Integration Testing
 
-This document describes AWD's integration testing strategy to ensure runtime setup scripts work correctly and the golden scenario from the README functions as expected.
+This document describes APM's integration testing strategy to ensure runtime setup scripts work correctly and the golden scenario from the README functions as expected.
 
 ## Testing Strategy
 
-AWD uses a tiered approach to integration testing:
+APM uses a tiered approach to integration testing:
 
 ### 1. **Smoke Tests** (Every CI run)
 - **Location**: `tests/integration/test_runtime_smoke.py`
@@ -12,7 +12,7 @@ AWD uses a tiered approach to integration testing:
 - **Scope**: 
   - Runtime installation (codex, llm)
   - Binary functionality (`--version`, `--help`)
-  - AWD runtime detection
+  - APM runtime detection
   - Workflow compilation without execution
 - **Duration**: ~2-3 minutes per platform
 - **Trigger**: Every push/PR
@@ -22,8 +22,8 @@ AWD uses a tiered approach to integration testing:
 - **Purpose**: Complete verification of the README golden scenario
 - **Scope**:
   - Full runtime setup and configuration
-  - Project initialization (`awd init`)
-  - Dependency installation (`awd install`)
+  - Project initialization (`apm init`)
+  - Dependency installation (`apm install`)
   - Real API calls to GitHub Models
   - Both Codex and LLM runtime execution
 - **Duration**: ~10-15 minutes per platform (with 20-minute timeout)  
@@ -70,7 +70,7 @@ This script (`scripts/test-e2e.sh`) is a unified script that automatically adapt
 #### Option 2: Direct pytest execution
 ```bash
 # Set up environment
-export AWD_E2E_TESTS=1
+export APM_E2E_TESTS=1
 export GITHUB_TOKEN=your_github_token_here
 export GITHUB_MODELS_KEY=your_github_token_here  # LLM runtime expects this specific env var
 
@@ -146,17 +146,17 @@ All integration tests run on:
 - ✅ Runtime setup scripts execute successfully
 - ✅ Binaries are downloaded and installed correctly
 - ✅ Binaries respond to basic commands
-- ✅ AWD can detect installed runtimes
+- ✅ APM can detect installed runtimes
 - ✅ Configuration files are created properly
 - ✅ Workflow compilation works (without execution)
 
 ### E2E Tests Verify:
 - ✅ Complete golden scenario from README works
-- ✅ `awd runtime setup codex` installs and configures Codex
-- ✅ `awd runtime setup llm` installs and configures LLM
-- ✅ `awd init my-hello-world` creates project correctly
-- ✅ `awd install` handles dependencies
-- ✅ `awd run start --param name="Tester"` executes successfully
+- ✅ `apm runtime setup codex` installs and configures Codex
+- ✅ `apm runtime setup llm` installs and configures LLM
+- ✅ `apm init my-hello-world` creates project correctly
+- ✅ `apm install` handles dependencies
+- ✅ `apm run start --param name="Tester"` executes successfully
 - ✅ Real API calls to GitHub Models work
 - ✅ Parameter substitution works correctly
 - ✅ MCP integration functions (GitHub tools)

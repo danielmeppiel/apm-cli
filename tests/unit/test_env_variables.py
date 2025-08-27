@@ -5,7 +5,7 @@ import json
 import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
-from awd_cli.adapters.client.vscode import VSCodeClientAdapter
+from apm_cli.adapters.client.vscode import VSCodeClientAdapter
 
 
 class TestEnvironmentVariablesHandling(unittest.TestCase):
@@ -23,12 +23,12 @@ class TestEnvironmentVariablesHandling(unittest.TestCase):
             json.dump({"servers": {}}, f)
             
         # Create mock clients
-        self.mock_registry_patcher = patch('awd_cli.adapters.client.vscode.SimpleRegistryClient')
+        self.mock_registry_patcher = patch('apm_cli.adapters.client.vscode.SimpleRegistryClient')
         self.mock_registry_class = self.mock_registry_patcher.start()
         self.mock_registry = MagicMock()
         self.mock_registry_class.return_value = self.mock_registry
         
-        self.mock_integration_patcher = patch('awd_cli.adapters.client.vscode.RegistryIntegration')
+        self.mock_integration_patcher = patch('apm_cli.adapters.client.vscode.RegistryIntegration')
         self.mock_integration_class = self.mock_integration_patcher.start()
         self.mock_integration = MagicMock()
         self.mock_integration_class.return_value = self.mock_integration
@@ -46,7 +46,7 @@ class TestEnvironmentVariablesHandling(unittest.TestCase):
         self.mock_integration_patcher.stop()
         self.temp_dir.cleanup()
     
-    @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
+    @patch("apm_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_configure_mcp_server_with_environment_variables(self, mock_get_path):
         """Test configuring an MCP server with environment variables."""
         # Prepare the server info with environment variables

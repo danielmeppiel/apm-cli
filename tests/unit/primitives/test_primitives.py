@@ -5,9 +5,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from awd_cli.primitives.models import Chatmode, Instruction, Context, PrimitiveCollection
-from awd_cli.primitives.parser import parse_primitive_file, validate_primitive, _extract_primitive_name
-from awd_cli.primitives.discovery import discover_primitives, find_primitive_files
+from apm_cli.primitives.models import Chatmode, Instruction, Context, PrimitiveCollection
+from apm_cli.primitives.parser import parse_primitive_file, validate_primitive, _extract_primitive_name
+from apm_cli.primitives.discovery import discover_primitives, find_primitive_files
 
 
 class TestPrimitiveModels(unittest.TestCase):
@@ -257,17 +257,17 @@ This project is a command-line tool for managing AI workflows.
 
     def test_extract_primitive_name(self):
         """Test primitive name extraction from various path formats."""
-        # Test structured .awd/ paths
+        # Test structured .apm/ paths
         self.assertEqual(
-            _extract_primitive_name(Path(".awd/chatmodes/code-review.chatmode.md")),
+            _extract_primitive_name(Path(".apm/chatmodes/code-review.chatmode.md")),
             "code-review"
         )
         self.assertEqual(
-            _extract_primitive_name(Path(".awd/instructions/python-style.instructions.md")),
+            _extract_primitive_name(Path(".apm/instructions/python-style.instructions.md")),
             "python-style"
         )
         self.assertEqual(
-            _extract_primitive_name(Path(".awd/context/project-info.context.md")),
+            _extract_primitive_name(Path(".apm/context/project-info.context.md")),
             "project-info"
         )
         
@@ -279,7 +279,7 @@ This project is a command-line tool for managing AI workflows.
         
         # Test memory files
         self.assertEqual(
-            _extract_primitive_name(Path(".awd/memory/team-info.memory.md")),
+            _extract_primitive_name(Path(".apm/memory/team-info.memory.md")),
             "team-info"
         )
         
@@ -318,9 +318,9 @@ class TestPrimitiveDiscovery(unittest.TestCase):
         self.temp_dir_path = self.temp_dir.name
         
         # Create directory structure
-        os.makedirs(os.path.join(self.temp_dir_path, ".awd", "chatmodes"), exist_ok=True)
-        os.makedirs(os.path.join(self.temp_dir_path, ".awd", "instructions"), exist_ok=True)
-        os.makedirs(os.path.join(self.temp_dir_path, ".awd", "context"), exist_ok=True)
+        os.makedirs(os.path.join(self.temp_dir_path, ".apm", "chatmodes"), exist_ok=True)
+        os.makedirs(os.path.join(self.temp_dir_path, ".apm", "instructions"), exist_ok=True)
+        os.makedirs(os.path.join(self.temp_dir_path, ".apm", "context"), exist_ok=True)
         os.makedirs(os.path.join(self.temp_dir_path, ".github", "chatmodes"), exist_ok=True)
 
     def tearDown(self):
@@ -353,13 +353,13 @@ description: Test context
 """
         
         # Write files
-        with open(os.path.join(self.temp_dir_path, ".awd", "chatmodes", "assistant.chatmode.md"), "w") as f:
+        with open(os.path.join(self.temp_dir_path, ".apm", "chatmodes", "assistant.chatmode.md"), "w") as f:
             f.write(chatmode_content)
         
-        with open(os.path.join(self.temp_dir_path, ".awd", "instructions", "style.instructions.md"), "w") as f:
+        with open(os.path.join(self.temp_dir_path, ".apm", "instructions", "style.instructions.md"), "w") as f:
             f.write(instruction_content)
         
-        with open(os.path.join(self.temp_dir_path, ".awd", "context", "project.context.md"), "w") as f:
+        with open(os.path.join(self.temp_dir_path, ".apm", "context", "project.context.md"), "w") as f:
             f.write(context_content)
         
         with open(os.path.join(self.temp_dir_path, ".github", "chatmodes", "vscode.chatmode.md"), "w") as f:
@@ -415,16 +415,16 @@ description: Test context
     
     def test_find_primitive_files_specific_patterns(self):
         """Test finding primitive files with specific patterns."""
-        # Test with .awd specific pattern
-        awd_file = os.path.join(self.temp_dir_path, ".awd", "chatmodes", "test.chatmode.md")
-        with open(awd_file, "w") as f:
+        # Test with .apm specific pattern
+        apm_file = os.path.join(self.temp_dir_path, ".apm", "chatmodes", "test.chatmode.md")
+        with open(apm_file, "w") as f:
             f.write("---\ndescription: Test\n---\n\n# Test")
         
-        # Test .awd specific pattern
-        patterns = ["**/.awd/chatmodes/*.chatmode.md"]
+        # Test .apm specific pattern
+        patterns = ["**/.apm/chatmodes/*.chatmode.md"]
         found_files = find_primitive_files(self.temp_dir_path, patterns)
         
-        # Should find the .awd file
+        # Should find the .apm file
         self.assertEqual(len(found_files), 1)
         self.assertTrue(found_files[0].name.endswith('.chatmode.md'))
 

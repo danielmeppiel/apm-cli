@@ -1,5 +1,5 @@
 ---
-description: "Implement a new feature following AWD best practices"
+description: "Implement a new feature following APM best practices"
 input:
   - feature_name: "Name of the feature to implement"
   - feature_description: "Detailed description of the feature"
@@ -15,7 +15,7 @@ Description: ${{input:feature_description}}
 ## Implementation Steps
 
 ### 1. Specification Review
-- [ ] Review [feature specification](../.awd/specs/hello-feature.md)
+- [ ] Review [feature specification](../.apm/specs/hello-feature.md)
 - [ ] Understand requirements and acceptance criteria
 - [ ] Identify dependencies and potential conflicts
 

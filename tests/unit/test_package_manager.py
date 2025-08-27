@@ -2,7 +2,7 @@
 
 import unittest
 from unittest.mock import patch, MagicMock
-from awd_cli.adapters.package_manager.default_manager import DefaultMCPPackageManager
+from apm_cli.adapters.package_manager.default_manager import DefaultMCPPackageManager
 
 
 class TestDefaultMCPPackageManager(unittest.TestCase):
@@ -12,8 +12,8 @@ class TestDefaultMCPPackageManager(unittest.TestCase):
         """Set up test fixtures."""
         self.package_manager = DefaultMCPPackageManager()
     
-    @patch('awd_cli.factory.ClientFactory.create_client')
-    @patch('awd_cli.config.get_default_client')
+    @patch('apm_cli.factory.ClientFactory.create_client')
+    @patch('apm_cli.config.get_default_client')
     def test_install(self, mock_get_default_client, mock_create_client):
         """Test installing a package."""
         # Setup mocks
@@ -32,8 +32,8 @@ class TestDefaultMCPPackageManager(unittest.TestCase):
         self.assertTrue(result)
         mock_client.configure_mcp_server.assert_called_with("test-package", "test-package", True)
     
-    @patch('awd_cli.factory.ClientFactory.create_client')
-    @patch('awd_cli.config.get_default_client')
+    @patch('apm_cli.factory.ClientFactory.create_client')
+    @patch('apm_cli.config.get_default_client')
     def test_uninstall(self, mock_get_default_client, mock_create_client):
         """Test uninstalling a package."""
         # Setup mocks
@@ -52,8 +52,8 @@ class TestDefaultMCPPackageManager(unittest.TestCase):
         self.assertTrue(result)
         mock_client.update_config.assert_called_once()
     
-    @patch('awd_cli.factory.ClientFactory.create_client')
-    @patch('awd_cli.config.get_default_client')
+    @patch('apm_cli.factory.ClientFactory.create_client')
+    @patch('apm_cli.config.get_default_client')
     def test_list_installed(self, mock_get_default_client, mock_create_client):
         """Test listing installed packages."""
         # Setup mocks
@@ -72,7 +72,7 @@ class TestDefaultMCPPackageManager(unittest.TestCase):
         self.assertIsInstance(packages, list)
         self.assertEqual(set(packages), {"server1", "server2"})
     
-    @patch('awd_cli.registry.integration.RegistryIntegration.search_packages')
+    @patch('apm_cli.registry.integration.RegistryIntegration.search_packages')
     def test_search(self, mock_search_packages):
         """Test searching for packages."""
         # Setup mocks

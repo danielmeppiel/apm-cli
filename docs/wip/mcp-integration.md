@@ -6,23 +6,23 @@
 
 ## Overview
 
-Model Context Protocol (MCP) integration will enable AWD prompts to call external tools and APIs. This is a major Phase 2 feature that requires collaboration with runtime providers.
+Model Context Protocol (MCP) integration will enable APM prompts to call external tools and APIs. This is a major Phase 2 feature that requires collaboration with runtime providers.
 
 ## Current Implementation (Phase 1)
 
 ### What Works
 ```bash
 # MCP commands exist but point to demo registry
-awd mcp list                    # ✅ Lists installed servers
-awd mcp registry list           # ✅ Queries demo registry  
-awd mcp registry search logs    # ✅ Searches demo registry
+apm mcp list                    # ✅ Lists installed servers
+apm mcp registry list           # ✅ Queries demo registry  
+apm mcp registry search logs    # ✅ Searches demo registry
 ```
 
 ### What's Stubbed
 ```bash
 # Installation commands exist but are unreliable
-awd mcp install redis-server    # ❌ May not work reliably
-awd mcp verify                  # ❌ Points to demo registry
+apm mcp install redis-server    # ❌ May not work reliably
+apm mcp verify                  # ❌ Points to demo registry
 ```
 
 ### Prompt Declaration (Works for Parsing)
@@ -52,7 +52,7 @@ Use the logs-analyzer tool to examine ${input:service_name} logs.
 Collaborate with Simon Willison on native MCP support in the `llm` library.
 
 **Advantages:**
-- ✅ Consistent with AWD's current LLM runtime
+- ✅ Consistent with APM's current LLM runtime
 - ✅ Community-driven development
 - ✅ Standard MCP client implementation
 - ✅ Multiple model provider support
@@ -73,7 +73,7 @@ class LLMRuntime(RuntimeAdapter):
 **Timeline:**
 - Week 6-7: Research and design collaboration
 - Week 8-9: Implement MCP client in LLM library  
-- Week 10: AWD integration testing
+- Week 10: APM integration testing
 
 ### Approach 2: Codex CLI Integration  
 Leverage existing MCP support in OpenAI's Codex CLI.
@@ -99,7 +99,7 @@ class CodexRuntime(RuntimeAdapter):
 
 **Timeline:**
 - Week 6: Test current Codex MCP capabilities
-- Week 7: Integrate AWD MCP declarations with Codex
+- Week 7: Integrate APM MCP declarations with Codex
 - Week 8: Documentation and testing
 
 ## MCP Registry Strategy
@@ -136,14 +136,14 @@ Reliability: Not guaranteed for production
 - [ ] Evaluate LLM library MCP plugin architecture
 - [ ] Test Codex CLI MCP capabilities
 - [ ] Choose primary registry strategy
-- [ ] Design AWD MCP integration API
+- [ ] Design APM MCP integration API
 
 ### Week 7: Runtime Integration
 - [ ] Implement chosen runtime MCP support
 - [ ] Create MCP server installation system
 - [ ] Design reliable dependency resolution
 
-### Week 8: AWD Integration
+### Week 8: APM Integration
 - [ ] Connect prompt MCP declarations to runtime
 - [ ] Implement automatic server installation
 - [ ] Add MCP-specific error handling
@@ -162,8 +162,8 @@ Reliability: Not guaranteed for production
 
 ### Automatic MCP Server Management
 ```bash
-# AWD detects MCP dependencies and installs automatically
-awd run az-cost-optimize --param subscription_id=abc123
+# APM detects MCP dependencies and installs automatically
+apm run az-cost-optimize --param subscription_id=abc123
 
 # Output:
 # Installing MCP servers: azure-cost-analyzer, github-issues
@@ -176,13 +176,13 @@ awd run az-cost-optimize --param subscription_id=abc123
 ### Manual MCP Management
 ```bash
 # Install specific MCP server
-awd mcp install azure-cost-analyzer
+apm mcp install azure-cost-analyzer
 
 # List available servers  
-awd mcp registry list
+apm mcp registry list
 
 # Verify prompt dependencies
-awd mcp verify --prompt az-cost-optimize
+apm mcp verify --prompt az-cost-optimize
 ```
 
 ### Enhanced Prompt Capabilities
@@ -229,7 +229,7 @@ input: [subscription_id, repository]
 ### 3. Runtime Compatibility  
 **Challenge**: Different MCP implementations across runtimes
 **Solution**:
-- Abstract MCP interface in AWD
+- Abstract MCP interface in APM
 - Runtime-specific MCP adapters
 - Feature detection and graceful degradation
 
@@ -333,14 +333,14 @@ Focus on overprovisioned VMs and unused storage accounts.
 ### MCP Community
 - **Goal**: Contribute to MCP ecosystem standards
 - **Timeline**: Ongoing throughout Phase 2
-- **Benefit**: Ensure AWD works with broader MCP ecosystem
+- **Benefit**: Ensure APM works with broader MCP ecosystem
 
 ## Risk Mitigation
 
 ### Risk 1: MCP Spec Changes
 **Mitigation**: 
 - Track MCP specification closely
-- Build adapters to isolate AWD from spec changes
+- Build adapters to isolate APM from spec changes
 - Maintain compatibility with multiple MCP versions
 
 ### Risk 2: Runtime Integration Delays

@@ -1,5 +1,5 @@
 ---
-applyTo: "src/awd_cli/cli.py"
+applyTo: "src/apm_cli/cli.py"
 ---
 
 # CLI Design Guidelines
@@ -14,7 +14,7 @@ applyTo: "src/awd_cli/cli.py"
 
 ### Command Help Text
 - **ALWAYS** include contextual emojis in command help strings
-- Format: `help="🚀 Initialize a new AWD project"`
+- Format: `help="🚀 Initialize a new APM project"`
 - Use semantic emojis that match the command purpose
 
 ### Status Symbols & Feedback

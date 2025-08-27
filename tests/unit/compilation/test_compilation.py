@@ -7,18 +7,18 @@ import yaml
 from pathlib import Path
 from unittest.mock import patch
 
-from awd_cli.compilation.template_builder import (
+from apm_cli.compilation.template_builder import (
     build_conditional_sections,
 )
-from awd_cli.compilation.link_resolver import (
+from apm_cli.compilation.link_resolver import (
     validate_link_targets,
 )
-from awd_cli.compilation.agents_compiler import (
+from apm_cli.compilation.agents_compiler import (
     AgentsCompiler,
     CompilationConfig,
     compile_agents_md
 )
-from awd_cli.primitives.models import Instruction, Chatmode, PrimitiveCollection
+from apm_cli.primitives.models import Instruction, Chatmode, PrimitiveCollection
 
 
 class TestTemplateBuilder(unittest.TestCase):
@@ -156,7 +156,7 @@ class TestAgentsCompiler(unittest.TestCase):
         errors = compiler.validate_primitives(primitives)
         self.assertEqual(len(errors), 0)
 
-    @patch('awd_cli.primitives.discovery.discover_primitives')
+    @patch('apm_cli.primitives.discovery.discover_primitives')
     def test_compile_with_mock_primitives(self, mock_discover):
         """Test compilation with mocked primitives."""
         # Create mock primitives
@@ -291,7 +291,7 @@ class TestCLIIntegration(unittest.TestCase):
     
     def test_validate_mode_with_valid_primitives(self):
         """Test validation mode with valid primitives."""
-        from awd_cli.cli import _display_validation_errors, _get_validation_suggestion
+        from apm_cli.cli import _display_validation_errors, _get_validation_suggestion
         
         # Test validation suggestion function
         suggestion = _get_validation_suggestion("Missing 'description' in frontmatter")
@@ -305,7 +305,7 @@ class TestCLIIntegration(unittest.TestCase):
     
     def test_validation_error_display(self):
         """Test validation error display functionality."""
-        from awd_cli.cli import _display_validation_errors
+        from apm_cli.cli import _display_validation_errors
         
         # Test with mock errors
         errors = [
@@ -319,12 +319,12 @@ class TestCLIIntegration(unittest.TestCase):
         except Exception as e:
             self.fail(f"_display_validation_errors raised an exception: {e}")
     
-    def test_compilation_config_from_awd_yml(self):
-        """Test CompilationConfig loading from awd.yml."""
-        from awd_cli.compilation.agents_compiler import CompilationConfig
+    def test_compilation_config_from_apm_yml(self):
+        """Test CompilationConfig loading from apm.yml."""
+        from apm_cli.compilation.agents_compiler import CompilationConfig
         import yaml
         
-        # Create test awd.yml
+        # Create test apm.yml
         test_config = {
             'compilation': {
                 'output': 'CUSTOM.md',
@@ -333,17 +333,17 @@ class TestCLIIntegration(unittest.TestCase):
             }
         }
         
-        with open('awd.yml', 'w') as f:
+        with open('apm.yml', 'w') as f:
             yaml.dump(test_config, f)
         
         # Test config loading
-        config = CompilationConfig.from_awd_yml()
+        config = CompilationConfig.from_apm_yml()
         self.assertEqual(config.output_path, 'CUSTOM.md')
         self.assertEqual(config.chatmode, 'test-mode')
         self.assertEqual(config.resolve_links, False)
         
         # Test with overrides
-        config_with_overrides = CompilationConfig.from_awd_yml(
+        config_with_overrides = CompilationConfig.from_apm_yml(
             output_path='OVERRIDE.md',
             chatmode='override-mode'
         )
@@ -352,7 +352,7 @@ class TestCLIIntegration(unittest.TestCase):
         self.assertEqual(config_with_overrides.resolve_links, False)  # Should keep from config
         
         # Clean up
-        Path('awd.yml').unlink()
+        Path('apm.yml').unlink()
 
 
 if __name__ == '__main__':

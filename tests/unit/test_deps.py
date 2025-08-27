@@ -7,8 +7,8 @@ from unittest.mock import patch, mock_open
 import yaml
 import frontmatter
 
-from awd_cli.deps.aggregator import scan_workflows_for_dependencies, sync_workflow_dependencies
-from awd_cli.deps.verifier import verify_dependencies, install_missing_dependencies, load_awd_config
+from apm_cli.deps.aggregator import scan_workflows_for_dependencies, sync_workflow_dependencies
+from apm_cli.deps.verifier import verify_dependencies, install_missing_dependencies, load_apm_config
 
 
 class TestDependenciesAggregator(unittest.TestCase):
@@ -45,11 +45,11 @@ class TestDependenciesAggregator(unittest.TestCase):
         self.assertEqual(mock_file.call_count, 2)
         self.assertEqual(mock_frontmatter_load.call_count, 2)
     
-    @patch('awd_cli.deps.aggregator.scan_workflows_for_dependencies')
+    @patch('apm_cli.deps.aggregator.scan_workflows_for_dependencies')
     @patch('builtins.open', new_callable=mock_open)
     @patch('yaml.dump')
     def test_sync_workflow_dependencies(self, mock_yaml_dump, mock_file, mock_scan):
-        """Test syncing workflow dependencies to awd.yml."""
+        """Test syncing workflow dependencies to apm.yml."""
         # Mock scan_workflows_for_dependencies to return a set of servers
         mock_scan.return_value = {'server1', 'server2', 'server3'}
         
@@ -70,7 +70,7 @@ class TestDependenciesVerifier(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.config_path = os.path.join(self.temp_dir.name, 'awd.yml')
+        self.config_path = os.path.join(self.temp_dir.name, 'apm.yml')
         
         # Create a test configuration file
         config = {
@@ -92,19 +92,19 @@ class TestDependenciesVerifier(unittest.TestCase):
         
         self.temp_dir.cleanup()
     
-    def test_load_awd_config(self):
-        """Test loading the AWD configuration file."""
+    def test_load_apm_config(self):
+        """Test loading the APM configuration file."""
         # Test with an existing file
-        config = load_awd_config(self.config_path)
+        config = load_apm_config(self.config_path)
         self.assertIsInstance(config, dict)
         self.assertEqual(config['version'], '1.0')
         self.assertEqual(config['servers'], ['server1', 'server2', 'server3'])
         
         # Test with a non-existent file
-        config = load_awd_config('nonexistent.yml')
+        config = load_apm_config('nonexistent.yml')
         self.assertIsNone(config)
     
-    @patch('awd_cli.factory.PackageManagerFactory.create_package_manager')
+    @patch('apm_cli.factory.PackageManagerFactory.create_package_manager')
     def test_verify_dependencies(self, mock_factory):
         """Test verifying dependencies."""
         # Mock the package manager to return a list of installed packages
@@ -127,9 +127,9 @@ class TestDependenciesVerifier(unittest.TestCase):
         self.assertEqual(set(installed), {'server1', 'server2', 'server3'})
         self.assertEqual(missing, [])
     
-    @patch('awd_cli.factory.ClientFactory.create_client')
-    @patch('awd_cli.factory.PackageManagerFactory.create_package_manager')
-    @patch('awd_cli.deps.verifier.verify_dependencies')
+    @patch('apm_cli.factory.ClientFactory.create_client')
+    @patch('apm_cli.factory.PackageManagerFactory.create_package_manager')
+    @patch('apm_cli.deps.verifier.verify_dependencies')
     def test_install_missing_dependencies(self, mock_verify, mock_factory, mock_client_factory):
         """Test installing missing dependencies."""
         # Mock verify_dependencies to return missing packages

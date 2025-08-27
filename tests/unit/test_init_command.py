@@ -1,4 +1,4 @@
-"""Tests for the awd init command."""
+"""Tests for the apm init command."""
 
 import pytest
 import tempfile
@@ -8,11 +8,11 @@ from pathlib import Path
 from click.testing import CliRunner
 from unittest.mock import patch
 
-from awd_cli.cli import cli
+from apm_cli.cli import cli
 
 
 class TestInitCommand:
-    """Test cases for awd init command."""
+    """Test cases for apm init command."""
     
     def setup_method(self):
         """Set up test fixtures."""
@@ -42,8 +42,8 @@ class TestInitCommand:
             result = self.runner.invoke(cli, ['init', '--yes'])
             
             assert result.exit_code == 0
-            assert "AWD project initialized successfully!" in result.output
-            assert Path('awd.yml').exists()
+            assert "APM project initialized successfully!" in result.output
+            assert Path('apm.yml').exists()
             assert Path('hello-world.prompt.md').exists()
             assert Path('README.md').exists()
     
@@ -55,8 +55,8 @@ class TestInitCommand:
             result = self.runner.invoke(cli, ['init', '.', '--yes'])
             
             assert result.exit_code == 0
-            assert "AWD project initialized successfully!" in result.output
-            assert Path('awd.yml').exists()
+            assert "APM project initialized successfully!" in result.output
+            assert Path('apm.yml').exists()
     
     def test_init_new_directory(self):
         """Test initialization in new directory."""
@@ -71,7 +71,7 @@ class TestInitCommand:
             project_path = Path(tmp_dir) / 'my-project'
             assert project_path.exists()
             assert project_path.is_dir()
-            assert (project_path / 'awd.yml').exists()
+            assert (project_path / 'apm.yml').exists()
             assert (project_path / 'hello-world.prompt.md').exists()
     
     def test_init_existing_project_without_force(self):
@@ -79,14 +79,14 @@ class TestInitCommand:
         with tempfile.TemporaryDirectory() as tmp_dir:
             os.chdir(tmp_dir)
             
-            # Create existing awd.yml
-            Path('awd.yml').write_text('name: existing-project\nversion: 0.1.0\n')
+            # Create existing apm.yml
+            Path('apm.yml').write_text('name: existing-project\nversion: 0.1.0\n')
             
             # Try to init without force (should prompt)
             result = self.runner.invoke(cli, ['init', '--yes'])
             
             assert result.exit_code == 0
-            assert "Existing AWD project detected" in result.output
+            assert "Existing APM project detected" in result.output
             assert "--yes specified, continuing with overwrite" in result.output
     
     def test_init_existing_project_with_force(self):
@@ -94,15 +94,15 @@ class TestInitCommand:
         with tempfile.TemporaryDirectory() as tmp_dir:
             os.chdir(tmp_dir)
             
-            # Create existing awd.yml
-            Path('awd.yml').write_text('name: existing-project\nversion: 0.1.0\n')
+            # Create existing apm.yml
+            Path('apm.yml').write_text('name: existing-project\nversion: 0.1.0\n')
             
             result = self.runner.invoke(cli, ['init', '--force', '--yes'])
             
             assert result.exit_code == 0
-            assert "AWD project initialized successfully!" in result.output
+            assert "APM project initialized successfully!" in result.output
             # Should overwrite the file
-            with open('awd.yml') as f:
+            with open('apm.yml') as f:
                 config = yaml.safe_load(f)
                 # The template should have been applied
                 assert 'scripts' in config
@@ -112,14 +112,14 @@ class TestInitCommand:
         with tempfile.TemporaryDirectory() as tmp_dir:
             os.chdir(tmp_dir)
             
-            # Create existing awd.yml with custom values
+            # Create existing apm.yml with custom values
             existing_config = {
                 'name': 'my-custom-project',
                 'version': '2.0.0',
                 'description': 'Custom description',
                 'author': 'Custom Author'
             }
-            with open('awd.yml', 'w') as f:
+            with open('apm.yml', 'w') as f:
                 yaml.dump(existing_config, f)
             
             result = self.runner.invoke(cli, ['init', '--yes'])
@@ -138,14 +138,14 @@ class TestInitCommand:
             result = self.runner.invoke(cli, ['init'], input=user_input)
             
             assert result.exit_code == 0
-            assert "Setting up your AWD project" in result.output
+            assert "Setting up your APM project" in result.output
             assert "Project name" in result.output
             assert "Version" in result.output
             assert "Description" in result.output
             assert "Author" in result.output
             
-            # Verify the interactive values were applied to awd.yml
-            with open('awd.yml') as f:
+            # Verify the interactive values were applied to apm.yml
+            with open('apm.yml') as f:
                 config = yaml.safe_load(f)
                 assert config['name'] == 'my-test-project'
                 assert config['version'] == '1.5.0'
@@ -164,21 +164,21 @@ class TestInitCommand:
             
             assert result.exit_code == 0
             assert "Aborted" in result.output
-            assert not Path('awd.yml').exists()
+            assert not Path('apm.yml').exists()
     
     def test_init_existing_project_interactive_cancel(self):
         """Test cancelling when existing project detected in interactive mode."""
         with tempfile.TemporaryDirectory() as tmp_dir:
             os.chdir(tmp_dir)
             
-            # Create existing awd.yml
-            Path('awd.yml').write_text('name: existing-project\nversion: 0.1.0\n')
+            # Create existing apm.yml
+            Path('apm.yml').write_text('name: existing-project\nversion: 0.1.0\n')
             
             # Simulate user saying 'no' to overwrite
             result = self.runner.invoke(cli, ['init'], input='n\n')
             
             assert result.exit_code == 0
-            assert "Existing AWD project detected" in result.output
+            assert "Existing APM project detected" in result.output
             assert "Initialization cancelled" in result.output
     
     def test_init_validates_project_structure(self):
@@ -193,8 +193,8 @@ class TestInitCommand:
             # Use absolute path for checking files
             project_path = Path(tmp_dir) / 'test-project'
             
-            # Verify awd.yml structure
-            with open(project_path / 'awd.yml') as f:
+            # Verify apm.yml structure
+            with open(project_path / 'apm.yml') as f:
                 config = yaml.safe_load(f)
                 assert config['name'] == 'test-project'
                 assert 'version' in config

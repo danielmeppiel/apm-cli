@@ -1,4 +1,4 @@
-"""Integration tests for AWD-CLI."""
+"""Integration tests for APM-CLI."""
 
 import os
 import json
@@ -9,8 +9,8 @@ import shutil
 import gc
 import sys
 from unittest.mock import patch, MagicMock
-from awd_cli.factory import ClientFactory, PackageManagerFactory
-from awd_cli.core.operations import install_package
+from apm_cli.factory import ClientFactory, PackageManagerFactory
+from apm_cli.core.operations import install_package
 
 
 def safe_rmdir(path):
@@ -34,7 +34,7 @@ def safe_rmdir(path):
 
 
 class TestIntegration(unittest.TestCase):
-    """Integration test cases for AWD-CLI."""
+    """Integration test cases for APM-CLI."""
     
     def setUp(self):
         """Set up test fixtures."""
@@ -63,8 +63,8 @@ class TestIntegration(unittest.TestCase):
             if hasattr(self, 'temp_dir_path') and os.path.exists(self.temp_dir_path):
                 safe_rmdir(self.temp_dir_path)
     
-    @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
-    @patch("awd_cli.registry.client.SimpleRegistryClient.find_server_by_reference")
+    @patch("apm_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
+    @patch("apm_cli.registry.client.SimpleRegistryClient.find_server_by_reference")
     def test_install_package_integration(self, mock_find_server, mock_get_path):
         """Test installing a package and updating client configuration."""
         mock_get_path.return_value = self.temp_path

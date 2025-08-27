@@ -67,18 +67,18 @@ detect_platform() {
     log_info "Detected platform: $DETECTED_PLATFORM"
 }
 
-# Create AWD runtime directory
-ensure_awd_runtime_dir() {
-    local runtime_dir="$HOME/.awd/runtimes"
+# Create APM runtime directory
+ensure_apm_runtime_dir() {
+    local runtime_dir="$HOME/.apm/runtimes"
     if [[ ! -d "$runtime_dir" ]]; then
-        log_info "Creating AWD runtime directory: $runtime_dir"
+        log_info "Creating APM runtime directory: $runtime_dir"
         mkdir -p "$runtime_dir"
     fi
 }
 
-# Add AWD runtimes to PATH if not already present
+# Add APM runtimes to PATH if not already present
 ensure_path_updated() {
-    local runtime_dir="$HOME/.awd/runtimes"
+    local runtime_dir="$HOME/.apm/runtimes"
     local shell_rc=""
     
     # First, update the current session PATH immediately
@@ -106,13 +106,13 @@ ensure_path_updated() {
     esac
     
     # Check if shell RC already contains the runtime directory
-    if [[ -f "$shell_rc" ]] && grep -q "\.awd/runtimes" "$shell_rc"; then
+    if [[ -f "$shell_rc" ]] && grep -q "\.apm/runtimes" "$shell_rc"; then
         log_info "PATH already configured in $shell_rc"
     else
         log_info "Adding $runtime_dir to PATH in $shell_rc"
         echo "" >> "$shell_rc"
-        echo "# Added by AWD runtime setup" >> "$shell_rc"
-        echo "export PATH=\"\$HOME/.awd/runtimes:\$PATH\"" >> "$shell_rc"
+        echo "# Added by APM runtime setup" >> "$shell_rc"
+        echo "export PATH=\"\$HOME/.apm/runtimes:\$PATH\"" >> "$shell_rc"
         log_info "PATH updated in $shell_rc for future sessions"
     fi
     

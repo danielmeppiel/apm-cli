@@ -7,9 +7,9 @@ import time
 import shutil
 import gc
 import sys
-from awd_cli.workflow.parser import WorkflowDefinition, parse_workflow_file
-from awd_cli.workflow.runner import substitute_parameters, collect_parameters
-from awd_cli.workflow.discovery import discover_workflows, create_workflow_template
+from apm_cli.workflow.parser import WorkflowDefinition, parse_workflow_file
+from apm_cli.workflow.runner import substitute_parameters, collect_parameters
+from apm_cli.workflow.discovery import discover_workflows, create_workflow_template
 
 
 def safe_rmdir(path):

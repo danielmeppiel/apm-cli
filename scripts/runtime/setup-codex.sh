@@ -52,7 +52,7 @@ setup_codex() {
     # Detect platform using detect_platform from common utilities
     detect_platform
     
-    # Map AWD platform format to Codex binary format
+    # Map APM platform format to Codex binary format
     local codex_platform
     case "$DETECTED_PLATFORM" in
         darwin-arm64)
@@ -70,15 +70,15 @@ setup_codex() {
             ;;
     esac
     
-    # Ensure AWD runtime directory exists
-    ensure_awd_runtime_dir
+    # Ensure APM runtime directory exists
+    ensure_apm_runtime_dir
     
     # Set up paths
-    local runtime_dir="$HOME/.awd/runtimes"
+    local runtime_dir="$HOME/.apm/runtimes"
     local codex_binary="$runtime_dir/codex"
     local codex_config_dir="$HOME/.codex"
     local codex_config="$codex_config_dir/config.toml"
-    local temp_dir="/tmp/awd-codex-install"
+    local temp_dir="/tmp/apm-codex-install"
     
     # Create temp directory
     mkdir -p "$temp_dir"
@@ -160,7 +160,7 @@ setup_codex() {
         fi
         
         # Create Codex configuration for GitHub Models with MCP integration
-        log_info "Creating Codex configuration for GitHub Models with MCP (AWD default)..."
+        log_info "Creating Codex configuration for GitHub Models with MCP (APM default)..."
         
         # Check if GitHub token is available for MCP server setup
         if [[ -n "${GITHUB_TOKEN:-}" ]]; then
@@ -221,9 +221,9 @@ EOF
         fi
         
         log_success "Codex configuration created at $codex_config"
-        log_info "AWD configured Codex with GitHub Models as default provider"
+        log_info "APM configured Codex with GitHub Models as default provider"
     else
-        log_info "Vanilla mode: Skipping AWD configuration - Codex will use its native defaults"
+        log_info "Vanilla mode: Skipping APM configuration - Codex will use its native defaults"
     fi
     
     # Update PATH
@@ -249,17 +249,17 @@ EOF
         fi
         
         if [[ -n "${GITHUB_TOKEN:-}" ]] && [[ "$docker_available" == "true" ]]; then
-            echo "🚀 Ready to use AWD with GitHub integration!"
-            echo "   - Run: awd run start --param name=YourName"
+            echo "🚀 Ready to use APM with GitHub integration!"
+            echo "   - Run: apm run start --param name=YourName"
             echo ""
             log_success "✨ GitHub MCP Server integration configured!"
-            echo "   - Your AWD scripts can now use GitHub tools like 'get_me', 'list_repos', etc."
+            echo "   - Your APM scripts can now use GitHub tools like 'get_me', 'list_repos', etc."
             echo "   - Docker is available and MCP server will work automatically"
             echo "   - GitHub Models provides free access to OpenAI models with your GitHub token"
         elif [[ -n "${GITHUB_TOKEN:-}" ]] && [[ "$docker_available" == "false" ]]; then
-            echo "1. Install and start Docker to enable GitHub tools in AWD scripts"
+            echo "1. Install and start Docker to enable GitHub tools in APM scripts"
             echo "2. Re-run this script to enable MCP integration"
-            echo "3. Then run: awd run start --param name=YourName"
+            echo "3. Then run: apm run start --param name=YourName"
             echo ""
             log_warning "⚠️  GitHub MCP Server integration requires Docker"
             echo "   - GITHUB_TOKEN is configured but Docker is not available"
@@ -267,7 +267,7 @@ EOF
         else
             echo "1. Set your GitHub token: export GITHUB_TOKEN=your_token_here"
             echo "2. Re-run this script to enable GitHub MCP integration"
-            echo "3. Then run: awd run start --param name=YourName"
+            echo "3. Then run: apm run start --param name=YourName"
             echo ""
             log_warning "⚠️  GitHub MCP Server integration not configured"
             echo "   - Set GITHUB_TOKEN environment variable and ensure Docker is running"
@@ -275,7 +275,7 @@ EOF
         fi
     else
         echo "1. Configure Codex with your preferred provider (see: codex --help)"
-        echo "2. Then run with AWD: awd run start"
+        echo "2. Then run with APM: apm run start"
     fi
 }
 

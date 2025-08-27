@@ -3,7 +3,7 @@
 import unittest
 import os
 from unittest import mock
-from awd_cli.registry.client import SimpleRegistryClient
+from apm_cli.registry.client import SimpleRegistryClient
 
 
 class TestSimpleRegistryClient(unittest.TestCase):
@@ -67,7 +67,7 @@ class TestSimpleRegistryClient(unittest.TestCase):
             params={"limit": 10, "cursor": "page-token"}
         )
         
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.list_servers')
     def test_search_servers(self, mock_list_servers):
         """Test searching for servers in the registry."""
         # Mock response
@@ -136,8 +136,8 @@ class TestSimpleRegistryClient(unittest.TestCase):
             f"{self.client.registry_url}/v0/servers/123e4567-e89b-12d3-a456-426614174000"
         )
     
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.list_servers')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_info')
     def test_get_server_by_name(self, mock_get_server_info, mock_list_servers):
         """Test finding a server by name."""
         # Mock list_servers
@@ -184,7 +184,7 @@ class TestSimpleRegistryClient(unittest.TestCase):
         client = SimpleRegistryClient("https://explicit-url.example.com")
         self.assertEqual(client.registry_url, "https://explicit-url.example.com")
 
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_info')
     def test_find_server_by_reference_uuid(self, mock_get_server_info):
         """Test finding a server by UUID reference."""
         # Mock server data
@@ -202,7 +202,7 @@ class TestSimpleRegistryClient(unittest.TestCase):
         self.assertEqual(result, server_data)
         mock_get_server_info.assert_called_once_with("123e4567-e89b-12d3-a456-426614174000")
 
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_info')
     def test_find_server_by_reference_uuid_not_found(self, mock_get_server_info):
         """Test finding a server by UUID that doesn't exist."""
         # Mock get_server_info to raise ValueError
@@ -215,8 +215,8 @@ class TestSimpleRegistryClient(unittest.TestCase):
         self.assertIsNone(result)
         mock_get_server_info.assert_called_once_with("123e4567-e89b-12d3-a456-426614174000")
 
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.list_servers')
     def test_find_server_by_reference_name_match(self, mock_list_servers, mock_get_server_info):
         """Test finding a server by exact name match."""
         # Mock list_servers
@@ -250,7 +250,7 @@ class TestSimpleRegistryClient(unittest.TestCase):
         mock_list_servers.assert_called_once()
         mock_get_server_info.assert_called_once_with("123e4567-e89b-12d3-a456-426614174000")
 
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.list_servers')
     def test_find_server_by_reference_name_not_found(self, mock_list_servers):
         """Test finding a server by name that doesn't exist in registry."""
         # Mock list_servers with no matching names
@@ -275,8 +275,8 @@ class TestSimpleRegistryClient(unittest.TestCase):
         self.assertIsNone(result)
         mock_list_servers.assert_called_once()
 
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.get_server_info')
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.get_server_info')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.list_servers')
     def test_find_server_by_reference_name_match_get_server_info_fails(self, mock_list_servers, mock_get_server_info):
         """Test finding a server by name when get_server_info fails."""
         # Mock list_servers
@@ -301,7 +301,7 @@ class TestSimpleRegistryClient(unittest.TestCase):
         mock_list_servers.assert_called_once()
         mock_get_server_info.assert_called_once_with("123e4567-e89b-12d3-a456-426614174000")
 
-    @mock.patch('awd_cli.registry.client.SimpleRegistryClient.list_servers')
+    @mock.patch('apm_cli.registry.client.SimpleRegistryClient.list_servers')
     def test_find_server_by_reference_invalid_format(self, mock_list_servers):
         """Test finding a server with various invalid/edge case formats."""
         # Mock list_servers with no matches

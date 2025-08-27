@@ -1,6 +1,6 @@
-# AWD Documentation
+# APM Documentation
 
-Welcome to the Agentic Workflow Definitions (AWD) documentation. AWD is the NPM for AI-Native Development - build, package, share, and run agentic apps across any LLM runtime.
+Welcome to the Agent Primitives Manager (APM) documentation. APM is the package manager for AI-Native Development - build, package, share, and run agentic apps across any LLM runtime.
 
 ## Quick Start
 - [CLI Reference](cli-reference.md) - Complete command documentation
@@ -12,11 +12,11 @@ Welcome to the Agentic Workflow Definitions (AWD) documentation. AWD is the NPM 
 ## Development
 - [Development Status](development-status.md) - Feature status and testing coverage
 - [Integration Testing](integration-testing.md) - Testing strategy and execution
-- [Contributing](../CONTRIBUTING.md) - How to contribute to AWD
+- [Contributing](../CONTRIBUTING.md) - How to contribute to APM
 
 ## Work in Progress
 - [MCP Integration](wip/mcp-integration.md) - Phase 2 MCP tool calling (coming soon)
 
 ## Community
-- [AWD Manifesto](../MANIFESTO.md) - Our principles and philosophy
-- [GitHub Issues](https://github.com/danielmeppiel/awd-cli/issues) - Bug reports and feature requests
+- [APM Manifesto](../MANIFESTO.md) - Our principles and philosophy
+- [GitHub Issues](https://github.com/danielmeppiel/apm-cli/issues) - Bug reports and feature requests

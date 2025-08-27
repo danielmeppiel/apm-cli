@@ -1,6 +1,6 @@
-# Contributing to awd-cli
+# Contributing to apm-cli
 
-Thank you for considering contributing to awd-cli! This document outlines the process for contributing to the project.
+Thank you for considering contributing to apm-cli! This document outlines the process for contributing to the project.
 
 ## Code of Conduct
 
@@ -12,7 +12,7 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 Before submitting a bug report:
 
-1. Check the [GitHub Issues](https://github.com/username/awd-cli/issues) to see if the bug has already been reported.
+1. Check the [GitHub Issues](https://github.com/username/apm-cli/issues) to see if the bug has already been reported.
 2. Update your copy of the code to the latest version to ensure the issue hasn't been fixed.
 
 When submitting a bug report:
@@ -44,11 +44,11 @@ Enhancement suggestions are welcome! Please:
 ### Pull Request Process
 
 1. **Choose the appropriate PR template** for your change:
-   - **🚀 New Feature**: [Create Feature PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=feature.md)
-   - **🐛 Bug Fix**: [Create Bug Fix PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=bugfix.md)  
-   - **📖 Documentation**: [Create Docs PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=documentation.md)
-   - **🔧 Maintenance**: [Create Maintenance PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD?template=maintenance.md)
-   - **Other**: [Create Standard PR](https://github.com/danielmeppiel/awd-cli/compare/main...HEAD)
+   - **🚀 New Feature**: [Create Feature PR](https://github.com/danielmeppiel/apm-cli/compare/main...HEAD?template=feature.md)
+   - **🐛 Bug Fix**: [Create Bug Fix PR](https://github.com/danielmeppiel/apm-cli/compare/main...HEAD?template=bugfix.md)  
+   - **📖 Documentation**: [Create Docs PR](https://github.com/danielmeppiel/apm-cli/compare/main...HEAD?template=documentation.md)
+   - **🔧 Maintenance**: [Create Maintenance PR](https://github.com/danielmeppiel/apm-cli/compare/main...HEAD?template=maintenance.md)
+   - **Other**: [Create Standard PR](https://github.com/danielmeppiel/apm-cli/compare/main...HEAD)
 
 2. **Apply the correct label** after creating your PR:
    - `enhancement` or `feature` - New functionality
@@ -70,8 +70,8 @@ This project uses uv to manage Python environments and dependencies:
 
 ```bash
 # Clone the repository
-git clone https://github.com/danielmeppiel/awd-cli.git
-cd awd-cli
+git clone https://github.com/danielmeppiel/apm-cli.git
+cd apm-cli
 
 # Create a virtual environment and install dependencies
 uv venv

@@ -28,10 +28,10 @@ done
 setup_llm() {
     log_info "Setting up LLM runtime..."
     
-    # Ensure AWD runtime directory exists
-    ensure_awd_runtime_dir
+    # Ensure APM runtime directory exists
+    ensure_apm_runtime_dir
     
-    local runtime_dir="$HOME/.awd/runtimes"
+    local runtime_dir="$HOME/.apm/runtimes"
     local llm_venv="$runtime_dir/llm-venv"
     local llm_wrapper="$runtime_dir/llm"
     
@@ -52,7 +52,7 @@ setup_llm() {
     
     # Install GitHub Models plugin in non-vanilla mode
     if [[ "$VANILLA_MODE" == "false" ]]; then
-        log_info "Installing GitHub Models plugin for AWD defaults..."
+        log_info "Installing GitHub Models plugin for APM defaults..."
         "$llm_venv/bin/pip" install llm-github-models
         log_success "GitHub Models plugin installed"
     else
@@ -63,7 +63,7 @@ setup_llm() {
     log_info "Creating LLM wrapper script..."
     cat > "$llm_wrapper" << EOF
 #!/bin/bash
-# LLM wrapper script created by AWD
+# LLM wrapper script created by APM
 exec "$llm_venv/bin/llm" "\$@"
 EOF
     
@@ -89,14 +89,14 @@ EOF
     log_info "Next steps:"
     if [[ "$VANILLA_MODE" == "false" ]]; then
         echo "1. Set your GitHub token: export GITHUB_TOKEN=your_token_here"
-        echo "2. Then run with AWD: awd run start --runtime=llm"
+        echo "2. Then run with APM: apm run start --runtime=llm"
         echo ""
         log_info "GitHub Models provides free access to OpenAI models with your GitHub token"
     else
         echo "1. Configure LLM providers: llm keys set <provider>"
         echo "2. For OpenAI: llm keys set openai"
         echo "3. For Anthropic: llm keys set anthropic"
-        echo "4. Then run with AWD: awd run start --runtime=llm"
+        echo "4. Then run with APM: apm run start --runtime=llm"
     fi
 }
 

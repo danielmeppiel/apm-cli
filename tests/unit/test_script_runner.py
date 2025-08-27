@@ -4,7 +4,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch, mock_open
 
-from awd_cli.core.script_runner import ScriptRunner, PromptCompiler
+from apm_cli.core.script_runner import ScriptRunner, PromptCompiler
 
 
 class TestScriptRunner:
@@ -14,7 +14,7 @@ class TestScriptRunner:
         """Set up test fixtures."""
         self.script_runner = ScriptRunner()
         self.compiled_content = "You are a helpful assistant. Say hello to TestUser!"
-        self.compiled_path = ".awd/compiled/hello-world.txt"
+        self.compiled_path = ".apm/compiled/hello-world.txt"
     
     def test_transform_runtime_command_simple_codex(self):
         """Test simple codex command transformation."""
@@ -88,10 +88,10 @@ class TestScriptRunner:
         )
         assert result == f"unknown-command {self.compiled_path}"
     
-    @patch('awd_cli.core.script_runner.Path.exists')
+    @patch('apm_cli.core.script_runner.Path.exists')
     @patch('builtins.open', new_callable=mock_open, read_data="scripts:\n  start: 'codex hello.prompt.md'")
     def test_list_scripts(self, mock_file, mock_exists):
-        """Test listing scripts from awd.yml."""
+        """Test listing scripts from apm.yml."""
         mock_exists.return_value = True
         
         scripts = self.script_runner.list_scripts()
@@ -144,8 +144,8 @@ class TestPromptCompiler:
         # Should leave placeholder unchanged when parameter is missing
         assert result == "Hello ${input:name}!"
     
-    @patch('awd_cli.core.script_runner.Path.mkdir')
-    @patch('awd_cli.core.script_runner.Path.exists')
+    @patch('apm_cli.core.script_runner.Path.mkdir')
+    @patch('apm_cli.core.script_runner.Path.exists')
     @patch('builtins.open', new_callable=mock_open)
     def test_compile_with_frontmatter(self, mock_file, mock_exists, mock_mkdir):
         """Test compiling prompt file with frontmatter."""
@@ -172,8 +172,8 @@ Hello ${input:name}!"""
         assert "Hello World!" in written_content
         assert "---" not in written_content  # Frontmatter should be stripped
     
-    @patch('awd_cli.core.script_runner.Path.mkdir')
-    @patch('awd_cli.core.script_runner.Path.exists')
+    @patch('apm_cli.core.script_runner.Path.mkdir')
+    @patch('apm_cli.core.script_runner.Path.exists')
     @patch('builtins.open', new_callable=mock_open)
     def test_compile_without_frontmatter(self, mock_file, mock_exists, mock_mkdir):
         """Test compiling prompt file without frontmatter."""
@@ -190,7 +190,7 @@ Hello ${input:name}!"""
         written_content = mock_file.return_value.write.call_args[0][0]
         assert written_content == "Hello World!"
     
-    @patch('awd_cli.core.script_runner.Path.exists')
+    @patch('apm_cli.core.script_runner.Path.exists')
     def test_compile_file_not_found(self, mock_exists):
         """Test compiling non-existent prompt file."""
         mock_exists.return_value = False

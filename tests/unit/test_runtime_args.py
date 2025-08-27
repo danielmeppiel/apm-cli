@@ -2,7 +2,7 @@
 
 import unittest
 from unittest import mock
-from awd_cli.adapters.client.vscode import VSCodeClientAdapter
+from apm_cli.adapters.client.vscode import VSCodeClientAdapter
 
 
 class TestRuntimeArguments(unittest.TestCase):

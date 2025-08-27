@@ -22,6 +22,6 @@ Prompts and workflows as shared first-class AI artifacts. Version controlled, pe
 
 ---
 
-*These principles guide every decision in AWD's design. We believe AI Agents should empower dev teams without overwhelming them, and that the best AI tools are the ones that feel simple and familiar while enabling extraordinary capabilities.*
+*These principles guide every decision in APM's design. We believe AI Agents should empower dev teams without overwhelming them, and that the best AI tools are the ones that feel simple and familiar while enabling extraordinary capabilities.*
 
 **Join us in making Agentic automation accessible to everyone.** 🚀

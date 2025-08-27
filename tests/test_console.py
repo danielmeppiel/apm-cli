@@ -8,7 +8,7 @@ from unittest import TestCase
 import pytest
 from click.testing import CliRunner
 
-from awd_cli.cli import cli as app
+from apm_cli.cli import cli as app
 
 
 runner = CliRunner()

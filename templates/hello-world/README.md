@@ -1,29 +1,29 @@
 # {{project_name}}
 
-An AWD (Agentic Workflow Definitions) application with comprehensive primitives compilation examples.
+An APM (Agentic Primitives Manager) application with comprehensive primitives compilation examples.
 
 ## Quick Start
 
 ```bash
 # Install dependencies
-awd install
+apm install
 
-# Compile AWD primitives into AGENTS.md
-awd compile
+# Compile APM primitives into AGENTS.md
+apm compile
 
 # Run the hello world prompt
-awd run start --param name="Developer"
+apm run start --param name="Developer"
 
 # Run feature implementation workflow
-awd run feature --param feature_name="User Authentication" --param feature_description="Implement secure user login and registration"
+apm run feature --param feature_name="User Authentication" --param feature_description="Implement secure user login and registration"
 
 # Preview before execution
-awd preview --param name="Developer"
+apm preview --param name="Developer"
 ```
 
-## AWD Primitives Compilation
+## APM Primitives Compilation
 
-This project demonstrates the full AWD primitives system:
+This project demonstrates the full APM primitives system:
 
 ### Available Primitives
 - **Chatmodes**: `default`, `backend-engineer`
@@ -34,24 +34,24 @@ This project demonstrates the full AWD primitives system:
 ### Compilation Commands
 ```bash
 # Compile all primitives into AGENTS.md
-awd compile
+apm compile
 
 # Watch for changes and auto-recompile
-awd compile --watch
+apm compile --watch
 
 # Validate primitives without compiling
-awd compile --validate
+apm compile --validate
 
 # Dry run to preview output
-awd compile --dry-run
+apm compile --dry-run
 
 # Use specific chatmode
-awd compile --chatmode backend-engineer
+apm compile --chatmode backend-engineer
 ```
 
 ### Directory Structure
 ```
-.awd/
+.apm/
 ├── chatmodes/
 │   ├── default.chatmode.md
 │   └── backend-engineer.chatmode.md
@@ -72,6 +72,6 @@ awd compile --chatmode backend-engineer
 
 ## About
 
-This project was created with AWD - The NPM for AI-Native Development.
+This project was created with APM - The package manager for AI-Native Development.
 
-Learn more at: https://github.com/danielmeppiel/awd-cli
+Learn more at: https://github.com/danielmeppiel/apm-cli

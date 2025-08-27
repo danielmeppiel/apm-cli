@@ -1,9 +1,9 @@
-"""Integration test for LLM runtime with AWD workflows."""
+"""Integration test for LLM runtime with APM workflows."""
 
 import tempfile
 import os
 from unittest.mock import patch, Mock
-from awd_cli.workflow.runner import run_workflow
+from apm_cli.workflow.runner import run_workflow
 
 
 def test_workflow_with_invalid_runtime():
@@ -26,7 +26,7 @@ Hello ${input:name}, this is a test prompt.
             f.write(workflow_content)
         
         # Mock the RuntimeFactory to control runtime existence check
-        with patch('awd_cli.workflow.runner.RuntimeFactory') as mock_factory_class:
+        with patch('apm_cli.workflow.runner.RuntimeFactory') as mock_factory_class:
             mock_factory_class.runtime_exists.return_value = False  # gpt-4o-mini is not a valid runtime
             mock_factory_class._RUNTIME_ADAPTERS = []  # Mock empty adapters for error message
             
@@ -69,7 +69,7 @@ Deploy the ${input:service} service to production.
             f.write(workflow_content)
         
         # Preview without runtime (traditional copy mode)
-        from awd_cli.workflow.runner import preview_workflow
+        from apm_cli.workflow.runner import preview_workflow
         params = {'service': 'api-gateway'}
         
         success, result = preview_workflow('test-copy', params, temp_dir)
@@ -102,7 +102,7 @@ Please respond with a greeting.
             f.write(workflow_content)
         
         # Mock the RuntimeFactory to return a mocked LLM runtime
-        with patch('awd_cli.workflow.runner.RuntimeFactory') as mock_factory_class:
+        with patch('apm_cli.workflow.runner.RuntimeFactory') as mock_factory_class:
             mock_runtime = Mock()
             mock_runtime.execute_prompt.return_value = "Hello World! Nice to meet you."
             mock_factory_class.create_runtime.return_value = mock_runtime

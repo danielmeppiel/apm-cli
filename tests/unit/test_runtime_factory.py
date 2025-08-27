@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import Mock, patch
-from awd_cli.runtime.factory import RuntimeFactory
+from apm_cli.runtime.factory import RuntimeFactory
 
 
 class TestRuntimeFactory:

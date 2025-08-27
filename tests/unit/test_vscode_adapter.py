@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 import pytest
 from unittest.mock import patch, MagicMock
-from awd_cli.adapters.client.vscode import VSCodeClientAdapter
+from apm_cli.adapters.client.vscode import VSCodeClientAdapter
 
 
 class TestVSCodeClientAdapter(unittest.TestCase):
@@ -25,12 +25,12 @@ class TestVSCodeClientAdapter(unittest.TestCase):
             json.dump({"servers": {}}, f)
             
         # Create mock clients
-        self.mock_registry_patcher = patch('awd_cli.adapters.client.vscode.SimpleRegistryClient')
+        self.mock_registry_patcher = patch('apm_cli.adapters.client.vscode.SimpleRegistryClient')
         self.mock_registry_class = self.mock_registry_patcher.start()
         self.mock_registry = MagicMock()
         self.mock_registry_class.return_value = self.mock_registry
         
-        self.mock_integration_patcher = patch('awd_cli.adapters.client.vscode.RegistryIntegration')
+        self.mock_integration_patcher = patch('apm_cli.adapters.client.vscode.RegistryIntegration')
         self.mock_integration_class = self.mock_integration_patcher.start()
         self.mock_integration = MagicMock()
         self.mock_integration_class.return_value = self.mock_integration
@@ -68,7 +68,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.mock_integration_patcher.stop()
         self.temp_dir.cleanup()
     
-    @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
+    @patch("apm_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_get_current_config(self, mock_get_path):
         """Test getting the current configuration."""
         mock_get_path.return_value = self.temp_path
@@ -77,7 +77,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         config = adapter.get_current_config()
         self.assertEqual(config, {"servers": {}})
     
-    @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
+    @patch("apm_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_update_config(self, mock_get_path):
         """Test updating the configuration."""
         mock_get_path.return_value = self.temp_path
@@ -101,7 +101,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertEqual(updated_config, new_config)
         self.assertTrue(result)
         
-    @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
+    @patch("apm_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_update_config_nonexistent_file(self, mock_get_path):
         """Test updating configuration when file doesn't exist."""
         nonexistent_path = os.path.join(self.vscode_dir, "nonexistent.json")
@@ -126,7 +126,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertEqual(updated_config, new_config)
         self.assertTrue(result)
     
-    @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
+    @patch("apm_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_configure_mcp_server(self, mock_get_path):
         """Test configuring an MCP server."""
         mock_get_path.return_value = self.temp_path
@@ -152,7 +152,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertEqual(updated_config["servers"]["fetch"]["command"], "npx")
         self.assertEqual(updated_config["servers"]["fetch"]["args"], ["@mcp/fetch"])
     
-    @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
+    @patch("apm_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_configure_mcp_server_update_existing(self, mock_get_path):
         """Test updating an existing MCP server."""
         # Create a config with an existing server
@@ -191,7 +191,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         self.assertEqual(updated_config["servers"]["fetch"]["command"], "npx")
         self.assertEqual(updated_config["servers"]["fetch"]["args"], ["@mcp/fetch"])
     
-    @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
+    @patch("apm_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_configure_mcp_server_empty_url(self, mock_get_path):
         """Test configuring an MCP server with empty URL."""
         mock_get_path.return_value = self.temp_path
@@ -204,7 +204,7 @@ class TestVSCodeClientAdapter(unittest.TestCase):
         
         self.assertFalse(result)
     
-    @patch("awd_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
+    @patch("apm_cli.adapters.client.vscode.VSCodeClientAdapter.get_config_path")
     def test_configure_mcp_server_registry_error(self, mock_get_path):
         """Test error behavior when registry doesn't have server details."""
         # Configure the mock to return None when server is not found

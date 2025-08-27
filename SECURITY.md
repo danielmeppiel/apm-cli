@@ -25,9 +25,9 @@ Please follow these steps:
 
 ## Security Best Practices
 
-When using awd-cli:
+When using apm-cli:
 
-1. Keep your awd-cli installation up to date
+1. Keep your apm-cli installation up to date
 2. Review workflow files carefully before execution
 3. Use proper access controls for your MCP servers
 4. Validate all input parameters in your workflows

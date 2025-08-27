@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Complete rebranding from AWD to APM** - Changed from "Agentic Workflow Definitions (AWD)" to "Agent Primitives Manager (APM)"
+- **New positioning** - APM is now positioned as "the package manager for AI-Native Development"
+- **Updated CLI commands** - All `awd` commands changed to `apm`
+- **Configuration files** - `awd.yml` renamed to `apm.yml`, `.awd/` directory renamed to `.apm/`
+- **Repository rename** - Repository changed from `awd-cli` to `apm-cli`
+- **Package naming** - PyPI package changed from `awd-cli` to `apm-cli`
+
 ## [0.0.14] - 2025-01-19
 
 ### Changed
@@ -25,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Manual Installation Documentation** - Fixed incorrect binary download URLs in README.md to use proper `.tar.gz` archives with extraction steps
-- **Codex Debug Fix** - fixed the awd app template `debug` script to correctly setup Codex in debug mode
+- **Codex Debug Fix** - fixed the apm app template `debug` script to correctly setup Codex in debug mode
 
 ### Documentation
 - **Enhanced Quick Start** - Updated README with clearer prerequisites and Docker requirement for full GitHub integration
@@ -106,7 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.7] - 2025-06-29
 
 ### Added
-- **Interactive project initialization** - Enhanced `awd init` with interactive mode and options for overwriting existing files
+- **Interactive project initialization** - Enhanced `apm init` with interactive mode and options for overwriting existing files
 - **Rich library integration** - Improved CLI user experience with beautiful terminal output and formatting
 - **Enhanced documentation** - Updated development documentation and integration testing details
 - **Runtime support documentation** - Improved documentation reflecting changes in runtime support and prompt execution flow
@@ -122,7 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.6] - 2025-06-29
 
 ### Added
-- **NPM-like script configuration** in `awd.yml` - Define custom execution commands for different runtimes
+- **NPM-like script configuration** in `apm.yml` - Define custom execution commands for different runtimes
 - **Runtime-agnostic script execution** - Configure scripts for Codex, LLM, or any runtime via `scripts:` section
 - **Intelligent prompt compilation** - Automatic parameter substitution and runtime command transformation
 - **Multi-runtime project support** - Single project can define scripts for different LLM backends
@@ -130,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Architecture
 - **Separation of Concerns**: Runtime execution logic moved from CLI core to configurable scripts
 - **ScriptRunner system**: Handles automatic `.prompt.md` compilation and runtime command transformation  
-- **Flexible runtime targeting**: Projects define their own execution strategies via `awd.yml`
+- **Flexible runtime targeting**: Projects define their own execution strategies via `apm.yml`
 
 ### Examples
 ```yaml
@@ -159,7 +167,7 @@ scripts:
 ## [0.0.4] - 2025-06-28
 
 ### Added
-- Runtime management system with `awd runtime` commands (setup, list, remove, status)
+- Runtime management system with `apm runtime` commands (setup, list, remove, status)
 - Automated setup scripts for Codex and LLM runtimes with GitHub Models support
 - Centralized version management reading from pyproject.toml
 - Cross-platform runtime installation and configuration
@@ -187,13 +195,13 @@ scripts:
 ## [0.0.1] - 2025-06-27
 
 ### Added
-- Initial release of AWD CLI - the NPM for AI-native development
+- Initial release of APM CLI - the package manager for AI-native development
 - 6 core commands: `init`, `install`, `run`, `list`, `version`, `help`
 - NPM-like developer workflow: Initialize → Install → Run
 - Cross-platform binaries (no Python required)
 - Multiple LLM runtime support: llm library, OpenAI Codex
 - Hello world template with GitHub MCP integration
-- Project-based configuration with awd.yml
+- Project-based configuration with apm.yml
 - Automatic MCP dependency management
 - Zero-dependency installation via curl script
 - PyPI package distribution
@@ -201,19 +209,19 @@ scripts:
 ### Installation
 ```bash
 # Zero dependencies
-curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/danielmeppiel/apm-cli/main/install.sh | sh
 
 # Or with pip
-pip install awd-cli
+pip install apm-cli
 ```
 
 ### Quick Start
 ```bash
-awd init my-project
+apm init my-project
 cd my-project
-awd install
-awd run --param name="Developer"
+apm install
+apm run --param name="Developer"
 ```
 
-[0.0.11]: https://github.com/danielmeppiel/awd-cli/releases/tag/v0.0.11
-[0.0.10]: https://github.com/danielmeppiel/awd-cli/releases/tag/v0.0.10
+[0.0.11]: https://github.com/danielmeppiel/apm-cli/releases/tag/v0.0.11
+[0.0.10]: https://github.com/danielmeppiel/apm-cli/releases/tag/v0.0.10

@@ -1,10 +1,10 @@
-# AWD Primitives Guide
+# APM Primitives Guide
 
-AWD primitives are the foundational building blocks for AI-powered development workflows. They include chatmodes, instructions, and context files that define how AI assistants should behave and what information they should have access to.
+APM primitives are the foundational building blocks for AI-powered development workflows. They include chatmodes, instructions, and context files that define how AI assistants should behave and what information they should have access to.
 
 ## Overview
 
-The AWD CLI supports three types of primitives:
+The APM CLI supports three types of primitives:
 
 - **Chatmodes** (`.chatmode.md`) - Define AI assistant personalities and behaviors
 - **Instructions** (`.instructions.md`) - Provide coding standards and guidelines for specific file types
@@ -14,11 +14,11 @@ The AWD CLI supports three types of primitives:
 
 ### Supported Locations
 
-AWD discovers primitives in these locations:
+APM discovers primitives in these locations:
 
 ```
-# AWD-native structure
-.awd/
+# APM-native structure
+.apm/
 ├── chatmodes/           # AI assistant definitions
 │   └── *.chatmode.md
 ├── instructions/        # Coding standards and guidelines  
@@ -143,13 +143,13 @@ Context files provide background information, project details, and other relevan
 
 **Examples:**
 
-Project context (`.awd/context/project-info.context.md`):
+Project context (`.apm/context/project-info.context.md`):
 ```markdown
 ---
 description: Project overview and architecture
 ---
 
-# AWD CLI Project
+# APM CLI Project
 
 ## Overview
 Command-line tool for AI-powered development workflows.
@@ -165,7 +165,7 @@ Command-line tool for AI-powered development workflows.
 - Extensible primitive system
 ```
 
-Team information (`.awd/memory/team-contacts.memory.md`):
+Team information (`.apm/memory/team-contacts.memory.md`):
 ```markdown
 # Team Contacts
 
@@ -184,10 +184,10 @@ Team information (`.awd/memory/team-contacts.memory.md`):
 
 ## Discovery and Parsing
 
-The AWD CLI automatically discovers and parses all primitive files in your project:
+The APM CLI automatically discovers and parses all primitive files in your project:
 
 ```python
-from awd_cli.primitives import discover_primitives
+from apm_cli.primitives import discover_primitives
 
 # Discover all primitives in current directory
 collection = discover_primitives()
@@ -233,9 +233,9 @@ Use specific `applyTo` patterns for instructions:
 Keep primitives in version control alongside your code. Use semantic versioning for breaking changes.
 
 ### 4. Organized Structure
-Use the structured `.awd/` directories for better organization:
+Use the structured `.apm/` directories for better organization:
 ```
-.awd/
+.apm/
 ├── chatmodes/
 │   ├── code-reviewer.chatmode.md
 │   └── documentation-writer.chatmode.md
@@ -263,7 +263,7 @@ For VSCode Copilot compatibility, place files in `.github/` directories:
     └── coding-standards.instructions.md
 ```
 
-These files follow the same format and will be discovered alongside AWD-specific primitives.
+These files follow the same format and will be discovered alongside APM-specific primitives.
 
 ## Error Handling
 

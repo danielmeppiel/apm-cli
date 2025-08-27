@@ -1,5 +1,5 @@
 """
-End-to-end golden path tests for AWD runtime integration.
+End-to-end golden path tests for APM runtime integration.
 
 These tests verify the complete user journey from the README golden scenario,
 including real runtime installation and API calls. They should only run on 
@@ -21,12 +21,12 @@ from unittest import mock
 
 
 # Skip all tests in this module if not in E2E mode
-E2E_MODE = os.environ.get('AWD_E2E_TESTS', '').lower() in ('1', 'true', 'yes')
+E2E_MODE = os.environ.get('APM_E2E_TESTS', '').lower() in ('1', 'true', 'yes')
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 
 pytestmark = pytest.mark.skipif(
     not E2E_MODE, 
-    reason="E2E tests only run when AWD_E2E_TESTS=1 is set"
+    reason="E2E tests only run when APM_E2E_TESTS=1 is set"
 )
 
 
@@ -100,14 +100,14 @@ def temp_e2e_home():
 
 
 @pytest.fixture(scope="module")
-def awd_binary():
-    """Get path to AWD binary for testing."""
-    # Try to find AWD binary in common locations
+def apm_binary():
+    """Get path to APM binary for testing."""
+    # Try to find APM binary in common locations
     possible_paths = [
-        "awd",  # In PATH
-        "./awd",  # Local directory
-        "./dist/awd",  # Build directory
-        Path(__file__).parent.parent.parent / "dist" / "awd",  # Relative to test
+        "apm",  # In PATH
+        "./apm",  # Local directory
+        "./dist/apm",  # Build directory
+        Path(__file__).parent.parent.parent / "dist" / "apm",  # Relative to test
     ]
     
     for path in possible_paths:
@@ -118,23 +118,23 @@ def awd_binary():
         except (subprocess.CalledProcessError, FileNotFoundError):
             continue
     
-    pytest.skip("AWD binary not found. Build it first with: python -m build")
+    pytest.skip("APM binary not found. Build it first with: python -m build")
 
 
 class TestGoldenScenarioE2E:
     """End-to-end tests for the README golden scenario."""
     
     @pytest.mark.skipif(not GITHUB_TOKEN, reason="GITHUB_TOKEN required for E2E tests")
-    def test_complete_golden_scenario_codex(self, temp_e2e_home, awd_binary):
+    def test_complete_golden_scenario_codex(self, temp_e2e_home, apm_binary):
         """Test the complete golden scenario from README using Codex runtime."""
         
-        # Step 1: Setup Codex runtime (equivalent to: awd runtime setup codex)
+        # Step 1: Setup Codex runtime (equivalent to: apm runtime setup codex)
         print("\n=== Setting up Codex runtime ===")
-        result = run_command(f"{awd_binary} runtime setup codex", timeout=300, show_output=True)
+        result = run_command(f"{apm_binary} runtime setup codex", timeout=300, show_output=True)
         assert result.returncode == 0, f"Runtime setup failed: {result.stderr}"
         
         # Verify codex is available and GitHub configuration was created
-        codex_binary = Path(temp_e2e_home) / ".awd" / "runtimes" / "codex"
+        codex_binary = Path(temp_e2e_home) / ".apm" / "runtimes" / "codex"
         codex_config = Path(temp_e2e_home) / ".codex" / "config.toml"
         
         assert codex_binary.exists(), "Codex binary not installed"
@@ -162,32 +162,32 @@ class TestGoldenScenarioE2E:
         else:
             print("⚠ Codex not in PATH, will need explicit path or shell restart")
         
-        # Step 2: Initialize project (equivalent to: awd init my-hello-world)
+        # Step 2: Initialize project (equivalent to: apm init my-hello-world)
         with tempfile.TemporaryDirectory() as project_workspace:
             project_dir = Path(project_workspace) / "my-hello-world"
             
-            print("\n=== Initializing AWD project ===")
-            result = run_command(f"{awd_binary} init my-hello-world --yes", cwd=project_workspace, show_output=True)
+            print("\n=== Initializing APM project ===")
+            result = run_command(f"{apm_binary} init my-hello-world --yes", cwd=project_workspace, show_output=True)
             assert result.returncode == 0, f"Project init failed: {result.stderr}"
             assert project_dir.exists(), "Project directory not created"
             
             # Verify project structure
-            assert (project_dir / "awd.yml").exists(), "awd.yml not created"
+            assert (project_dir / "apm.yml").exists(), "apm.yml not created"
             assert (project_dir / "hello-world.prompt.md").exists(), "Prompt file not created"
             
             # Show project contents for debugging
             print("\n=== Project structure ===")
-            awd_yml_content = (project_dir / "awd.yml").read_text()
+            apm_yml_content = (project_dir / "apm.yml").read_text()
             prompt_content = (project_dir / "hello-world.prompt.md").read_text()
-            print(f"awd.yml:\n{awd_yml_content}")
+            print(f"apm.yml:\n{apm_yml_content}")
             print(f"hello-world.prompt.md:\n{prompt_content[:500]}...")
             
-            # Step 3: Install dependencies (equivalent to: awd install)
+            # Step 3: Install dependencies (equivalent to: apm install)
             print("\n=== Installing dependencies ===")
-            result = run_command(f"{awd_binary} install", cwd=project_dir, show_output=True)
+            result = run_command(f"{apm_binary} install", cwd=project_dir, show_output=True)
             assert result.returncode == 0, f"Dependency install failed: {result.stderr}"
             
-            # Step 4: Run the golden scenario (equivalent to: awd run start --param name="E2E Tester")
+            # Step 4: Run the golden scenario (equivalent to: apm run start --param name="E2E Tester")
             print("\n=== Running golden scenario with Codex ===")
             print(f"Environment: HOME={temp_e2e_home}, GITHUB_TOKEN={'SET' if GITHUB_TOKEN else 'NOT SET'}")
             
@@ -197,7 +197,7 @@ class TestGoldenScenarioE2E:
             env['HOME'] = temp_e2e_home
             
             # Run with real-time output streaming
-            cmd = f'{awd_binary} run start --param name="E2E Tester"'
+            cmd = f'{apm_binary} run start --param name="E2E Tester"'
             print(f"Executing: {cmd}")
             
             try:
@@ -255,16 +255,16 @@ class TestGoldenScenarioE2E:
                 pytest.fail("Codex execution timed out after 120 seconds")
             
     @pytest.mark.skipif(not GITHUB_TOKEN, reason="GITHUB_TOKEN required for E2E tests")        
-    def test_complete_golden_scenario_llm(self, temp_e2e_home, awd_binary):
+    def test_complete_golden_scenario_llm(self, temp_e2e_home, apm_binary):
         """Test the complete golden scenario using LLM runtime."""
         
-        # Step 1: Setup LLM runtime (equivalent to: awd runtime setup llm)
+        # Step 1: Setup LLM runtime (equivalent to: apm runtime setup llm)
         print("\\n=== Setting up LLM runtime ===")
-        result = run_command(f"{awd_binary} runtime setup llm", timeout=300)
+        result = run_command(f"{apm_binary} runtime setup llm", timeout=300)
         assert result.returncode == 0, f"LLM runtime setup failed: {result.stderr}"
         
         # Verify LLM is available
-        llm_wrapper = Path(temp_e2e_home) / ".awd" / "runtimes" / "llm"
+        llm_wrapper = Path(temp_e2e_home) / ".apm" / "runtimes" / "llm"
         assert llm_wrapper.exists(), "LLM wrapper not installed"
         
         # Configure LLM for GitHub Models
@@ -279,14 +279,14 @@ class TestGoldenScenarioE2E:
             project_dir = Path(project_workspace) / "my-hello-world-llm"
             
             print("\\n=== Initializing LLM test project ===")
-            result = run_command(f"{awd_binary} init my-hello-world-llm --yes", cwd=project_workspace)
+            result = run_command(f"{apm_binary} init my-hello-world-llm --yes", cwd=project_workspace)
             assert result.returncode == 0, f"Project init failed: {result.stderr}"
             
             # Step 3: Install dependencies
-            result = run_command(f"{awd_binary} install", cwd=project_dir)
+            result = run_command(f"{apm_binary} install", cwd=project_dir)
             assert result.returncode == 0, f"Dependency install failed: {result.stderr}"
             
-            # Step 4: Run with LLM runtime (equivalent to: awd run llm --param name="E2E LLM Tester")
+            # Step 4: Run with LLM runtime (equivalent to: apm run llm --param name="E2E LLM Tester")
             print("\\n=== Running golden scenario with LLM ===")
             
             # Ensure GITHUB_MODELS_KEY is set for the execution
@@ -295,7 +295,7 @@ class TestGoldenScenarioE2E:
             env['HOME'] = temp_e2e_home
             
             # Run the command with proper environment
-            cmd = f'{awd_binary} run llm --param name="E2E LLM Tester"'
+            cmd = f'{apm_binary} run llm --param name="E2E LLM Tester"'
             process = subprocess.Popen(
                 cmd,
                 shell=True,
@@ -327,10 +327,10 @@ class TestGoldenScenarioE2E:
                 print(f"Output: {full_output}")
                 pytest.skip("LLM execution failed, likely due to authentication in CI environment")
 
-    def test_runtime_list_command(self, temp_e2e_home, awd_binary):
-        """Test that AWD can list installed runtimes."""
+    def test_runtime_list_command(self, temp_e2e_home, apm_binary):
+        """Test that APM can list installed runtimes."""
         print("\\n=== Testing runtime list command ===")
-        result = run_command(f"{awd_binary} runtime list")
+        result = run_command(f"{apm_binary} runtime list")
         
         # Should succeed even if no runtimes installed
         assert result.returncode == 0, f"Runtime list failed: {result.stderr}"
@@ -342,47 +342,47 @@ class TestGoldenScenarioE2E:
         
         print(f"Runtime list output: {result.stdout}")
 
-    def test_awd_version_and_help(self, awd_binary):
-        """Test basic AWD CLI functionality."""
-        print("\\n=== Testing AWD CLI basics ===")
+    def test_apm_version_and_help(self, apm_binary):
+        """Test basic APM CLI functionality."""
+        print("\\n=== Testing APM CLI basics ===")
         
         # Test version
-        result = run_command(f"{awd_binary} --version")
+        result = run_command(f"{apm_binary} --version")
         assert result.returncode == 0, f"Version command failed: {result.stderr}"
         assert result.stdout.strip(), "Version output is empty"
         
         # Test help
-        result = run_command(f"{awd_binary} --help")
+        result = run_command(f"{apm_binary} --help")
         assert result.returncode == 0, f"Help command failed: {result.stderr}"
-        assert "usage:" in result.stdout.lower() or "awd" in result.stdout.lower(), \
+        assert "usage:" in result.stdout.lower() or "apm" in result.stdout.lower(), \
             "Help output doesn't look correct"
         
-        print(f"AWD version: {result.stdout}")
+        print(f"APM version: {result.stdout}")
 
 
 class TestRuntimeInteroperability:
     """Test that both runtimes can be installed and work together."""
     
-    def test_dual_runtime_installation(self, temp_e2e_home, awd_binary):
+    def test_dual_runtime_installation(self, temp_e2e_home, apm_binary):
         """Test installing both runtimes in the same environment."""
         
         # Install Codex
         print("\\n=== Installing Codex runtime ===")
-        result = run_command(f"{awd_binary} runtime setup codex", timeout=300)
+        result = run_command(f"{apm_binary} runtime setup codex", timeout=300)
         assert result.returncode == 0, f"Codex setup failed: {result.stderr}"
         
         # Install LLM  
         print("\\n=== Installing LLM runtime ===")
-        result = run_command(f"{awd_binary} runtime setup llm", timeout=300)
+        result = run_command(f"{apm_binary} runtime setup llm", timeout=300)
         assert result.returncode == 0, f"LLM setup failed: {result.stderr}"
         
         # Verify both are available
-        runtime_dir = Path(temp_e2e_home) / ".awd" / "runtimes"
+        runtime_dir = Path(temp_e2e_home) / ".apm" / "runtimes"
         assert (runtime_dir / "codex").exists(), "Codex not found after dual install"
         assert (runtime_dir / "llm").exists(), "LLM not found after dual install"
         
         # Test runtime list shows both
-        result = run_command(f"{awd_binary} runtime list")
+        result = run_command(f"{apm_binary} runtime list")
         assert result.returncode == 0, f"Runtime list failed: {result.stderr}"
         
         output = result.stdout.lower()
@@ -393,7 +393,7 @@ class TestRuntimeInteroperability:
 if __name__ == "__main__":
     # Example of how to run E2E tests manually
     print("To run E2E tests manually:")
-    print("export AWD_E2E_TESTS=1")
+    print("export APM_E2E_TESTS=1")
     print("export GITHUB_TOKEN=your_token_here")  
     print("pytest tests/integration/test_golden_scenario_e2e.py -v -s")
     
@@ -401,4 +401,4 @@ if __name__ == "__main__":
     if E2E_MODE:
         pytest.main([__file__, "-v", "-s"])
     else:
-        print("\\nE2E mode not enabled. Set AWD_E2E_TESTS=1 to run these tests.")
+        print("\\nE2E mode not enabled. Set APM_E2E_TESTS=1 to run these tests.")

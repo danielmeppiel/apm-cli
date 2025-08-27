@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-# AWD CLI Installer Script
-# Usage: curl -sSL https://raw.githubusercontent.com/danielmeppiel/awd-cli/main/install.sh | sh
+# APM CLI Installer Script
+# Usage: curl -sSL https://raw.githubusercontent.com/danielmeppiel/apm-cli/main/install.sh | sh
 
 # Colors for output
 RED='\033[0;31m'
@@ -12,14 +12,14 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO="danielmeppiel/awd-cli"
+REPO="danielmeppiel/apm-cli"
 INSTALL_DIR="/usr/local/bin"
-BINARY_NAME="awd"
+BINARY_NAME="apm"
 
 # Banner
 echo -e "${BLUE}"
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    AWD CLI Installer                        ║"
+echo "║                    APM CLI Installer                        ║"
 echo "║              The NPM for AI-Native Development              ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
@@ -47,13 +47,13 @@ esac
 case $OS in
     Darwin)
         PLATFORM="darwin"
-        DOWNLOAD_BINARY="awd-darwin-$ARCH.tar.gz"
-        EXTRACTED_DIR="awd-darwin-$ARCH"
+        DOWNLOAD_BINARY="apm-darwin-$ARCH.tar.gz"
+        EXTRACTED_DIR="apm-darwin-$ARCH"
         ;;
     Linux)
         PLATFORM="linux"
-        DOWNLOAD_BINARY="awd-linux-$ARCH.tar.gz"
-        EXTRACTED_DIR="awd-linux-$ARCH"
+        DOWNLOAD_BINARY="apm-linux-$ARCH.tar.gz"
+        EXTRACTED_DIR="apm-linux-$ARCH"
         ;;
     *)
         echo -e "${RED}Error: Unsupported operating system: $OS${NC}"
@@ -97,11 +97,11 @@ TMP_DIR=$(mktemp -d)
 trap "rm -rf $TMP_DIR" EXIT
 
 # Download binary
-echo -e "${YELLOW}Downloading AWD CLI...${NC}"
+echo -e "${YELLOW}Downloading APM CLI...${NC}"
 if curl -L --fail --silent --show-error "$DOWNLOAD_URL" -o "$TMP_DIR/$DOWNLOAD_BINARY"; then
     echo -e "${GREEN}✓ Download successful${NC}"
 else
-    echo -e "${RED}Error: Failed to download AWD CLI${NC}"
+    echo -e "${RED}Error: Failed to download APM CLI${NC}"
     echo "URL: $DOWNLOAD_URL"
     echo "This might mean:"
     echo "  1. No binary available for your platform ($PLATFORM-$ARCH)"
@@ -110,7 +110,7 @@ else
     echo ""
     echo "You can try installing from source instead:"
     echo "  git clone https://github.com/$REPO.git"
-    echo "  cd awd-cli && pip install -e ."
+    echo "  cd apm-cli && pip install -e ."
     exit 1
 fi
 
@@ -136,7 +136,7 @@ else
 fi
 
 # Install binary
-echo -e "${YELLOW}Installing AWD CLI to $INSTALL_DIR...${NC}"
+echo -e "${YELLOW}Installing APM CLI to $INSTALL_DIR...${NC}"
 if [ -w "$INSTALL_DIR" ]; then
     cp "$TMP_DIR/$EXTRACTED_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 else
@@ -144,13 +144,13 @@ else
 fi
 
 # Verify installation
-if command -v awd >/dev/null 2>&1; then
-    INSTALLED_VERSION=$(awd --version 2>/dev/null || echo "unknown")
-    echo -e "${GREEN}✓ AWD CLI installed successfully!${NC}"
+if command -v apm >/dev/null 2>&1; then
+    INSTALLED_VERSION=$(apm --version 2>/dev/null || echo "unknown")
+    echo -e "${GREEN}✓ APM CLI installed successfully!${NC}"
     echo -e "${BLUE}Version: $INSTALLED_VERSION${NC}"
     echo -e "${BLUE}Location: $INSTALL_DIR/$BINARY_NAME${NC}"
 else
-    echo -e "${YELLOW}⚠ AWD CLI installed but not found in PATH${NC}"
+    echo -e "${YELLOW}⚠ APM CLI installed but not found in PATH${NC}"
     echo "You may need to add $INSTALL_DIR to your PATH environment variable."
     echo "Add this line to your shell profile (.bashrc, .zshrc, etc.):"
     echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
@@ -160,9 +160,9 @@ echo ""
 echo -e "${GREEN}🎉 Installation complete!${NC}"
 echo ""
 echo -e "${BLUE}Quick start:${NC}"
-echo "  awd init my-app          # Create a new AWD project"
-echo "  cd my-app && awd install # Install dependencies"
-echo "  awd run                  # Run your first prompt"
+echo "  apm init my-app          # Create a new APM project"
+echo "  cd my-app && apm install # Install dependencies"
+echo "  apm run                  # Run your first prompt"
 echo ""
 echo -e "${BLUE}Documentation:${NC} https://github.com/$REPO"
 echo -e "${BLUE}Need help?${NC} Create an issue at https://github.com/$REPO/issues"

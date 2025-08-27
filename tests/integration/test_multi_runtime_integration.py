@@ -3,8 +3,8 @@
 import tempfile
 import os
 from unittest.mock import patch, Mock
-from awd_cli.workflow.runner import run_workflow
-from awd_cli.runtime.factory import RuntimeFactory
+from apm_cli.workflow.runner import run_workflow
+from apm_cli.runtime.factory import RuntimeFactory
 
 
 def test_runtime_type_selection():
@@ -27,7 +27,7 @@ ${input:message}
             f.write(workflow_content)
         
         # Mock the RuntimeFactory for testing runtime type selection
-        with patch('awd_cli.workflow.runner.RuntimeFactory') as mock_factory_class:
+        with patch('apm_cli.workflow.runner.RuntimeFactory') as mock_factory_class:
             mock_runtime = Mock()
             mock_runtime.execute_prompt.return_value = "Response from runtime"
             mock_factory_class.create_runtime.return_value = mock_runtime
@@ -70,7 +70,7 @@ ${input:message}
             f.write(workflow_content)
         
         # Mock the RuntimeFactory to raise ValueError for unknown runtime
-        with patch('awd_cli.workflow.runner.RuntimeFactory') as mock_factory_class:
+        with patch('apm_cli.workflow.runner.RuntimeFactory') as mock_factory_class:
             mock_factory_class.create_runtime.side_effect = ValueError("Unknown runtime: unknown")
             
             # Test with invalid runtime type

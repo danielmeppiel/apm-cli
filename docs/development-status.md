@@ -1,6 +1,6 @@
 # Development Status
 
-Current state of AWD CLI features, testing coverage, and development roadmap.
+Current state of APM CLI features, testing coverage, and development roadmap.
 
 ## Feature Status Matrix
 

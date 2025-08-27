@@ -2,13 +2,13 @@
 
 import pytest
 from unittest.mock import Mock, patch
-from awd_cli.runtime.llm_runtime import LLMRuntime
+from apm_cli.runtime.llm_runtime import LLMRuntime
 
 
 class TestLLMRuntime:
     """Test LLM runtime adapter."""
     
-    @patch('awd_cli.runtime.llm_runtime.subprocess.run')
+    @patch('apm_cli.runtime.llm_runtime.subprocess.run')
     def test_init_success(self, mock_run):
         """Test successful initialization."""
         # Mock the --version check
@@ -20,7 +20,7 @@ class TestLLMRuntime:
         mock_run.assert_called_once_with(['llm', '--version'], 
                                         capture_output=True, text=True, check=True)
     
-    @patch('awd_cli.runtime.llm_runtime.subprocess.run')
+    @patch('apm_cli.runtime.llm_runtime.subprocess.run')
     def test_init_fallback(self, mock_run):
         """Test fallback when llm CLI not available."""
         mock_run.side_effect = FileNotFoundError("llm command not found")
@@ -28,8 +28,8 @@ class TestLLMRuntime:
         with pytest.raises(RuntimeError, match="llm CLI not found"):
             LLMRuntime("invalid-model")
     
-    @patch('awd_cli.runtime.llm_runtime.subprocess.Popen')
-    @patch('awd_cli.runtime.llm_runtime.subprocess.run')
+    @patch('apm_cli.runtime.llm_runtime.subprocess.Popen')
+    @patch('apm_cli.runtime.llm_runtime.subprocess.run')
     def test_execute_prompt_success(self, mock_run, mock_popen):
         """Test successful prompt execution."""
         # Mock version check
@@ -48,8 +48,8 @@ class TestLLMRuntime:
         assert result == "Test response"
         mock_popen.assert_called_once()
     
-    @patch('awd_cli.runtime.llm_runtime.subprocess.Popen')
-    @patch('awd_cli.runtime.llm_runtime.subprocess.run')
+    @patch('apm_cli.runtime.llm_runtime.subprocess.Popen')
+    @patch('apm_cli.runtime.llm_runtime.subprocess.run')
     def test_execute_prompt_failure(self, mock_run, mock_popen):
         """Test prompt execution failure."""
         # Mock version check
@@ -70,7 +70,7 @@ class TestLLMRuntime:
         """Test default model getter."""
         assert LLMRuntime.get_default_model() is None
     
-    @patch('awd_cli.runtime.llm_runtime.subprocess.run')
+    @patch('apm_cli.runtime.llm_runtime.subprocess.run')
     def test_str_representation(self, mock_run):
         """Test string representation."""
         mock_run.return_value = Mock(returncode=0, stdout="llm 0.17.0")
