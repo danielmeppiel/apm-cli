@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-08-27
+
+### Fixed
+- **CI/CD Build Environment**: Standardized CI/CD build process to use uv like local development
+  - Ensures consistent dependency resolution between local and CI builds
+  - Activates virtual environment during binary build process
+  - Fixes potential environment-related build discrepancies
+
+### Technical Details
+- Updated GitHub Actions workflow to use uv for dependency management in build job
+- Added virtual environment activation step in CI/CD binary build process
+- This ensures CI/CD builds match local development environment exactly
+
 ## [0.1.1] - 2025-08-27
 
 ### Fixed
@@ -16,13 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Improved
 - **Enhanced install script** - Updated install script to properly handle PyInstaller `--onedir` mode by copying the entire bundle directory to `/usr/local/lib/apm/` and creating a symlink in `/usr/local/bin/apm`
-- **Faster startup times** - Maintained `--onedir` mode for optimal binary startup performance while fixing installation reliability
-- **Complete hero section workflow** - All steps in the Quick Start (install, init, compile, install dependencies, run) now work end-to-end
-
-### Technical
-- Enhanced PyInstaller spec with explicit template file inclusion using glob patterns
-- Added comprehensive compilation module imports to prevent runtime import errors
-- Improved binary distribution structure for reliable cross-platform installation
 
 ## [0.1.0] - 2025-08-27
 
