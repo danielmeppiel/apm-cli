@@ -93,8 +93,11 @@ test_runtime_setup() {
     
     # Test runtime setup (this may take a moment)
     echo "Running: $BINARY_PATH runtime setup codex"
-    "$BINARY_PATH" runtime setup codex
+    echo "--- Command Output Start ---"
+    "$BINARY_PATH" runtime setup codex 2>&1
     local exit_code=$?
+    echo "--- Command Output End ---"
+    echo "Exit code: $exit_code"
     
     if [[ $exit_code -ne 0 ]]; then
         log_error "apm runtime setup codex failed with exit code $exit_code"
@@ -110,8 +113,11 @@ test_init_project() {
     
     # Test init with the exact project name from README
     echo "Running: $BINARY_PATH init my-ai-native-project --yes"
-    "$BINARY_PATH" init my-ai-native-project --yes
+    echo "--- Command Output Start ---"
+    "$BINARY_PATH" init my-ai-native-project --yes 2>&1
     local exit_code=$?
+    echo "--- Command Output End ---"
+    echo "Exit code: $exit_code"
     
     if [[ $exit_code -ne 0 ]]; then
         log_error "apm init my-ai-native-project failed with exit code $exit_code"
@@ -141,8 +147,11 @@ test_compile() {
     
     # Test compile (the critical step that was failing) - show actual error
     echo "Running: $BINARY_PATH compile"
-    "$BINARY_PATH" compile
+    echo "--- Command Output Start ---"
+    "$BINARY_PATH" compile 2>&1
     local exit_code=$?
+    echo "--- Command Output End ---"
+    echo "Exit code: $exit_code"
     
     if [[ $exit_code -ne 0 ]]; then
         log_error "apm compile failed with exit code $exit_code"
@@ -169,8 +178,11 @@ test_install() {
     
     # Test install
     echo "Running: $BINARY_PATH install"
-    "$BINARY_PATH" install
+    echo "--- Command Output Start ---"
+    "$BINARY_PATH" install 2>&1
     local exit_code=$?
+    echo "--- Command Output End ---"
+    echo "Exit code: $exit_code"
     
     if [[ $exit_code -ne 0 ]]; then
         log_error "apm install failed with exit code $exit_code"
@@ -191,8 +203,11 @@ test_run_command() {
     # Test run (this may not fully complete but should at least start)
     # We'll check that it doesn't fail immediately due to binary issues
     echo "Running: $BINARY_PATH run start --param name=\"Developer\" (with 10s timeout)"
-    timeout 10s "$BINARY_PATH" run start --param name="Developer"
+    echo "--- Command Output Start ---"
+    timeout 10s "$BINARY_PATH" run start --param name="Developer" 2>&1
     local exit_code=$?
+    echo "--- Command Output End ---"
+    echo "Exit code: $exit_code"
     
     if [[ $exit_code -eq 124 ]]; then
         # Exit code 124 is timeout, which is expected and OK
@@ -215,8 +230,11 @@ test_basic_commands() {
     
     # Test --version (show actual error if it fails)
     echo "Running: $BINARY_PATH --version"
+    echo "--- Command Output Start ---"
     "$BINARY_PATH" --version
     local version_exit_code=$?
+    echo "--- Command Output End ---"
+    echo "Exit code: $version_exit_code"
     
     if [[ $version_exit_code -ne 0 ]]; then
         log_error "apm --version failed with exit code $version_exit_code"
@@ -225,8 +243,11 @@ test_basic_commands() {
     
     # Test --help
     echo "Running: $BINARY_PATH --help"
-    "$BINARY_PATH" --help >/dev/null 2>&1
-    local help_exit_code=$?
+    echo "--- Command Output Start ---"
+    "$BINARY_PATH" --help 2>&1 | head -20  # Limit output for readability
+    local help_exit_code=${PIPESTATUS[0]}
+    echo "--- Command Output End ---"
+    echo "Exit code: $help_exit_code"
     
     if [[ $help_exit_code -ne 0 ]]; then
         log_error "apm --help failed with exit code $help_exit_code"

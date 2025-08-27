@@ -174,9 +174,6 @@ jobs:
       models: read  # Required for GitHub Models API access
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -187,40 +184,52 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       
-      # Only install test runner dependencies, not the APM package itself
-      # This tests the binary in isolation like a real user would
-      - name: Install minimal test dependencies
+      # Create completely isolated test environment
+      - name: Create isolated test environment
         run: |
+          mkdir -p /tmp/apm-isolated-test
+          cd /tmp/apm-isolated-test
+          
+          # Install minimal test dependencies in isolation
           uv venv
           source .venv/bin/activate
           uv pip install pytest
+          echo "ISOLATED_TEST_DIR=/tmp/apm-isolated-test" >> $GITHUB_ENV
       
       - name: Download APM binary from build artifacts
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.binary_name }}
-          path: ./
+          path: /tmp/apm-isolated-test/
       
-      - name: Make binary executable
+      - name: Make binary executable and verify isolation
         run: |
+          cd /tmp/apm-isolated-test
+          
           # Debug: List the downloaded structure
           echo "Downloaded structure:"
           find . -name "apm" -type f
           ls -la ./dist/
+          
           # Make the binary executable
           chmod +x ./dist/${{ matrix.binary_name }}/apm
       
       - name: Create APM symlink for testing
         run: |
+          cd /tmp/apm-isolated-test
           ln -s "$(pwd)/dist/${{ matrix.binary_name }}/apm" "$(pwd)/apm"
-          echo "$(pwd)" >> $GITHUB_PATH
+          echo "/tmp/apm-isolated-test" >> $GITHUB_PATH
       
       - name: Run Binary Isolation Tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cd /tmp/apm-isolated-test
           chmod +x scripts/test-binary-isolation.sh
           ./scripts/test-binary-isolation.sh
+      
+      - name: Checkout code for E2E tests (after binary isolation)
+        uses: actions/checkout@v4
       
       - name: Run E2E golden scenario tests
         env:
@@ -231,9 +240,7 @@ jobs:
           source .venv/bin/activate
           chmod +x scripts/test-e2e.sh
           ./scripts/test-e2e.sh
-        timeout-minutes: 20
-
-  # Create GitHub release (only after E2E tests pass)
+        timeout-minutes: 20  # Create GitHub release (only after E2E tests pass)
   create-release:
     name: Create GitHub Release
     needs: [test, build, e2e-tests]
