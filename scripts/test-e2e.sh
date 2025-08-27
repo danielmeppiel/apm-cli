@@ -1,5 +1,12 @@
 #!/bin/bash
 # Unified E2E testing script for both CI and local environments
+# Tests the exact hero quick start flow from README:
+#   2. apm runtime setup codex  
+#   3. apm init my-ai-native-project
+#   4. cd my-ai-native-project && apm compile
+#   5. apm install
+#   6. apm run start --param name="Developer"
+#
 # - CI mode: Uses pre-built artifacts from build job, sets up runtimes, runs E2E tests
 # - Local mode: Builds binary, sets up runtimes, runs E2E tests
 # This ensures consistent testing workflow between CI/CD and local development
@@ -222,7 +229,13 @@ install_test_dependencies() {
 
 # Run E2E tests (exactly like CI does)
 run_e2e_tests() {
-    log_info "=== Running E2E golden scenario tests (mirroring CI) ==="
+    log_info "=== Running E2E hero quick start tests (mirroring CI) ==="
+    log_info "Testing exact README hero flow:"
+    log_info "  2. apm runtime setup codex"  
+    log_info "  3. apm init my-ai-native-project"
+    log_info "  4. cd my-ai-native-project && apm compile"
+    log_info "  5. apm install"
+    log_info "  6. apm run start --param name=\"Developer\""
     
     # Set environment variables (like CI does)
     export APM_E2E_TESTS="1"
@@ -276,10 +289,13 @@ main() {
         echo "✅ Local mode: Built binary and validated full CI/CD process"
     fi
     echo ""
-    echo "E2E validation complete:"
-    echo "  1. Binary setup ✅"
-    echo "  2. Runtime installation (codex/llm) ✅"
-    echo "  3. E2E tests with real API calls ✅"
+    echo "E2E validation complete - EXACT README HERO FLOW:"
+    echo "  1. Prerequisites (GITHUB_TOKEN) ✅"
+    echo "  2. apm runtime setup codex ✅"
+    echo "  3. apm init my-ai-native-project ✅"
+    echo "  4. cd my-ai-native-project && apm compile ✅" 
+    echo "  5. apm install ✅"
+    echo "  6. apm run start --param name=\"Developer\" ✅"
     echo ""
     log_success "Ready for production deployment!"
 }
