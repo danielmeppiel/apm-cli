@@ -75,11 +75,10 @@ jobs:
         source .venv/bin/activate
         pytest tests/integration/test_runtime_smoke.py -v
 
-  # Build binaries (only on tags or manual dispatch)
+  # Build binaries
   build:
     name: Build APM Binary
     needs: [test]
-    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         include:
@@ -148,11 +147,10 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-  # End-to-end golden scenario tests (only on releases)
+  # End-to-end golden scenario tests
   e2e-tests:
     name: E2E Golden Scenario Tests
     needs: [test, build]
-    if: github.ref_type == 'tag'  # Only run on version tags
     strategy:
       matrix:
         include:
