@@ -54,6 +54,7 @@ hiddenimports = [
     'apm_cli.cli',
     'apm_cli.config',
     'apm_cli.factory',
+    'apm_cli.version',  # Add version module
     'apm_cli.adapters',
     'apm_cli.adapters.client',
     'apm_cli.adapters.client.base',
@@ -63,6 +64,10 @@ hiddenimports = [
     'apm_cli.compilation.agents_compiler',
     'apm_cli.compilation.template_builder',
     'apm_cli.compilation.link_resolver',
+    'apm_cli.primitives',  # Add primitives module
+    'apm_cli.primitives.models',
+    'apm_cli.primitives.discovery',
+    'apm_cli.primitives.parser',
     'apm_cli.core',
     'apm_cli.core.operations',
     'apm_cli.deps',

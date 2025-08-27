@@ -6,17 +6,17 @@ import click
 from pathlib import Path
 from colorama import init, Fore, Style
 
-# Handle version import for both package and PyInstaller contexts
-try:
-    from .version import get_version
-except ImportError:
-    # Fallback for PyInstaller or direct execution
-    try:
-        from apm_cli.version import get_version
-    except ImportError:
-        # Last resort fallback
-        def get_version():
-            return "unknown"
+# Standard imports
+import sys
+import os
+import click
+from pathlib import Path
+from colorama import init, Fore, Style
+
+# APM imports - use absolute imports everywhere for consistency
+from apm_cli.version import get_version
+from apm_cli.compilation import AgentsCompiler, CompilationConfig
+from apm_cli.primitives.discovery import discover_primitives
 
 # Initialize colorama for fallback
 init(autoreset=True)
@@ -801,9 +801,6 @@ def _watch_mode(output, chatmode, no_links, dry_run):
                     _rich_info(f"File changed: {changed_file}", symbol="eyes")
                     _rich_info("Recompiling...", symbol="gear")
                     
-                    # Import compilation modules
-                    from .compilation import AgentsCompiler, CompilationConfig
-                    
                     # Create configuration from apm.yml with overrides
                     config = CompilationConfig.from_apm_yml(
                         output_path=self.output if self.output != "AGENTS.md" else None,
@@ -867,7 +864,6 @@ def _watch_mode(output, chatmode, no_links, dry_run):
         
         # Do initial compilation
         _rich_info("Performing initial compilation...", symbol="gear")
-        from .compilation import AgentsCompiler, CompilationConfig
         
         config = CompilationConfig.from_apm_yml(
             output_path=output if output != "AGENTS.md" else None,
@@ -923,17 +919,29 @@ def compile(ctx, output, dry_run, no_links, chatmode, watch, validate):
     and various output customization options.
     """
     try:
-        # Import here to avoid circular imports and improve startup time
-        from .compilation import AgentsCompiler, CompilationConfig
+        # Check if compilation modules are available
+        if AgentsCompiler is None or CompilationConfig is None:
+            _rich_error("Compilation module not available: failed to import during startup")
+            _rich_info("💡 This might be a development environment issue.")
+            sys.exit(1)
         
         # Handle validation-only mode
         if validate:
             _rich_info("Validating APM primitives...", symbol="gear")
-            compiler = AgentsCompiler(".")
+            try:
+                compiler = AgentsCompiler(".")
+            except Exception as e:
+                _rich_error(f"Failed to create AgentsCompiler: {e}")
+                _rich_info(f"💡 Error details: {type(e).__name__}")
+                sys.exit(1)
             
             # Discover and validate primitives
-            from .primitives.discovery import discover_primitives
-            primitives = discover_primitives(".")
+            try:
+                primitives = discover_primitives(".")
+            except Exception as e:
+                _rich_error(f"Failed to discover primitives: {e}")
+                _rich_info(f"💡 Error details: {type(e).__name__}")
+                sys.exit(1)
             validation_errors = compiler.validate_primitives(primitives)
             
             if validation_errors:

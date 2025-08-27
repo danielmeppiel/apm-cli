@@ -186,10 +186,13 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       
-      - name: Install test dependencies
+      # Only install test runner dependencies, not the APM package itself
+      # This tests the binary in isolation like a real user would
+      - name: Install minimal test dependencies
         run: |
           uv venv
-          uv pip install -e ".[dev]"
+          source .venv/bin/activate
+          uv pip install pytest
       
       - name: Download APM binary from build artifacts
         uses: actions/download-artifact@v4
