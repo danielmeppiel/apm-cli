@@ -20,27 +20,32 @@ repo_root = spec_dir.parent
 # APM CLI entry point
 entry_point = repo_root / 'src' / 'apm_cli' / 'cli.py'
 
-# Data files to include
+# Data files to include - recursively include all template files
 datas = [
-    (str(repo_root / 'templates'), 'templates'),  # Bundle templates directory
     (str(repo_root / 'scripts' / 'runtime'), 'scripts/runtime'),  # Bundle runtime setup scripts
     (str(repo_root / 'pyproject.toml'), '.'),  # Bundle pyproject.toml for version reading
 ]
 
-# Add all files from templates directory, including hidden .apm directories
-import glob
-template_files = []
-for template_dir in (repo_root / 'templates').iterdir():
-    if template_dir.is_dir():
-        # Use glob to include all files, including those in hidden directories
-        for file_pattern in ['**/*', '**/.*']:
-            for file_path in template_dir.glob(file_pattern):
-                if file_path.is_file():
-                    # Create relative path from templates directory
-                    rel_path = file_path.relative_to(repo_root / 'templates')
-                    template_files.append((str(file_path), f'templates/{rel_path.parent}'))
+# Recursively add all files from templates directory, including hidden directories
+def collect_template_files(templates_root):
+    """Recursively collect all template files, including those in hidden directories."""
+    template_files = []
+    
+    for root, dirs, files in os.walk(templates_root):
+        for file in files:
+            source_path = os.path.join(root, file)
+            # Calculate the relative path from the templates root
+            rel_path = os.path.relpath(source_path, templates_root)
+            # Destination should maintain the same structure under templates/
+            dest_dir = os.path.dirname(f'templates/{rel_path}')
+            if dest_dir == 'templates':
+                dest_dir = 'templates'
+            template_files.append((source_path, dest_dir))
+    
+    return template_files
 
-# Add template files to datas
+# Add all template files to datas
+template_files = collect_template_files(str(repo_root / 'templates'))
 datas.extend(template_files)
 
 # Hidden imports for APM modules that might not be auto-detected
