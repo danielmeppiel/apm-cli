@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2025-08-27
+
 ### Changed
 - **Complete rebranding from AWD to APM** - Changed from "Agentic Workflow Definitions (AWD)" to "Agent Primitives Manager (APM)"
 - **New positioning** - APM is now positioned as "the package manager for AI-Native Development"
