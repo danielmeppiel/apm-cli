@@ -81,9 +81,8 @@ check_prerequisites() {
         return 1
     fi
     
-    # Debug: Show token prefix for verification (hide the full token for security)
-    local token_prefix="${GITHUB_TOKEN:0:20}..."
-    log_info "Using GITHUB_TOKEN: $token_prefix"
+    # Verify token is present but don't expose it in logs
+    log_info "GITHUB_TOKEN is configured"
     
     log_success "GITHUB_TOKEN is set"
 }
@@ -93,8 +92,12 @@ test_runtime_setup() {
     log_test "README Step 2: apm runtime setup codex"
     
     # Test runtime setup (this may take a moment)
-    if ! "$BINARY_PATH" runtime setup codex; then
-        log_error "apm runtime setup codex failed"
+    echo "Running: $BINARY_PATH runtime setup codex"
+    "$BINARY_PATH" runtime setup codex
+    local exit_code=$?
+    
+    if [[ $exit_code -ne 0 ]]; then
+        log_error "apm runtime setup codex failed with exit code $exit_code"
         return 1
     fi
     
@@ -106,8 +109,12 @@ test_init_project() {
     log_test "README Step 3: apm init my-ai-native-project"
     
     # Test init with the exact project name from README
-    if ! "$BINARY_PATH" init my-ai-native-project --yes; then
-        log_error "apm init my-ai-native-project failed"
+    echo "Running: $BINARY_PATH init my-ai-native-project --yes"
+    "$BINARY_PATH" init my-ai-native-project --yes
+    local exit_code=$?
+    
+    if [[ $exit_code -ne 0 ]]; then
+        log_error "apm init my-ai-native-project failed with exit code $exit_code"
         return 1
     fi
     
@@ -134,8 +141,11 @@ test_compile() {
     
     # Test compile (the critical step that was failing) - show actual error
     echo "Running: $BINARY_PATH compile"
-    if ! "$BINARY_PATH" compile; then
-        log_error "apm compile failed"
+    "$BINARY_PATH" compile
+    local exit_code=$?
+    
+    if [[ $exit_code -ne 0 ]]; then
+        log_error "apm compile failed with exit code $exit_code"
         cd ..
         return 1
     fi
@@ -158,8 +168,12 @@ test_install() {
     cd my-ai-native-project
     
     # Test install
-    if ! "$BINARY_PATH" install 2>/dev/null; then
-        log_error "apm install failed"
+    echo "Running: $BINARY_PATH install"
+    "$BINARY_PATH" install
+    local exit_code=$?
+    
+    if [[ $exit_code -ne 0 ]]; then
+        log_error "apm install failed with exit code $exit_code"
         cd ..
         return 1
     fi
@@ -176,11 +190,18 @@ test_run_command() {
     
     # Test run (this may not fully complete but should at least start)
     # We'll check that it doesn't fail immediately due to binary issues
-    if ! timeout 10s "$BINARY_PATH" run start --param name="Developer" 2>/dev/null || [[ $? -eq 124 ]]; then
+    echo "Running: $BINARY_PATH run start --param name=\"Developer\" (with 10s timeout)"
+    timeout 10s "$BINARY_PATH" run start --param name="Developer"
+    local exit_code=$?
+    
+    if [[ $exit_code -eq 124 ]]; then
         # Exit code 124 is timeout, which is expected and OK
         log_success "Run command started successfully (timed out as expected)"
+    elif [[ $exit_code -eq 0 ]]; then
+        # Command completed successfully within timeout
+        log_success "Run command completed successfully"
     else
-        log_error "apm run command failed immediately"
+        log_error "apm run command failed immediately with exit code $exit_code"
         cd ..
         return 1
     fi
@@ -193,14 +214,22 @@ test_basic_commands() {
     log_test "Sanity check: Basic commands"
     
     # Test --version (show actual error if it fails)
-    if ! "$BINARY_PATH" --version; then
-        log_error "apm --version failed"
+    echo "Running: $BINARY_PATH --version"
+    "$BINARY_PATH" --version
+    local version_exit_code=$?
+    
+    if [[ $version_exit_code -ne 0 ]]; then
+        log_error "apm --version failed with exit code $version_exit_code"
         return 1
     fi
     
     # Test --help
-    if ! "$BINARY_PATH" --help >/dev/null 2>&1; then
-        log_error "apm --help failed"
+    echo "Running: $BINARY_PATH --help"
+    "$BINARY_PATH" --help >/dev/null 2>&1
+    local help_exit_code=$?
+    
+    if [[ $help_exit_code -ne 0 ]]; then
+        log_error "apm --help failed with exit code $help_exit_code"
         return 1
     fi
     
