@@ -1,6 +1,6 @@
 # Agentic Workflow Definitions (AWD)
 
-**Plug AI-Native Development best practices into any project** - Stop the trial-and-error cycle of inconsistent AI results. AWD implements the proven [AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/) that delivers reliable, repeatable AI development workflows with any coding agent.
+**Make any project compatible with AI-Native Development** - Stop the trial-and-error cycle of inconsistent AI results. AWD implements the proven [AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/) that delivers reliable, repeatable workflows with any coding agent.
 
 **Works with Any Coding Agent** - From GitHub Copilot to Cursor, Codex to Aider. AWD creates portable Agent Primitives that ensure consistent AI behavior across all tools through the emerging [agents.md standard](https://agents.md).
 
@@ -13,31 +13,10 @@
 | **Node.js** | **Coding Agent Runtimes** | Execute compiled AI workflows |
 | **JavaScript** | **Natural Language** | What runtimes actually understand |
 
-## The AI-Native Development Problem
-
-Most developers experience AI as inconsistent and unreliable:
-
-- ❌ **Ad-hoc prompting** that produces different results each time
-- ❌ **Context overload** that confuses AI agents and wastes tokens
-- ❌ **Vendor lock-in** to specific AI tools and platforms
-- ❌ **No knowledge persistence** across sessions and team members
-
-## The AWD Solution: Systematic AI Engineering
-
-AWD implements the complete [3-layer AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/docs/concepts/):
-
-**🔧 Layer 1: Markdown Prompt Engineering** - Structured, repeatable AI instructions  
-**⚙️ Layer 2: Agent Primitives** - Configurable tools that deploy prompt + context engineering  
-**🎯 Layer 3: Context Engineering** - Strategic LLM memory management for reliability
-
-**Result**: Transform from supervising every AI interaction to architecting systems that delegate complete workflows to AI agents.
-
 ## Quick Start (2 minutes)
 
 > [!NOTE] 
 > **📋 Prerequisites**: Get a GitHub fine-grained Personal Access Token with **read-only Models permissions** at [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
->
-> **Optional**: Docker installed and running (enables automatic GitHub MCP Server integration with tools like `get_me`, `list_repos`, etc.)
 
 ```bash
 # 1. Install AWD CLI (zero dependencies)
@@ -59,13 +38,38 @@ awd install
 awd run start --param name="Developer"
 ```
 
-**That's it!** Your project now has systematic, reliable AI development workflows that work with any coding agent.
+**That's it!** Your project now has reliable AI-Native Development workflows that work with any coding agent.
+
+## What You Just Built
+
+You just created an AI-native project with:
+
+- **Agent Primitives** - Configurable tools that deploy proven prompt + context engineering techniques
+- **Universal Compatibility** - Works with GitHub Copilot, Cursor, Codex, Aider, and any agent supporting agents.md
+- **Reliable Workflows** - Replace one-off prompting with reusable, structured AI workflows
+- **Team Knowledge** - Capture and share AI patterns across your entire development team
+
+## Why This Matters
+
+Most developers experience AI as inconsistent and unreliable:
+- ❌ **Ad-hoc prompting** that produces different results each time
+- ❌ **Context overload** that confuses AI agents and wastes tokens  
+- ❌ **Vendor lock-in** to specific AI tools and platforms
+- ❌ **No knowledge persistence** across sessions and team members
+
+**AWD solves this** by implementing the complete [3-layer AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/docs/concepts/):
+
+**🔧 Layer 1: Markdown Prompt Engineering** - Structured, repeatable AI instructions  
+**⚙️ Layer 2: Agent Primitives** - Configurable tools that deploy prompt + context engineering  
+**🎯 Layer 3: Context Engineering** - Strategic LLM memory management for reliability
+
+**Result**: Transform from supervising every AI interaction to architecting systems that delegate complete workflows to AI agents.
 
 ## AI-Native Development Maturity Journey
 
-**From Manual Supervision → Systematic Architecture**
+**From Manual Supervision → Engineered Architecture**
 
-Most developers start by manually supervising every AI interaction. AWD enables the transformation to systematic AI engineering:
+Most developers start by manually supervising every AI interaction. AWD enables the transformation to AI-Native engineering:
 
 ### 🔴 Before AWD: Manual Agent Supervision
 - Write one-off prompts for each task  
@@ -75,17 +79,17 @@ Most developers start by manually supervising every AI interaction. AWD enables 
 
 ### 🟢 With AWD: Engineered Agent Delegation  
 - Build reusable Agent Primitives once
-- Engineer context systematically 
+- Engineer context strategically 
 - Delegate complete workflows to AI
 - *You're the architect - AI handles execution autonomously*
 
-> **Learn the Complete Framework**: Explore the [AI-Native Development Guide](https://danielmeppiel.github.io/awesome-ai-native/) for systematic approaches to Markdown Prompt Engineering, Agent Primitives, and Context Engineering.
+> **Learn the Complete Framework**: Explore the [AI-Native Development Guide](https://danielmeppiel.github.io/awesome-ai-native/) for approaches to Markdown Prompt Engineering, Agent Primitives, and Context Engineering.
 
 ## How Agent Primitives Work
 
-AWD implements Agent Primitives - the configurable tools that systematically deploy prompt engineering and context engineering techniques:
+AWD implements Agent Primitives - the configurable tools that deploy prompt engineering and context engineering techniques:
 
-**🏗️ Initialize a project with AI Native structure:**
+**🏗️ Initialize a project with AI-Native structure:**
 
 ```bash
 awd init my-project  # Creates complete Agent Primitives scaffolding + awd.yml
@@ -120,14 +124,14 @@ awd compile  # Transforms .awd/ primitives → agents.md standard
 
 This generates an `AGENTS.md` file compatible with all major coding agents.
 
-## Example: Systematic AI Workflows
+## Example: Structured AI Workflows
 
 **Traditional Prompt** (inconsistent, manual):
 ```
 "Add authentication to the API"
 ```
 
-**Agent Primitives Workflow** (systematic, reliable):
+**Agent Primitives Workflow** (reliable, reusable):
 
 ```markdown
 ---
@@ -199,15 +203,15 @@ awd run review --param files="src/auth/"
 
 **The Problem**: Developers have powerful AI coding assistants but lack systematic approaches to make them reliable and scalable. Every team reinvents their AI workflows, can't share effective patterns, and struggles with inconsistent results.
 
-**The Solution**: AWD provides the missing infrastructure layer that makes AI-Native Development systematic, portable, and reliable.
+**The Solution**: AWD provides the missing infrastructure layer that makes AI-Native Development portable and reliable.
 
 ### Key Benefits
 
-**🎯 Systematic Reliability** - Replace trial-and-error with proven AI-Native Development patterns  
+**🎯 Reliable Results** - Replace trial-and-error with proven AI-Native Development patterns  
 **🔄 Universal Portability** - Works with any coding agent through the agents.md standard  
 **📦 Knowledge Packaging** - Share AI workflows like code packages with versioning  
 **🧠 Compound Intelligence** - Primitives improve through iterative team refinement  
-**⚡ Team Scaling** - Transform any project for reliable AI development workflows
+**⚡ Team Scaling** - Transform any project for reliable AI-Native Development workflows
 
 ### The Infrastructure Analogy
 
@@ -220,7 +224,7 @@ Just as npm revolutionized JavaScript by creating package ecosystem infrastructu
 
 ## The Complete AI-Native Framework
 
-AWD implements the complete [AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/docs/concepts/) through systematic engineering practices:
+AWD implements the complete [AI-Native Development framework](https://danielmeppiel.github.io/awesome-ai-native/docs/concepts/) through engineering practices:
 
 ```mermaid
 graph TD
@@ -313,7 +317,7 @@ RUST_LOG=debug awd run start                     # Enable debug logging
 ## Beyond Simple Prompts: Advanced Workflows
 
 > [!TIP]
-> **Workflow Composition**: While complex prompt chaining is planned for future releases, current Agent Primitives already enable systematic, reliable AI workflows through structured context engineering and modular primitives.
+> **Workflow Composition**: While complex prompt chaining is planned for future releases, current Agent Primitives already enable reliable AI workflows through structured context engineering and modular primitives.
 
 **Example: Multi-step Feature Development**
 ```bash
@@ -341,4 +345,4 @@ Each step leverages your project's Agent Primitives for consistent, reliable res
 
 ---
 
-**AWD transforms any project into systematic, reliable AI-Native Development.**
+**AWD transforms any project into reliable AI-Native Development.**
