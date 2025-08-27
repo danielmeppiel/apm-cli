@@ -28,7 +28,7 @@ When working on any task, always consider the broader project context from [proj
 
 ### Project Information
 
-This is a demonstration project showcasing APM (Agentic Primitives Manager) primitives compilation into AGENTS.md format.
+This is a demonstration project showcasing APM (Agent Primitives Manager) primitives compilation into AGENTS.md format.
 
 #### Project Goals
 - Demonstrate APM primitive compilation
