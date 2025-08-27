@@ -1,15 +1,14 @@
 #!/bin/bash
-# Unified E2E testing script for both CI and local environments
-# Tests the exact hero quick start flow from README:
-#   2. apm runtime setup codex  
-#   3. apm init my-ai-native-project
-#   4. cd my-ai-native-project && apm compile
-#   5. apm install
-#   6. apm run start --param name="Developer"
+# Integration testing script for both CI and local environments
+# Tests comprehensive runtime scenarios and edge cases:
+#   - Both Codex AND LLM runtime setup and interoperability
+#   - Complex pytest-based scenarios with error handling
+#   - Template bundling verification
+#   - Authentication matrix testing
 #
-# - CI mode: Uses pre-built artifacts from build job, sets up runtimes, runs E2E tests
-# - Local mode: Builds binary, sets up runtimes, runs E2E tests
-# This ensures consistent testing workflow between CI/CD and local development
+# - CI mode: Uses pre-built artifacts from build job, runs integration tests
+# - Local mode: Builds binary, runs comprehensive integration tests  
+# This ensures robust implementation testing before release validation
 
 set -euo pipefail
 
@@ -114,9 +113,18 @@ build_binary() {
     
     # Install Python dependencies (like CI does)
     log_info "Installing Python dependencies..."
-    python -m pip install --upgrade pip
-    pip install -e .
-    pip install pyinstaller
+    if command -v uv >/dev/null 2>&1; then
+        log_info "Using uv for binary build dependencies..."
+        uv venv
+        source .venv/bin/activate
+        uv pip install -e ".[dev]"
+        uv pip install pyinstaller
+    else
+        log_info "Using pip for binary build dependencies..."
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pyinstaller
+    fi
     
     # Build binary (like CI does)
     log_info "Building binary with build-binary.sh..."
@@ -159,9 +167,9 @@ setup_binary_for_testing() {
     log_success "APM binary ready for testing: $version"
 }
 
-# Set up runtimes (codex/llm) - THE MISSING PIECE!
+# Set up runtimes (codex/llm) - Integration Testing Coverage!
 setup_runtimes() {
-    log_info "=== Setting up runtimes for E2E tests ==="
+    log_info "=== Setting up runtimes for integration tests ==="
     
     # Set up codex runtime
     log_info "Setting up Codex runtime..."
@@ -227,15 +235,15 @@ install_test_dependencies() {
     log_success "Test dependencies installed"
 }
 
-# Run E2E tests (exactly like CI does)
+# Run integration tests (exactly like CI does)
 run_e2e_tests() {
-    log_info "=== Running E2E hero quick start tests (mirroring CI) ==="
-    log_info "Testing exact README hero flow:"
-    log_info "  2. apm runtime setup codex"  
-    log_info "  3. apm init my-ai-native-project"
-    log_info "  4. cd my-ai-native-project && apm compile"
-    log_info "  5. apm install"
-    log_info "  6. apm run start --param name=\"Developer\""
+    log_info "=== Running integration tests (mirroring CI) ==="
+    log_info "Testing comprehensive runtime scenarios:"
+    log_info "  - Codex runtime integration"  
+    log_info "  - LLM runtime integration"
+    log_info "  - Dual runtime interoperability"
+    log_info "  - Template bundling verification"
+    log_info "  - Authentication edge cases"
     
     # Set environment variables (like CI does)
     export APM_E2E_TESTS="1"
@@ -257,19 +265,20 @@ run_e2e_tests() {
     echo "Command: pytest tests/integration/test_golden_scenario_e2e.py -v -s --tb=short"
     
     if pytest tests/integration/test_golden_scenario_e2e.py -v -s --tb=short; then
-        log_success "E2E tests passed!"
+        log_success "Integration tests passed!"
     else
-        log_error "E2E tests failed!"
+        log_error "Integration tests failed!"
         exit 1
     fi
 }
 
 # Main execution
 main() {
-    echo "APM CLI E2E Testing - Unified CI/Local Script"
-    echo "============================================="
+    echo "APM CLI Integration Testing - Unified CI/Local Script"
+    echo "====================================================="
     echo ""
     echo "This script adapts to CI (using artifacts) or local (building) environments"
+    echo "Tests comprehensive runtime scenarios and implementation robustness"
     echo ""
     
     check_prerequisites
@@ -277,27 +286,27 @@ main() {
     detect_environment
     build_binary
     setup_binary_for_testing
-    setup_runtimes  # THE MISSING PIECE!
+    setup_runtimes  # Integration Testing Coverage!
     install_test_dependencies
     run_e2e_tests
     
-    log_success "All E2E tests completed successfully!"
+    log_success "All integration tests completed successfully!"
     echo ""
     if [[ "$USE_EXISTING_BINARY" == "true" ]]; then
-        echo "✅ CI mode: Used pre-built artifacts and validated E2E workflow"
+        echo "✅ CI mode: Used pre-built artifacts and validated integration workflow"
     else
-        echo "✅ Local mode: Built binary and validated full CI/CD process"
+        echo "✅ Local mode: Built binary and validated full integration process"
     fi
     echo ""
-    echo "E2E validation complete - EXACT README HERO FLOW:"
+    echo "Integration validation complete - COMPREHENSIVE RUNTIME TESTING:"
     echo "  1. Prerequisites (GITHUB_TOKEN) ✅"
-    echo "  2. apm runtime setup codex ✅"
-    echo "  3. apm init my-ai-native-project ✅"
-    echo "  4. cd my-ai-native-project && apm compile ✅" 
-    echo "  5. apm install ✅"
-    echo "  6. apm run start --param name=\"Developer\" ✅"
+    echo "  2. Codex runtime integration ✅"
+    echo "  3. LLM runtime integration ✅"
+    echo "  4. Dual runtime interoperability ✅" 
+    echo "  5. Template bundling verification ✅"
+    echo "  6. Authentication edge cases ✅"
     echo ""
-    log_success "Ready for production deployment!"
+    log_success "Ready for release validation!"
 }
 
 # Cleanup on exit

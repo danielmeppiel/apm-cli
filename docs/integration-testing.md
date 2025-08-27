@@ -44,21 +44,20 @@ pytest tests/integration/test_runtime_smoke.py::TestRuntimeSmoke::test_codex_run
 
 #### Option 1: Complete CI Process Simulation (Recommended)
 ```bash
-# Set up environment
-export GITHUB_TOKEN=your_github_token_here
-
-# Run the unified E2E script (works for both CI and local)
-./scripts/test-e2e.sh
+```bash
+export GITHUB_TOKEN=your_token_here
+./scripts/test-integration.sh
+```
 ```
 
-This script (`scripts/test-e2e.sh`) is a unified script that automatically adapts to your environment:
+This script (`scripts/test-integration.sh`) is a unified script that automatically adapts to your environment:
 
 **Local mode** (no existing binary):
 1. **Builds binary** with PyInstaller (like CI build job)
 2. **Sets up symlink and PATH** (like CI artifacts download)
 3. **Installs runtimes** (codex/llm setup)
 4. **Installs test dependencies** (like CI test setup)
-5. **Runs E2E tests** with the built binary (like CI e2e-tests job)
+5. **Runs integration tests** with the built binary (like CI integration-tests job)
 
 **CI mode** (binary exists in `./dist/`):
 1. **Uses existing binary** from CI build artifacts
@@ -123,8 +122,8 @@ The workflow ensures quality gates at each step:
 
 1. **test** job - Unit tests + smoke tests (all platforms)
 2. **build** job - Binary compilation (depends on test success)
-3. **e2e-tests** job - Golden scenario validation (depends on build success)
-4. **create-release** job - GitHub release creation (depends on e2e-tests success)
+3. **integration-tests** job - Comprehensive runtime scenarios (depends on build success)
+4. **create-release** job - GitHub release creation (depends on integration-tests success)
 5. **publish-pypi** job - PyPI package publication (depends on release creation)
 6. **update-homebrew** job - Homebrew formula update (depends on PyPI publication)
 
@@ -194,7 +193,7 @@ All integration tests run on:
 - Check network connectivity for downloads
 
 ### E2E Test Failures  
-- **Use the unified E2E script first**: Run `./scripts/test-e2e.sh` to reproduce the exact CI environment locally
+- **Use the unified integration script first**: Run `./scripts/test-integration.sh` to reproduce the exact CI environment locally
 - Verify `GITHUB_TOKEN` has required permissions (`models:read`)
 - Ensure both `GITHUB_TOKEN` and `GITHUB_MODELS_KEY` environment variables are set
 - Check GitHub Models API availability
