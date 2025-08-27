@@ -175,12 +175,29 @@ class TestGoldenScenarioE2E:
             assert (project_dir / "apm.yml").exists(), "apm.yml not created"
             assert (project_dir / "hello-world.prompt.md").exists(), "Prompt file not created"
             
+            # Critical: Verify Agent Primitives (.apm directory) are created
+            apm_dir = project_dir / ".apm"
+            assert apm_dir.exists(), "Agent Primitives directory (.apm) not created - TEMPLATE BUNDLING FAILED"
+            
+            print(f"✓ Verified Agent Primitives directory (.apm) exists")
+            
             # Show project contents for debugging
             print("\n=== Project structure ===")
             apm_yml_content = (project_dir / "apm.yml").read_text()
             prompt_content = (project_dir / "hello-world.prompt.md").read_text()
             print(f"apm.yml:\n{apm_yml_content}")
             print(f"hello-world.prompt.md:\n{prompt_content[:500]}...")
+            
+            # List Agent Primitives for verification
+            if apm_dir.exists():
+                agent_primitives = list(apm_dir.rglob("*"))
+                agent_files = [f for f in agent_primitives if f.is_file()]
+                print(f"\n=== Agent Primitives Files ({len(agent_files)} found) ===")
+                for f in sorted(agent_files):
+                    rel_path = f.relative_to(project_dir)
+                    print(f"  {rel_path}")
+            else:
+                print(f"\n❌ Agent Primitives directory (.apm) missing - TEMPLATE BUNDLING FAILED")
             
             # Step 3: Install dependencies (equivalent to: apm install)
             print("\n=== Installing dependencies ===")
@@ -358,6 +375,28 @@ class TestGoldenScenarioE2E:
             "Help output doesn't look correct"
         
         print(f"APM version: {result.stdout}")
+
+    def test_init_command_template_bundling(self, temp_e2e_home, apm_binary):
+        """Dedicated test for apm init command and template bundling."""
+        print("\\n=== Testing APM init command and template bundling ===")
+        
+        with tempfile.TemporaryDirectory() as workspace:
+            project_dir = Path(workspace) / "template-test-project"
+            
+            # Test apm init
+            result = run_command(f"{apm_binary} init template-test-project --yes", cwd=workspace, show_output=True)
+            assert result.returncode == 0, f"APM init failed: {result.stderr}"
+            
+            # Verify basic project files
+            assert project_dir.exists(), "Project directory not created"
+            assert (project_dir / "apm.yml").exists(), "apm.yml not created"
+            assert (project_dir / "hello-world.prompt.md").exists(), "Prompt template not created"
+            
+            # Critical: Verify Agent Primitives directory and files
+            apm_dir = project_dir / ".apm"
+            assert apm_dir.exists(), "Agent Primitives directory (.apm) not created - TEMPLATE BUNDLING FAILED"
+            
+            print(f"✅ Template bundling test passed: Agent Primitives directory (.apm) verified")
 
 
 class TestRuntimeInteroperability:

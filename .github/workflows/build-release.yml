@@ -144,6 +144,7 @@ jobs:
           path: |
             ./dist/${{ matrix.binary_name }}/
             ./dist/${{ matrix.binary_name }}.sha256
+          include-hidden-files: true  # Required to include .apm directories
           retention-days: 30
           if-no-files-found: error
 
@@ -234,19 +235,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./dist/
+          merge-multiple: true
       
       - name: Prepare release binaries
         run: |
           # Create tar.gz archives from directory structure for release and Homebrew
           cd dist
           for binary in apm-linux-x86_64 apm-darwin-x86_64 apm-darwin-arm64; do
-            # With merge-multiple: false, artifacts are in subdirectories named after the artifact
-            binary_dir="${binary}/${binary}"
-            
             # Ensure the binary is executable before archiving
-            chmod +x "${binary_dir}/apm"
-            # Create tar.gz with preserved permissions, archiving the inner directory
-            tar -czf "${binary}.tar.gz" -C "${binary}" "${binary}"
+            chmod +x "${binary}/apm"
+            # Create tar.gz with preserved permissions
+            tar -czf "${binary}.tar.gz" "$binary"
             if command -v sha256sum &> /dev/null; then
               sha256sum "${binary}.tar.gz" > "${binary}.tar.gz.sha256"
             elif command -v shasum &> /dev/null; then

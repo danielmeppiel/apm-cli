@@ -5,46 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+# Changelog
+
+## [0.1.6] - 2025-08-27
+
+### Fixed
+- **CRITICAL: Fixed missing Agent Primitives in CI-built binaries**
+  - Added `include-hidden-files: true` to GitHub Actions upload-artifact@v4
+  - GitHub Actions v4.4+ excludes hidden files by default, causing `.apm` directories to be lost
+  - This was causing "Template file not found" errors in released binaries
+  - Added verification steps to CI to catch similar issues in the future
+- **Enhanced E2E tests to verify template bundling**
+  - Added dedicated test for `apm init` command and `.apm` directory creation
+  - E2E tests now catch template bundling failures during CI
+
+### Technical Details
+- Root cause: `upload-artifact@v4` behavior change excluding hidden files
+- Impact: All released binaries from v0.1.0 to v0.1.5 missing Agent Primitives
+- Solution: Explicit `include-hidden-files: true` configuration
 
 ## [0.1.5] - 2025-08-27
 
 ### Fixed
 - **Critical CI/CD artifact merge issue** - Fixed GitHub Actions workflow where `merge-multiple: true` was causing artifact conflicts and dropping hidden `.apm` directories
-- **Template bundling in CI builds** - Removed `merge-multiple: true` to prevent artifacts from overwriting each other's hidden directories
-- **Release binary packaging** - Updated tar.gz creation logic to handle separate artifact directories correctly
-
-### Technical Details
-- Removed `merge-multiple: true` from `actions/download-artifact@v4` step which was causing multiple platform artifacts to merge and conflict
-- Updated binary packaging logic to correctly handle artifact directory structure (artifacts now download to separate subdirectories)
-- Fixed tar creation to preserve complete directory hierarchy including `.apm` directories for all platforms
-- All Agent Primitives templates now properly accessible in CI-built binaries
 
 ## [0.1.4] - 2025-08-27
 
 ### Fixed
 - **Critical PyInstaller template bundling fix** - Fixed PyInstaller spec file to properly bundle hidden `.apm` directories containing Agent Primitives (chatmodes, instructions, context, specs)
-- **Template discovery in binary** - Updated template collection logic to use `os.walk()` instead of glob patterns to correctly handle hidden directories
-- **Binary installation process** - Fixed system binary installation to properly copy entire PyInstaller bundle including `_internal` directory
-
-### Technical Details
-- Modified `collect_template_files()` function in `apm.spec` to recursively collect all template files including hidden directories
-- Ensures all Agent Primitives templates are available in binary distributions
-- Fixed path handling to maintain correct directory structure in bundled binaries
-- Templates now properly accessible at runtime without "Template file not found" errors
 
 ## [0.1.3] - 2025-08-27
 
 ### Fixed
 - **Critical PyInstaller template bundling fix** - Fixed PyInstaller spec file to properly bundle hidden `.apm` directories containing Agent Primitives (chatmodes, instructions, context, specs)
-- **Template discovery in binary** - Updated template collection logic to use `os.walk()` instead of glob patterns to correctly handle hidden directories
-- **Binary installation process** - Fixed system binary installation to properly copy entire PyInstaller bundle including `_internal` directory
-
-### Technical Details
-- Modified `collect_template_files()` function in `apm.spec` to recursively collect all template files including hidden directories
-- Ensures all Agent Primitives templates are available in binary distributions
-- Fixed path handling to maintain correct directory structure in bundled binaries
-- Templates now properly accessible at runtime without "Template file not found" errors
 
 ## [0.1.2] - 2025-08-27
 
