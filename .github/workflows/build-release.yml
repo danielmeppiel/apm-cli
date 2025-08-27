@@ -143,13 +143,14 @@ jobs:
           path: |
             ./dist/${{ matrix.binary_name }}/
             ./dist/${{ matrix.binary_name }}.sha256
+            ./scripts/test-binary-isolation.sh
           include-hidden-files: true  # Required to include .apm directories
           retention-days: 30
           if-no-files-found: error
 
-  # End-to-end golden scenario tests
+  # End-to-end and binary isolation tests
   e2e-tests:
-    name: E2E Golden Scenario Tests
+    name: E2E & Binary Isolation Tests
     needs: [test, build]
     strategy:
       matrix:
@@ -207,6 +208,11 @@ jobs:
         run: |
           ln -s "$(pwd)/dist/${{ matrix.binary_name }}/apm" "$(pwd)/apm"
           echo "$(pwd)" >> $GITHUB_PATH
+      
+      - name: Run Binary Isolation Tests
+        run: |
+          chmod +x scripts/test-binary-isolation.sh
+          ./scripts/test-binary-isolation.sh
       
       - name: Run E2E golden scenario tests
         env:

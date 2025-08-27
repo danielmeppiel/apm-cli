@@ -919,21 +919,11 @@ def compile(ctx, output, dry_run, no_links, chatmode, watch, validate):
     and various output customization options.
     """
     try:
-        # Check if compilation modules are available
-        if AgentsCompiler is None or CompilationConfig is None:
-            _rich_error("Compilation module not available: failed to import during startup")
-            _rich_info("💡 This might be a development environment issue.")
-            sys.exit(1)
         
         # Handle validation-only mode
         if validate:
             _rich_info("Validating APM primitives...", symbol="gear")
-            try:
-                compiler = AgentsCompiler(".")
-            except Exception as e:
-                _rich_error(f"Failed to create AgentsCompiler: {e}")
-                _rich_info(f"💡 Error details: {type(e).__name__}")
-                sys.exit(1)
+            compiler = AgentsCompiler(".")
             
             # Discover and validate primitives
             try:
