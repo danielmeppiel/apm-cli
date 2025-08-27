@@ -5,8 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# Changelog
-
 ## [0.1.6] - 2025-08-27
 
 ### Fixed
@@ -19,10 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added dedicated test for `apm init` command and `.apm` directory creation
   - E2E tests now catch template bundling failures during CI
 
+### ⚠️ IMPORTANT: Previous Version Status
+- **Versions v0.1.0 through v0.1.5 are BROKEN** - Released binaries missing Agent Primitives
+- **Use v0.1.6 or later** - First working release with complete Agent Primitives support
+- **Local builds unaffected** - Only released binaries from GitHub were broken
+
 ### Technical Details
-- Root cause: `upload-artifact@v4` behavior change excluding hidden files
-- Impact: All released binaries from v0.1.0 to v0.1.5 missing Agent Primitives
-- Solution: Explicit `include-hidden-files: true` configuration
+- Root cause: `upload-artifact@v4` behavior change excluding hidden files by default
+- Impact: All released binaries from v0.1.0 to v0.1.5 missing `.apm` directories
+- Solution: Explicit `include-hidden-files: true` configuration in CI workflow
 
 ## [0.1.5] - 2025-08-27
 
