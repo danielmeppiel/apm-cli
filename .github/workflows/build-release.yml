@@ -216,6 +216,8 @@ jobs:
           echo "$(pwd)" >> $GITHUB_PATH
       
       - name: Run Binary Isolation Tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           chmod +x scripts/test-binary-isolation.sh
           ./scripts/test-binary-isolation.sh
