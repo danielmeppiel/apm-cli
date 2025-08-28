@@ -286,21 +286,40 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./dist/
-          merge-multiple: true
       
       - name: Prepare release binaries
         run: |
+          # Debug: Show the actual downloaded structure
+          echo "Downloaded structure:"
+          find ./dist -type f | head -20
+          echo ""
+          echo "Directory listing:"
+          ls -la ./dist/
+          echo ""
+          
           # Create tar.gz archives from directory structure for release and Homebrew
           cd dist
           for binary in apm-linux-x86_64 apm-darwin-x86_64 apm-darwin-arm64; do
-            # Ensure the binary is executable before archiving
-            chmod +x "${binary}/apm"
-            # Create tar.gz with preserved permissions
-            tar -czf "${binary}.tar.gz" "$binary"
-            if command -v sha256sum &> /dev/null; then
-              sha256sum "${binary}.tar.gz" > "${binary}.tar.gz.sha256"
-            elif command -v shasum &> /dev/null; then
-              shasum -a 256 "${binary}.tar.gz" > "${binary}.tar.gz.sha256"
+            # With merge-multiple: false, artifacts are in subdirectories named after the artifact
+            binary_dir="${binary}/${binary}"
+            
+            if [ -d "$binary_dir" ] && [ -f "$binary_dir/apm" ]; then
+              echo "Processing $binary_dir directory..."
+              # Ensure the binary is executable before archiving
+              chmod +x "${binary_dir}/apm"
+              # Create tar.gz with preserved permissions, archiving the inner directory
+              tar -czf "${binary}.tar.gz" -C "${binary}" "${binary}"
+              if command -v sha256sum &> /dev/null; then
+                sha256sum "${binary}.tar.gz" > "${binary}.tar.gz.sha256"
+              elif command -v shasum &> /dev/null; then
+                shasum -a 256 "${binary}.tar.gz" > "${binary}.tar.gz.sha256"
+              fi
+              echo "Created ${binary}.tar.gz"
+            else
+              echo "ERROR: Binary directory $binary_dir not found or $binary_dir/apm missing"
+              echo "Artifact directory contents:"
+              ls -la "$binary/" || echo "Directory $binary does not exist"
+              exit 1
             fi
           done
       

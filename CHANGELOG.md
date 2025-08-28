@@ -12,11 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Declared `BINARY_PATH` as global variable to fix "unbound variable" error during CI/CD release validation
   - Fixed script formatting issue where function call was on same line as echo statement
 - **Enhanced CI/CD reliability** - Release validation tests now properly validate shipped binary isolation
+- **Critical CI/CD release binary packaging fix** - Fixed PyInstaller `--onedir` binary packaging in GitHub Actions
+  - Removed problematic `merge-multiple: true` that was flattening artifact directory structure
+  - Fixed tar.gz creation to handle nested artifact directories correctly (`binary_name/binary_name/apm`)
+  - Enhanced debugging output to troubleshoot artifact download structure issues
 
 ### Technical Details
-- Root cause: `BINARY_PATH` variable was locally scoped in `find_binary()` function
-- Impact: Release validation tests were failing during CI/CD pipeline execution
-- Solution: Moved variable declaration to global scope for cross-function access
+- Root cause: `BINARY_PATH` variable was locally scoped in `find_binary()` function, and `merge-multiple: true` was merging artifacts incorrectly
+- Impact: Release validation tests and binary packaging were failing during CI/CD pipeline execution
+- Solution: Global variable scope and proper nested directory handling for artifacts
 
 ## [0.1.6] - 2025-08-27
 
