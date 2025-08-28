@@ -95,6 +95,14 @@ hiddenimports = [
     'pathlib',
     'frontmatter',
     'requests',
+    # Rich modules (lazily imported, must be explicitly included)
+    'rich',
+    'rich.console',
+    'rich.theme',
+    'rich.panel',
+    'rich.table',
+    'rich.text',
+    'rich.prompt',
 ]
 
 # Modules to exclude to reduce binary size
